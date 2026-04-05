@@ -1,13 +1,25 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
-const menuItems = ['SMV', 'Money Management', 'HealtH', 'Innovation', 'Heal the WORLD'];
+type MenuItem = {
+  label: string;
+  href: string;
+};
+
+const menuItems: MenuItem[] = [
+  { label: 'SMV', href: '/' },
+  { label: 'Money Management', href: '/' },
+  { label: 'HealtH', href: '/health' },
+  { label: 'Innovation', href: '/' },
+  { label: 'Heal the WORLD', href: '/' }
+];
 
 export function Navbar() {
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState(menuItems[0]);
 
   const baseItemClass =
     'rounded-full px-4 py-2 text-sm font-medium tracking-wide text-slate-300 transition duration-200 hover:bg-white/10 hover:text-white';
@@ -32,35 +44,39 @@ export function Navbar() {
         </button>
 
         <nav className="hidden items-center gap-2 md:flex" aria-label="Main menu">
-          {menuItems.map((item) => (
-            <a
-              key={item}
-              href="#"
-              className={`${baseItemClass} ${activeItem === item ? activeItemClass : ''}`}
-              onClick={() => setActiveItem(item)}
-            >
-              {item}
-            </a>
-          ))}
+          {menuItems.map((item) => {
+            const isActive = item.href === '/health' ? pathname === '/health' : pathname === '/' && item.label === 'SMV';
+
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={`${baseItemClass} ${isActive ? activeItemClass : ''}`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
       </div>
 
       {isMenuOpen ? (
         <nav className="border-t border-white/10 px-6 py-4 md:hidden" aria-label="Mobile main menu">
           <div className="mx-auto flex max-w-6xl flex-col gap-2">
-            {menuItems.map((item) => (
-              <a
-                key={item}
-                href="#"
-                className={`${baseItemClass} text-center ${activeItem === item ? activeItemClass : ''}`}
-                onClick={() => {
-                  setActiveItem(item);
-                  setIsMenuOpen(false);
-                }}
-              >
-                {item}
-              </a>
-            ))}
+            {menuItems.map((item) => {
+              const isActive = item.href === '/health' ? pathname === '/health' : pathname === '/' && item.label === 'SMV';
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`${baseItemClass} text-center ${isActive ? activeItemClass : ''}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
         </nav>
       ) : null}
