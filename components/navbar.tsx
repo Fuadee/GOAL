@@ -14,7 +14,7 @@ const menuItems: MenuItem[] = [
   { label: 'Money Management', href: '/' },
   { label: 'HealtH', href: '/health' },
   { label: 'Innovation', href: '/innovation' },
-  { label: 'Heal the WORLD', href: '/' }
+  { label: 'Heal the WORLD', href: '/heal-world' }
 ];
 
 export function Navbar() {
