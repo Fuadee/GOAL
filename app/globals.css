@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 20% 98%;
+  --foreground: 222 30% 10%;
+  --card: 0 0% 100%;
+  --border: 220 16% 88%;
+  --muted: 215 18% 95%;
+  --primary: 221 83% 53%;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+}
+
+main {
+  @apply mx-auto max-w-6xl px-6 py-10;
+}
