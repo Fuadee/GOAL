@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Activity, BarChart3, Home, Settings } from "lucide-react";
+import { Activity, BarChart3, ClipboardCheck, Home, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/log", label: "Run Log", icon: Activity },
   { href: "/progress", label: "Progress", icon: BarChart3 },
+  { href: "/test", label: "Level Test", icon: ClipboardCheck },
   { href: "/settings", label: "Settings", icon: Settings }
 ];
 
@@ -13,8 +14,8 @@ export function AppShellNav({ pathname }: { pathname: string }) {
   return (
     <aside className="sticky top-0 h-screen w-64 border-r border-border bg-white/90 p-6 backdrop-blur">
       <div className="mb-8">
-        <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Adaptive 5K OS</p>
-        <h1 className="mt-2 text-xl font-semibold">กลับมาวิ่งได้เสมอ</h1>
+        <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Running Quest OS</p>
+        <h1 className="mt-2 text-xl font-semibold">ยังไปต่อได้เสมอ</h1>
       </div>
 
       <nav className="space-y-2">

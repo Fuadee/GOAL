@@ -18,7 +18,10 @@ export default function LogPage() {
               {mockRunLogs.map((log) => (
                 <div key={log.id} className="rounded-lg border border-border p-3">
                   <p className="font-medium">
-                    {log.runDate} · {log.durationMinutes} นาที · {log.activityType}
+                    {log.runDate} · {log.durationMinutes} นาที · {log.distanceKm} km · {log.activityType}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    mission: {log.missionType ?? "-"} · EXP +{log.xpEarned}
                   </p>
                   <p className="text-sm text-slate-500">
                     effort: {log.effort} {log.notes ? `· ${log.notes}` : ""}
