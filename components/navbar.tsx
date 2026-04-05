@@ -11,7 +11,7 @@ type MenuItem = {
 
 const menuItems: MenuItem[] = [
   { label: 'SMV', href: '/' },
-  { label: 'Money Management', href: '/' },
+  { label: 'Money Management', href: '/money-management' },
   { label: 'HealtH', href: '/health' },
   { label: 'Innovation', href: '/innovation' },
   { label: 'Heal the WORLD', href: '/heal-world' }
