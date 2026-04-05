@@ -1,29 +1,95 @@
 import { LayoutFrame } from "@/components/layout-frame";
-import { LevelProgressCard } from "@/components/level-progress-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
-import { mockRunLogs, mockRunningProfile } from "@/lib/mock-data";
-import { getWeeklySummary } from "@/lib/running/summary";
+import { demoStates, mockLevelTests, mockRunLogs, mockRunningProfile } from "@/lib/mock-data";
+import { getLevelReadiness, getTestResult, getWeeklyMissionForLevel, getWeeklyProgress } from "@/lib/running/quest";
+
+const LEVEL_LABELS = ["Level 1 · 0.5K", "Level 2 · 1K", "Level 3 · 2K", "Level 4 · 3K", "Level 5 · 5K"];
 
 export default function ProgressPage() {
-  const summary = getWeeklySummary(mockRunLogs);
+  const weeklyProgress = getWeeklyProgress(mockRunLogs);
+  const mission = getWeeklyMissionForLevel(mockRunningProfile.currentLevel);
+  const readiness = getLevelReadiness({ level: mockRunningProfile.currentLevel, weeklyProgress });
+  const passedState = getTestResult(demoStates.testPassed);
+  const failedState = getTestResult(demoStates.testFailed);
 
   return (
     <LayoutFrame>
-      <div className="grid grid-cols-[1.2fr_1fr] gap-6">
-        <LevelProgressCard currentLevel={mockRunningProfile.currentLevel} />
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Current Level</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1 text-sm">
+              <p className="text-3xl font-semibold">{mockRunningProfile.currentLevel}</p>
+              <p className="text-slate-500">{LEVEL_LABELS[mockRunningProfile.currentLevel - 1]}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Weekly Trend</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1 text-sm">
+              <p>Sessions: {weeklyProgress.sessions}/{mission.sessionsTarget}</p>
+              <p>Distance: {weeklyProgress.distanceKm}/{mission.distanceTargetKm} km</p>
+              <p>Time: {weeklyProgress.timeMin}/{mission.timeTargetMin} นาที</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Readiness Status</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm">
+              {readiness.ready ? (
+                <p className="rounded-md bg-emerald-50 p-3 text-emerald-700">พร้อมทดสอบระดับถัดไป</p>
+              ) : (
+                <p className="rounded-md bg-amber-50 p-3 text-amber-700">ยังขาดอีก {readiness.missing.length} เงื่อนไข</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Progress Summary</CardTitle>
+            <CardTitle>Unlocked Levels</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-5">
+            {LEVEL_LABELS.map((level, index) => (
+              <div
+                key={level}
+                className={`rounded-lg border p-3 text-sm ${
+                  index + 1 <= mockRunningProfile.currentLevel
+                    ? "border-emerald-200 bg-emerald-50"
+                    : "border-border bg-white"
+                }`}
+              >
+                {level}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Completed Tests History</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <p>7 วันล่าสุด: {summary.runs7d} ครั้ง</p>
-            <p>30 วันล่าสุด: {summary.runs30d} ครั้ง</p>
-            <p>เวลาสะสม 7 วัน: {summary.totalMinutes7d} นาที</p>
-            <p>แนวโน้ม: {summary.readiness}</p>
-            <p className="rounded-md bg-slate-100 p-3 text-slate-600">
-              ความสม่ำเสมอเล็ก ๆ คือชัยชนะใหญ่ เป้าหมายคือ “กลับมาได้เรื่อย ๆ” ไม่ใช่ “ห้ามหลุดเลย”
-            </p>
+            {mockLevelTests.map((test) => (
+              <div key={test.id} className="rounded-lg border p-3">
+                <p className="font-medium">
+                  {test.createdAt} · Level {test.targetLevel} Test · {test.testDistanceKm} km
+                </p>
+                <p className={test.passed ? "text-emerald-700" : "text-amber-700"}>
+                  {test.passed ? "ผ่าน" : "ยังไม่ผ่าน"} {test.notes ? `· ${test.notes}` : ""}
+                </p>
+              </div>
+            ))}
+            <div className="grid gap-3 md:grid-cols-2">
+              <p className="rounded-md bg-emerald-50 p-3 text-emerald-700">Demo สถานะสอบผ่าน: {passedState.message}</p>
+              <p className="rounded-md bg-amber-50 p-3 text-amber-700">Demo สถานะสอบไม่ผ่าน: {failedState.message}</p>
+            </div>
           </CardContent>
         </Card>
       </div>
