@@ -61,6 +61,44 @@ export function parseDurationToSeconds(input: string): number | null {
   return null;
 }
 
+export function parseMinuteSecondDuration(minutesInput: string, secondsInput: string): {
+  durationSeconds: number | null;
+  error: string | null;
+} {
+  const minutesRaw = minutesInput.trim();
+  const secondsRaw = secondsInput.trim();
+
+  if (!minutesRaw && !secondsRaw) {
+    return { durationSeconds: null, error: 'Please enter your run duration.' };
+  }
+
+  if (!minutesRaw || !secondsRaw) {
+    return { durationSeconds: null, error: 'Please fill in both minutes and seconds.' };
+  }
+
+  if (!/^\d+$/.test(minutesRaw) || !/^\d+$/.test(secondsRaw)) {
+    return { durationSeconds: null, error: 'Duration must contain only numbers.' };
+  }
+
+  const minutes = Number(minutesRaw);
+  const seconds = Number(secondsRaw);
+
+  if (!Number.isFinite(minutes) || !Number.isFinite(seconds) || minutes < 0 || seconds < 0) {
+    return { durationSeconds: null, error: 'Duration must be a valid positive time.' };
+  }
+
+  if (seconds > 59) {
+    return { durationSeconds: null, error: 'Seconds must be between 0 and 59.' };
+  }
+
+  const durationSeconds = minutes * 60 + seconds;
+  if (durationSeconds <= 0) {
+    return { durationSeconds: null, error: 'Duration must be greater than 0 seconds.' };
+  }
+
+  return { durationSeconds, error: null };
+}
+
 export function calculatePaceSecondsPerKm(durationSeconds: number, distanceKm: number): number | null {
   if (!Number.isFinite(durationSeconds) || !Number.isFinite(distanceKm) || durationSeconds <= 0 || distanceKm <= 0) {
     return null;

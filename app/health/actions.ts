@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { createRunLog } from '@/lib/running/quest.server';
-import { parseDurationToSeconds } from '@/lib/running/quest';
+import { parseMinuteSecondDuration } from '@/lib/running/quest';
 
 const isEffort = (value: string): value is 'easy' | 'normal' | 'hard' => {
   return value === 'easy' || value === 'normal' || value === 'hard';
@@ -12,13 +12,15 @@ const isEffort = (value: string): value is 'easy' | 'normal' | 'hard' => {
 export async function createRunnerRunLogAction(formData: FormData): Promise<{ success: boolean; message: string }> {
   const runDate = String(formData.get('run_date') ?? '').trim();
   const distanceRaw = String(formData.get('distance_km') ?? '').trim();
-  const durationRaw = String(formData.get('duration') ?? '').trim();
+  const durationMinutesRaw = String(formData.get('duration_minutes') ?? '').trim();
+  const durationSecondsRaw = String(formData.get('duration_seconds') ?? '').trim();
   const noStopRaw = String(formData.get('no_stop') ?? '').trim();
   const note = String(formData.get('note') ?? '').trim();
   const effortRaw = String(formData.get('effort') ?? '').trim();
 
   const distance = Number(distanceRaw);
-  const durationSeconds = parseDurationToSeconds(durationRaw);
+  const durationResult = parseMinuteSecondDuration(durationMinutesRaw, durationSecondsRaw);
+  const durationSeconds = durationResult.durationSeconds;
 
   if (!runDate) {
     return { success: false, message: 'Run date is required.' };
@@ -29,7 +31,7 @@ export async function createRunnerRunLogAction(formData: FormData): Promise<{ su
   }
 
   if (!durationSeconds || durationSeconds <= 0) {
-    return { success: false, message: 'Duration must be valid. Use mm:ss or hh:mm:ss.' };
+    return { success: false, message: durationResult.error ?? 'Duration must be valid.' };
   }
 
   const noStop = noStopRaw === 'true';
