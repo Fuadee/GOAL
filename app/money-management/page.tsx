@@ -5,363 +5,415 @@ import { useMemo, useState } from 'react';
 import { Navbar } from '@/components/navbar';
 
 const TARGET_HOUSES = 12;
-const DEFAULT_PHASE_SIZE = 3;
+const PHASE_ORDER = ['planning', 'permit', 'financial', 'loan', 'construction', 'ready'] as const;
 
-type PlannerInputs = {
-  monthlyIncome: string;
-  existingDebtPerMonth: string;
-  annualInterestRate: string;
-  loanYears: string;
-  downPaymentPerHouse: string;
-  constructionCostPerHouse: string;
-  expectedRentPerHouse: string;
-  operatingCostPerHouse: string;
+type PhaseName = (typeof PHASE_ORDER)[number];
+type PhaseStatus = 'locked' | 'in_progress' | 'completed';
+type ApprovalStatus = 'pending' | 'approved' | 'rejected';
+type TaskStatus = 'todo' | 'done';
+
+type HouseData = {
+  id: number;
+  location: string;
+  designUploaded: boolean;
+  permitStatus: ApprovalStatus;
+  landCost: string;
+  materialCost: string;
+  laborCost: string;
+  monthlyRent: string;
+  monthlyOperatingCost: string;
+  monthlyLoanPayment: string;
+  loanAmount: string;
+  approvedAmount: string;
+  loanStatus: ApprovalStatus;
+  constructionTasks: { title: string; status: TaskStatus }[];
+  rentalReady: boolean;
+  tenantAssigned: boolean;
 };
 
-const initialInputs: PlannerInputs = {
-  monthlyIncome: '120000',
-  existingDebtPerMonth: '20000',
-  annualInterestRate: '6.2',
-  loanYears: '20',
-  downPaymentPerHouse: '700000',
-  constructionCostPerHouse: '2800000',
-  expectedRentPerHouse: '18000',
-  operatingCostPerHouse: '3200'
+type PhaseStatusRow = {
+  house_id: number;
+  phase_name: PhaseName;
+  status: PhaseStatus;
+  completed_at: string | null;
 };
 
-const PHASES = [
-  {
-    title: 'Understand loan math',
-    checks: ['กำหนดวงเงินกู้ต่อหลัง', 'คำนวณค่างวดรายเดือน', 'เช็ก DSR และภาระหนี้รวม']
-  },
-  {
-    title: 'Validate first house',
-    checks: ['ทดสอบค่าเช่าจริงเทียบสมมติฐาน', 'บันทึกค่าใช้จ่ายดำเนินงาน', 'ยืนยันกระแสเงินสดสุทธิบวก']
-  },
-  {
-    title: 'Scale to 4 houses',
-    checks: ['ทำแบบบ้านซ้ำได้', 'วางทีมช่างและผู้รับเหมา', 'ตั้งระบบบริหารผู้เช่า']
-  },
-  {
-    title: 'Reach 12-house portfolio',
-    checks: ['ขยายเป็นเฟสละ 3 หลัง', 'รีไฟแนนซ์เมื่อดอกเบี้ยเหมาะสม', 'เน้นอัตราเช่าเต็มและซ่อมบำรุงเชิงรุก']
-  }
+const defaultTasks = [
+  { title: 'Foundation', status: 'todo' as const },
+  { title: 'Structure', status: 'todo' as const },
+  { title: 'Utilities + Finish', status: 'todo' as const }
 ];
+
+const createInitialHouses = (): HouseData[] =>
+  Array.from({ length: TARGET_HOUSES }, (_, index) => ({
+    id: index + 1,
+    location: '',
+    designUploaded: false,
+    permitStatus: 'pending',
+    landCost: '',
+    materialCost: '',
+    laborCost: '',
+    monthlyRent: '',
+    monthlyOperatingCost: '',
+    monthlyLoanPayment: '',
+    loanAmount: '',
+    approvedAmount: '',
+    loanStatus: 'pending',
+    constructionTasks: defaultTasks.map((task) => ({ ...task })),
+    rentalReady: false,
+    tenantAssigned: false
+  }));
+
+const parseNumber = (value: string): number | undefined => {
+  if (!value.trim()) {
+    return undefined;
+  }
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : undefined;
+};
 
 const formatCurrency = (value?: number) => {
   if (value === undefined || Number.isNaN(value)) {
     return '—';
   }
 
-  return new Intl.NumberFormat('th-TH', {
-    style: 'currency',
-    currency: 'THB',
-    maximumFractionDigits: 0
-  }).format(value);
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 };
 
-const formatNumber = (value?: number, digits = 1) => {
-  if (value === undefined || Number.isNaN(value)) {
-    return '—';
-  }
+const getFinancialMetrics = (house: HouseData) => {
+  const landCost = parseNumber(house.landCost);
+  const materialCost = parseNumber(house.materialCost);
+  const laborCost = parseNumber(house.laborCost);
+  const monthlyRent = parseNumber(house.monthlyRent);
+  const monthlyOperatingCost = parseNumber(house.monthlyOperatingCost);
+  const monthlyLoanPayment = parseNumber(house.monthlyLoanPayment);
 
-  return new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: digits,
-    minimumFractionDigits: digits
-  }).format(value);
+  const totalCost =
+    landCost !== undefined && materialCost !== undefined && laborCost !== undefined ? landCost + materialCost + laborCost : undefined;
+
+  const netCashflow =
+    monthlyRent !== undefined && monthlyOperatingCost !== undefined && monthlyLoanPayment !== undefined
+      ? monthlyRent - monthlyOperatingCost - monthlyLoanPayment
+      : undefined;
+
+  return { totalCost, netCashflow, landCost, materialCost, laborCost };
 };
 
-const parseNumber = (value: string): number | undefined => {
-  if (value.trim() === '') {
-    return undefined;
-  }
+const getPhaseCompletion = (house: HouseData, phase: PhaseName): { completed: boolean; reasons: string[] } => {
+  const financial = getFinancialMetrics(house);
 
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : undefined;
+  switch (phase) {
+    case 'planning': {
+      const reasons = [
+        ...(house.location.trim() ? [] : ['Location is required']),
+        ...(house.designUploaded ? [] : ['Design file must be uploaded'])
+      ];
+      return { completed: reasons.length === 0, reasons };
+    }
+    case 'permit': {
+      const reasons = house.permitStatus === 'approved' ? [] : ['Permit status must be approved'];
+      return { completed: reasons.length === 0, reasons };
+    }
+    case 'financial': {
+      const reasons = [
+        ...(financial.landCost !== undefined ? [] : ['Land cost is required']),
+        ...(financial.materialCost !== undefined ? [] : ['Material cost is required']),
+        ...(financial.laborCost !== undefined ? [] : ['Labor cost is required']),
+        ...(financial.totalCost !== undefined ? [] : ['total_cost could not be calculated']),
+        ...(financial.netCashflow !== undefined ? [] : ['net_cashflow could not be calculated'])
+      ];
+      return { completed: reasons.length === 0, reasons };
+    }
+    case 'loan': {
+      const loanAmount = parseNumber(house.loanAmount);
+      const approvedAmount = parseNumber(house.approvedAmount);
+      const reasons = [
+        ...(house.loanStatus === 'approved' ? [] : ['Loan status must be approved']),
+        ...(loanAmount !== undefined ? [] : ['loan_amount is required']),
+        ...(approvedAmount !== undefined ? [] : ['approved_amount is required']),
+        ...(loanAmount !== undefined && approvedAmount !== undefined && approvedAmount >= loanAmount
+          ? []
+          : ['approved_amount must be greater than or equal to loan_amount'])
+      ];
+      return { completed: reasons.length === 0, reasons };
+    }
+    case 'construction': {
+      const allDone = house.constructionTasks.every((task) => task.status === 'done');
+      return { completed: allDone, reasons: allDone ? [] : ['All construction tasks must be done'] };
+    }
+    case 'ready': {
+      const complete = house.rentalReady || house.tenantAssigned;
+      return { completed: complete, reasons: complete ? [] : ['Mark rental ready or assign tenant'] };
+    }
+  }
 };
 
-const getMonthlyInstallment = (loanAmount: number, annualRate: number, years: number): number | undefined => {
-  if (loanAmount <= 0 || annualRate <= 0 || years <= 0) {
-    return undefined;
+const getFirstIncompletePhaseIndex = (house: HouseData) => {
+  for (let i = 0; i < PHASE_ORDER.length; i += 1) {
+    if (!getPhaseCompletion(house, PHASE_ORDER[i]).completed) {
+      return i;
+    }
+  }
+  return PHASE_ORDER.length - 1;
+};
+
+const getPhaseStatus = (house: HouseData, phaseIndex: number): PhaseStatus => {
+  const firstIncomplete = getFirstIncompletePhaseIndex(house);
+  if (phaseIndex < firstIncomplete) {
+    return 'completed';
+  }
+  if (phaseIndex === firstIncomplete) {
+    return getPhaseCompletion(house, PHASE_ORDER[phaseIndex]).completed ? 'completed' : 'in_progress';
+  }
+  return 'locked';
+};
+
+const getCurrentPhase = (house: HouseData): PhaseName => PHASE_ORDER[getFirstIncompletePhaseIndex(house)];
+
+const canAccessPhase = (houses: HouseData[], house: HouseData, phaseIndex: number, strictMode: boolean) => {
+  if (phaseIndex === 0) {
+    return { unlocked: true, reason: '' };
   }
 
-  const monthlyRate = annualRate / 100 / 12;
-  const periods = years * 12;
-  return (loanAmount * monthlyRate * (1 + monthlyRate) ** periods) / ((1 + monthlyRate) ** periods - 1);
+  const previousPhase = PHASE_ORDER[phaseIndex - 1];
+  const previousCompletion = getPhaseCompletion(house, previousPhase);
+  if (!previousCompletion.completed) {
+    return {
+      unlocked: false,
+      reason: `House ${house.id} is locked because ${previousPhase} is incomplete: ${previousCompletion.reasons.join(', ')}`
+    };
+  }
+
+  if (strictMode) {
+    const blockingHouse = houses.find((candidate) => !getPhaseCompletion(candidate, previousPhase).completed);
+    if (blockingHouse) {
+      return {
+        unlocked: false,
+        reason: `Strict mode: all houses must complete ${previousPhase}. House ${blockingHouse.id} is still in progress.`
+      };
+    }
+  }
+
+  return { unlocked: true, reason: '' };
 };
 
 export default function MoneyManagementPage() {
-  const [inputs, setInputs] = useState<PlannerInputs>(initialInputs);
+  const [houses, setHouses] = useState<HouseData[]>(() => createInitialHouses());
+  const [selectedHouseId, setSelectedHouseId] = useState(1);
+  const [strictMode, setStrictMode] = useState(false);
 
-  const metrics = useMemo(() => {
-    const monthlyIncome = parseNumber(inputs.monthlyIncome);
-    const existingDebtPerMonth = parseNumber(inputs.existingDebtPerMonth);
-    const annualInterestRate = parseNumber(inputs.annualInterestRate);
-    const loanYears = parseNumber(inputs.loanYears);
-    const downPaymentPerHouse = parseNumber(inputs.downPaymentPerHouse);
-    const constructionCostPerHouse = parseNumber(inputs.constructionCostPerHouse);
-    const expectedRentPerHouse = parseNumber(inputs.expectedRentPerHouse);
-    const operatingCostPerHouse = parseNumber(inputs.operatingCostPerHouse);
+  const selectedHouse = houses.find((house) => house.id === selectedHouseId) ?? houses[0];
 
-    const loanAmountPerHouse =
-      constructionCostPerHouse !== undefined && downPaymentPerHouse !== undefined
-        ? Math.max(constructionCostPerHouse - downPaymentPerHouse, 0)
-        : undefined;
-
-    const monthlyInstallmentPerHouse =
-      loanAmountPerHouse !== undefined && annualInterestRate !== undefined && loanYears !== undefined
-        ? getMonthlyInstallment(loanAmountPerHouse, annualInterestRate, loanYears)
-        : undefined;
-
-    const netCashflowPerHouse =
-      expectedRentPerHouse !== undefined && monthlyInstallmentPerHouse !== undefined && operatingCostPerHouse !== undefined
-        ? expectedRentPerHouse - monthlyInstallmentPerHouse - operatingCostPerHouse
-        : undefined;
-
-    const maxDebtServiceRatio = 0.4;
-    const estimatedLoanCapacity =
-      monthlyIncome !== undefined && existingDebtPerMonth !== undefined && annualInterestRate !== undefined && loanYears !== undefined
-        ? (() => {
-            const availableInstallment = monthlyIncome * maxDebtServiceRatio - existingDebtPerMonth;
-            if (availableInstallment <= 0) {
-              return 0;
-            }
-
-            const monthlyRate = annualInterestRate / 100 / 12;
-            const periods = loanYears * 12;
-
-            if (monthlyRate <= 0 || periods <= 0) {
-              return undefined;
-            }
-
-            return (availableInstallment * ((1 + monthlyRate) ** periods - 1)) / (monthlyRate * (1 + monthlyRate) ** periods);
-          })()
-        : undefined;
-
-    const totalCashNeededPerHouse =
-      downPaymentPerHouse !== undefined && operatingCostPerHouse !== undefined
-        ? downPaymentPerHouse + operatingCostPerHouse * 6
-        : undefined;
-
-    const profitableHousesTarget =
-      netCashflowPerHouse !== undefined && netCashflowPerHouse > 0 ? Math.ceil(TARGET_HOUSES / DEFAULT_PHASE_SIZE) : undefined;
-
-    const recommendedPhasePlan =
-      profitableHousesTarget === undefined
-        ? 'กรอกข้อมูลให้ครบเพื่อวางแผนเฟสแบบแม่นยำ'
-        : `Start with 1 house → confirm cash flow → scale ${DEFAULT_PHASE_SIZE} houses per phase (${profitableHousesTarget} phases to ${TARGET_HOUSES})`;
-
-    const grossRentalIncomePerMonth =
-      expectedRentPerHouse !== undefined ? expectedRentPerHouse * TARGET_HOUSES : undefined;
-    const totalDebtServicePerMonth =
-      monthlyInstallmentPerHouse !== undefined ? monthlyInstallmentPerHouse * TARGET_HOUSES : undefined;
-    const totalOperatingCostPerMonth =
-      operatingCostPerHouse !== undefined ? operatingCostPerHouse * TARGET_HOUSES : undefined;
-
-    const passiveIncomePerMonth =
-      grossRentalIncomePerMonth !== undefined &&
-      totalDebtServicePerMonth !== undefined &&
-      totalOperatingCostPerMonth !== undefined
-        ? grossRentalIncomePerMonth - totalDebtServicePerMonth - totalOperatingCostPerMonth
-        : undefined;
-
-    const passiveIncomePerYear = passiveIncomePerMonth !== undefined ? passiveIncomePerMonth * 12 : undefined;
-
-    const estimatedPaybackPeriod =
-      constructionCostPerHouse !== undefined &&
-      downPaymentPerHouse !== undefined &&
-      netCashflowPerHouse !== undefined &&
-      netCashflowPerHouse > 0
-        ? (constructionCostPerHouse + downPaymentPerHouse) / netCashflowPerHouse / 12
-        : undefined;
-
-    return {
-      monthlyIncome,
-      existingDebtPerMonth,
-      annualInterestRate,
-      loanYears,
-      downPaymentPerHouse,
-      constructionCostPerHouse,
-      expectedRentPerHouse,
-      operatingCostPerHouse,
-      estimatedLoanCapacity,
-      monthlyInstallmentPerHouse,
-      totalCashNeededPerHouse,
-      netCashflowPerHouse,
-      loanAmountPerHouse,
-      recommendedPhasePlan,
-      grossRentalIncomePerMonth,
-      totalDebtServicePerMonth,
-      totalOperatingCostPerMonth,
-      passiveIncomePerMonth,
-      passiveIncomePerYear,
-      estimatedPaybackPeriod
-    };
-  }, [inputs]);
-
-  const handleInputChange = (key: keyof PlannerInputs, value: string) => {
-    setInputs((prev) => ({ ...prev, [key]: value }));
+  const updateSelectedHouse = (updater: (house: HouseData) => HouseData) => {
+    setHouses((prev) => prev.map((house) => (house.id === selectedHouseId ? updater(house) : house)));
   };
 
-  const houseStatus =
-    metrics.netCashflowPerHouse === undefined
-      ? 'Break-even'
-      : metrics.netCashflowPerHouse > 0
-        ? 'Profitable'
-        : metrics.netCashflowPerHouse === 0
-          ? 'Break-even'
-          : 'Negative cash flow';
+  const pipeline = useMemo(() => {
+    const grouped = Object.fromEntries(PHASE_ORDER.map((phase) => [phase, [] as HouseData[]])) as Record<PhaseName, HouseData[]>;
+    houses.forEach((house) => {
+      grouped[getCurrentPhase(house)].push(house);
+    });
+    return grouped;
+  }, [houses]);
+
+  const housePhaseStatuses = useMemo<PhaseStatusRow[]>(() => {
+    return houses.flatMap((house) =>
+      PHASE_ORDER.map((phase, index) => {
+        const status = getPhaseStatus(house, index);
+        return {
+          house_id: house.id,
+          phase_name: phase,
+          status,
+          completed_at: status === 'completed' ? new Date().toISOString() : null
+        };
+      })
+    );
+  }, [houses]);
+
+  const selectedFinancial = getFinancialMetrics(selectedHouse);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <Navbar />
 
-      <section className="mx-auto w-full max-w-6xl space-y-8 px-6 py-14 md:px-10">
-        <header className="space-y-6">
-          <div className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.28em] text-indigo-200/70">Dream + Feasibility Calculator</p>
-            <h1 className="text-4xl font-semibold text-white md:text-5xl">Money Management</h1>
-            <p className="max-w-3xl text-base text-slate-300 md:text-lg">
-              Goal: build 12 rental houses and turn them into long-term passive income.
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <HeroKpi label="Target Houses" value={`${TARGET_HOUSES} houses`} helper="เป้าหมายพอร์ตเช่าระยะยาว" />
-            <HeroKpi
-              label="Estimated Passive Income / Month"
-              value={formatCurrency(metrics.passiveIncomePerMonth)}
-              helper="รายรับสุทธิหลังหักค่างวดและค่าใช้จ่าย"
-            />
-            <HeroKpi
-              label="Estimated Payback Period"
-              value={metrics.estimatedPaybackPeriod ? `${formatNumber(metrics.estimatedPaybackPeriod, 1)} years` : '—'}
-              helper="เวลาคืนทุนโดยประมาณจากโมเดล 1 หลัง"
-            />
-          </div>
+      <section className="mx-auto w-full max-w-7xl space-y-8 px-6 py-10 md:px-10">
+        <header className="space-y-3">
+          <p className="text-xs uppercase tracking-[0.3em] text-indigo-200/70">Execution Control System</p>
+          <h1 className="text-4xl font-semibold text-white">Parallel Project Execution with Phase Lock</h1>
+          <p className="max-w-4xl text-slate-300">
+            All houses follow strict phase order: planning → permit → financial → loan → construction → ready.
+          </p>
         </header>
 
-        <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
-          <div className="mb-5 space-y-1">
-            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Loan Power Calculator</p>
-            <h2 className="text-2xl font-semibold text-white">คำนวณกำลังกู้ + เศรษฐศาสตร์บ้านเช่า</h2>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <InputField label="รายได้ต่อเดือน (monthlyIncome)" value={inputs.monthlyIncome} onChange={(value) => handleInputChange('monthlyIncome', value)} />
-              <InputField label="หนี้ต่อเดือนปัจจุบัน (existingDebtPerMonth)" value={inputs.existingDebtPerMonth} onChange={(value) => handleInputChange('existingDebtPerMonth', value)} />
-              <InputField label="ดอกเบี้ยต่อปี % (annualInterestRate)" value={inputs.annualInterestRate} onChange={(value) => handleInputChange('annualInterestRate', value)} />
-              <InputField label="ระยะเวลากู้ ปี (loanYears)" value={inputs.loanYears} onChange={(value) => handleInputChange('loanYears', value)} />
-              <InputField label="เงินดาวน์ต่อหลัง (downPaymentPerHouse)" value={inputs.downPaymentPerHouse} onChange={(value) => handleInputChange('downPaymentPerHouse', value)} />
-              <InputField label="ต้นทุนก่อสร้างต่อหลัง (constructionCostPerHouse)" value={inputs.constructionCostPerHouse} onChange={(value) => handleInputChange('constructionCostPerHouse', value)} />
-              <InputField label="ค่าเช่าคาดหวังต่อหลัง (expectedRentPerHouse)" value={inputs.expectedRentPerHouse} onChange={(value) => handleInputChange('expectedRentPerHouse', value)} />
-              <InputField label="ค่าใช้จ่ายดำเนินงานต่อหลัง (operatingCostPerHouse)" value={inputs.operatingCostPerHouse} onChange={(value) => handleInputChange('operatingCostPerHouse', value)} />
-            </div>
-
-            <div className="space-y-3 rounded-2xl border border-white/10 bg-slate-950/70 p-5">
-              <CalcRow label="estimatedLoanCapacity" value={formatCurrency(metrics.estimatedLoanCapacity)} />
-              <CalcRow label="monthlyInstallmentPerHouse" value={formatCurrency(metrics.monthlyInstallmentPerHouse)} />
-              <CalcRow label="totalCashNeededPerHouse" value={formatCurrency(metrics.totalCashNeededPerHouse)} />
-              <CalcRow label="netCashflowPerHouse" value={formatCurrency(metrics.netCashflowPerHouse)} />
-              <CalcRow label="recommendedPhasePlan" value={metrics.recommendedPhasePlan} multiline />
-            </div>
-          </div>
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <label className="flex items-center gap-3 text-sm text-white">
+            <input type="checkbox" checked={strictMode} onChange={(event) => setStrictMode(event.target.checked)} />
+            Enable strict mode (block next phase globally until all houses complete current phase)
+          </label>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-2">
-          <article className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-7">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-white">Per House Economics</h3>
-              <StatusBadge status={houseStatus} />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <CalcRow label="totalInvestmentPerHouse" value={formatCurrency(metrics.constructionCostPerHouse)} />
-              <CalcRow label="downPaymentPerHouse" value={formatCurrency(metrics.downPaymentPerHouse)} />
-              <CalcRow label="loanAmountPerHouse" value={formatCurrency(metrics.loanAmountPerHouse)} />
-              <CalcRow label="monthlyRent" value={formatCurrency(metrics.expectedRentPerHouse)} />
-              <CalcRow label="monthlyInstallment" value={formatCurrency(metrics.monthlyInstallmentPerHouse)} />
-              <CalcRow label="monthlyOperatingCost" value={formatCurrency(metrics.operatingCostPerHouse)} />
-              <CalcRow label="netCashflowPerHouse" value={formatCurrency(metrics.netCashflowPerHouse)} />
+        <section className="grid gap-6 lg:grid-cols-[1fr_1.5fr]">
+          <article className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <h2 className="text-xl font-semibold text-white">Pipeline View (12 Houses)</h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {PHASE_ORDER.map((phase) => (
+                <div key={phase} className="rounded-xl border border-white/10 bg-slate-950/60 p-3">
+                  <p className="text-xs uppercase text-slate-400">{phase}</p>
+                  <p className="text-lg font-semibold text-white">{pipeline[phase].length} houses</p>
+                  <p className="mt-1 text-xs text-slate-400">{pipeline[phase].map((house) => `#${house.id}`).join(', ') || '—'}</p>
+                </div>
+              ))}
             </div>
           </article>
 
-          <article className="rounded-3xl border border-indigo-300/40 bg-gradient-to-br from-indigo-500/20 via-fuchsia-500/10 to-sky-500/10 p-6 md:p-7">
-            <p className="text-xs uppercase tracking-[0.2em] text-indigo-100/90">12-House Vision</p>
-            <h3 className="mt-2 text-3xl font-semibold text-white">Sweet Goal</h3>
-            <div className="mt-5 space-y-3">
-              <CalcRow label="grossRentalIncomePerMonth" value={formatCurrency(metrics.grossRentalIncomePerMonth)} />
-              <CalcRow label="totalDebtServicePerMonth" value={formatCurrency(metrics.totalDebtServicePerMonth)} />
-              <CalcRow label="totalOperatingCostPerMonth" value={formatCurrency(metrics.totalOperatingCostPerMonth)} />
-              <CalcRow label="passiveIncomePerMonth" value={formatCurrency(metrics.passiveIncomePerMonth)} />
-              <CalcRow label="passiveIncomePerYear" value={formatCurrency(metrics.passiveIncomePerYear)} />
+          <article className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-xl font-semibold text-white">House Execution Panel</h2>
+              <select
+                value={selectedHouseId}
+                onChange={(event) => setSelectedHouseId(Number(event.target.value))}
+                className="rounded-lg border border-white/20 bg-slate-950 px-3 py-1.5 text-white"
+              >
+                {houses.map((house) => (
+                  <option key={house.id} value={house.id}>
+                    House {house.id.toString().padStart(2, '0')}
+                  </option>
+                ))}
+              </select>
             </div>
-            <p className="mt-5 text-sm text-indigo-100/90">
-              If all 12 houses are rented, this is the approximate monthly passive income.
-            </p>
+
+            <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+              {PHASE_ORDER.map((phase, index) => {
+                const status = getPhaseStatus(selectedHouse, index);
+                const access = canAccessPhase(houses, selectedHouse, index, strictMode);
+                const completion = getPhaseCompletion(selectedHouse, phase);
+
+                return (
+                  <div key={phase} className="rounded-xl border border-white/10 bg-slate-950/60 p-3 text-sm text-slate-200">
+                    <p className="font-semibold text-white">
+                      {status === 'locked' ? '🔒' : status === 'completed' ? '✅' : '🟡'} {phase}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">status: {status}</p>
+                    {!access.unlocked ? <p className="mt-2 text-xs text-rose-300">{access.reason}</p> : null}
+                    {!completion.completed ? <p className="mt-2 text-xs text-amber-200">{completion.reasons.join(', ')}</p> : null}
+                  </div>
+                );
+              })}
+            </div>
           </article>
         </section>
 
-        <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
-          <h3 className="text-2xl font-semibold text-white">Roadmap</h3>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {PHASES.map((phase, index) => (
-              <article key={phase.title} className="rounded-2xl border border-white/10 bg-slate-950/55 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Phase {index + 1}</p>
-                <h4 className="mt-1 text-base font-semibold text-white">{phase.title}</h4>
-                <ul className="mt-3 space-y-2 text-sm text-slate-200">
-                  {phase.checks.map((check) => (
-                    <li key={check} className="flex items-start gap-2">
-                      <span className="mt-0.5 text-emerald-300">✓</span>
-                      <span>{check}</span>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <h3 className="text-lg font-semibold text-white">Completion Criteria Input (Selected House)</h3>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <InputField label="planning.location" value={selectedHouse.location} onChange={(value) => updateSelectedHouse((house) => ({ ...house, location: value }))} />
+            <ToggleField
+              label="planning.design_file_uploaded"
+              checked={selectedHouse.designUploaded}
+              onChange={(checked) => updateSelectedHouse((house) => ({ ...house, designUploaded: checked }))}
+            />
+
+            <SelectField
+              label="permit.status"
+              value={selectedHouse.permitStatus}
+              options={['pending', 'approved', 'rejected']}
+              onChange={(value) => updateSelectedHouse((house) => ({ ...house, permitStatus: value as ApprovalStatus }))}
+            />
+
+            <InputField label="financial.land_cost" value={selectedHouse.landCost} onChange={(value) => updateSelectedHouse((house) => ({ ...house, landCost: value }))} />
+            <InputField label="financial.material_cost" value={selectedHouse.materialCost} onChange={(value) => updateSelectedHouse((house) => ({ ...house, materialCost: value }))} />
+            <InputField label="financial.labor_cost" value={selectedHouse.laborCost} onChange={(value) => updateSelectedHouse((house) => ({ ...house, laborCost: value }))} />
+            <InputField label="financial.monthly_rent" value={selectedHouse.monthlyRent} onChange={(value) => updateSelectedHouse((house) => ({ ...house, monthlyRent: value }))} />
+            <InputField
+              label="financial.monthly_operating_cost"
+              value={selectedHouse.monthlyOperatingCost}
+              onChange={(value) => updateSelectedHouse((house) => ({ ...house, monthlyOperatingCost: value }))}
+            />
+            <InputField
+              label="financial.monthly_loan_payment"
+              value={selectedHouse.monthlyLoanPayment}
+              onChange={(value) => updateSelectedHouse((house) => ({ ...house, monthlyLoanPayment: value }))}
+            />
+
+            <InputField label="loan.loan_amount" value={selectedHouse.loanAmount} onChange={(value) => updateSelectedHouse((house) => ({ ...house, loanAmount: value }))} />
+            <InputField
+              label="loan.approved_amount"
+              value={selectedHouse.approvedAmount}
+              onChange={(value) => updateSelectedHouse((house) => ({ ...house, approvedAmount: value }))}
+            />
+            <SelectField
+              label="loan.status"
+              value={selectedHouse.loanStatus}
+              options={['pending', 'approved', 'rejected']}
+              onChange={(value) => updateSelectedHouse((house) => ({ ...house, loanStatus: value as ApprovalStatus }))}
+            />
+
+            <ToggleField
+              label="ready.rental_ready"
+              checked={selectedHouse.rentalReady}
+              onChange={(checked) => updateSelectedHouse((house) => ({ ...house, rentalReady: checked }))}
+            />
+            <ToggleField
+              label="ready.tenant_assigned"
+              checked={selectedHouse.tenantAssigned}
+              onChange={(checked) => updateSelectedHouse((house) => ({ ...house, tenantAssigned: checked }))}
+            />
+          </div>
+
+          <div className="mt-4 rounded-xl border border-indigo-300/30 bg-indigo-500/10 p-3 text-sm text-indigo-100">
+            Calculated financials → total_cost: {formatCurrency(selectedFinancial.totalCost)} | net_cashflow: {formatCurrency(selectedFinancial.netCashflow)}
+          </div>
+
+          <div className="mt-4 space-y-2">
+            <p className="text-sm text-slate-300">construction.tasks</p>
+            {selectedHouse.constructionTasks.map((task, index) => {
+              const access = canAccessPhase(houses, selectedHouse, PHASE_ORDER.indexOf('construction'), strictMode);
+              const disabled = !access.unlocked;
+
+              return (
+                <button
+                  key={task.title}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() =>
+                    updateSelectedHouse((house) => ({
+                      ...house,
+                      constructionTasks: house.constructionTasks.map((current, currentIndex) =>
+                        currentIndex === index ? { ...current, status: current.status === 'done' ? 'todo' : 'done' } : current
+                      )
+                    }))
+                  }
+                  className="mr-2 rounded-lg border border-white/20 px-3 py-1.5 text-sm text-white disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {task.status === 'done' ? '✅' : '⬜'} {task.title}
+                </button>
+              );
+            })}
           </div>
         </section>
 
-        <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-2xl font-semibold text-white">House Plan Table</h3>
-            <p className="text-sm text-slate-400">แผน 12 หลัง แบบค่อยเป็นค่อยไป</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-separate border-spacing-y-2 text-left text-sm">
-              <thead>
-                <tr className="text-slate-400">
-                  <th className="px-3 py-2 font-medium">House</th>
-                  <th className="px-3 py-2 font-medium">Status</th>
-                  <th className="px-3 py-2 font-medium">Investment</th>
-                  <th className="px-3 py-2 font-medium">Loan</th>
-                  <th className="px-3 py-2 font-medium">Rent</th>
-                  <th className="px-3 py-2 font-medium">Net / Month</th>
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <h3 className="text-lg font-semibold text-white">house_phase_status Preview</h3>
+          <div className="mt-3 max-h-80 overflow-auto rounded-lg border border-white/10">
+            <table className="min-w-full text-left text-xs text-slate-200">
+              <thead className="bg-slate-900 text-slate-400">
+                <tr>
+                  <th className="px-2 py-2">house_id</th>
+                  <th className="px-2 py-2">phase_name</th>
+                  <th className="px-2 py-2">status</th>
+                  <th className="px-2 py-2">completed_at</th>
                 </tr>
               </thead>
               <tbody>
-                {Array.from({ length: TARGET_HOUSES }, (_, index) => {
-                  const houseNumber = index + 1;
-                  const status =
-                    houseNumber === 1
-                      ? 'Validate'
-                      : houseNumber <= 4
-                        ? 'Scale'
-                        : houseNumber <= 8
-                          ? 'Pipeline'
-                          : 'Planned';
-
-                  return (
-                    <tr key={houseNumber} className="rounded-xl bg-slate-950/50 text-slate-200">
-                      <td className="px-3 py-3 font-medium">House {houseNumber.toString().padStart(2, '0')}</td>
-                      <td className="px-3 py-3">{status}</td>
-                      <td className="px-3 py-3">{formatCurrency(metrics.constructionCostPerHouse)}</td>
-                      <td className="px-3 py-3">{formatCurrency(metrics.loanAmountPerHouse)}</td>
-                      <td className="px-3 py-3">{formatCurrency(metrics.expectedRentPerHouse)}</td>
-                      <td className="px-3 py-3">{formatCurrency(metrics.netCashflowPerHouse)}</td>
-                    </tr>
-                  );
-                })}
+                {housePhaseStatuses.map((row) => (
+                  <tr key={`${row.house_id}-${row.phase_name}`} className="border-t border-white/10">
+                    <td className="px-2 py-1">{row.house_id}</td>
+                    <td className="px-2 py-1">{row.phase_name}</td>
+                    <td className="px-2 py-1">{row.status}</td>
+                    <td className="px-2 py-1">{row.completed_at ?? 'null'}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -379,57 +431,49 @@ type InputFieldProps = {
 
 function InputField({ label, value, onChange }: InputFieldProps) {
   return (
-    <label className="space-y-2">
-      <span className="text-sm text-slate-300">{label}</span>
+    <label className="space-y-1">
+      <span className="text-xs text-slate-300">{label}</span>
       <input
         type="number"
         inputMode="decimal"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2.5 text-white outline-none transition focus:border-indigo-300/70"
+        className="w-full rounded-lg border border-white/20 bg-slate-950 px-3 py-2 text-white"
       />
     </label>
   );
 }
 
-type HeroKpiProps = {
-  label: string;
-  value: string;
-  helper: string;
-};
-
-function HeroKpi({ label, value, helper }: HeroKpiProps) {
+function ToggleField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
   return (
-    <article className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
-      <p className="mt-1 text-sm text-slate-300">{helper}</p>
-    </article>
+    <label className="flex items-center justify-between rounded-lg border border-white/10 bg-slate-950/70 px-3 py-2 text-xs text-slate-200">
+      {label}
+      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
+    </label>
   );
 }
 
-type CalcRowProps = {
+function SelectField({
+  label,
+  value,
+  options,
+  onChange
+}: {
   label: string;
   value: string;
-  multiline?: boolean;
-};
-
-function CalcRow({ label, value, multiline = false }: CalcRowProps) {
+  options: string[];
+  onChange: (value: string) => void;
+}) {
   return (
-    <div className="rounded-xl border border-white/10 bg-slate-900/40 px-3 py-2.5">
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p className={`mt-1 text-white ${multiline ? 'text-sm leading-relaxed' : 'text-base font-medium'}`}>{value}</p>
-    </div>
+    <label className="space-y-1">
+      <span className="text-xs text-slate-300">{label}</span>
+      <select value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded-lg border border-white/20 bg-slate-950 px-3 py-2 text-white">
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
   );
-}
-
-function StatusBadge({ status }: { status: 'Profitable' | 'Break-even' | 'Negative cash flow' }) {
-  const colorClass =
-    status === 'Profitable'
-      ? 'border-emerald-300/40 bg-emerald-300/15 text-emerald-100'
-      : status === 'Break-even'
-        ? 'border-amber-300/40 bg-amber-300/10 text-amber-100'
-        : 'border-rose-300/40 bg-rose-300/10 text-rose-100';
-
-  return <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${colorClass}`}>{status}</span>;
 }
