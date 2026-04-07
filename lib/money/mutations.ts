@@ -16,6 +16,39 @@ export async function createExpense(payload: { category: string; amount: number;
   return rows[0];
 }
 
+export async function updateIncomeSource(
+  id: string,
+  payload: {
+    name: string;
+    type: IncomeSourceType;
+    expected_income: number;
+    actual_income: number;
+  }
+): Promise<IncomeSourceRow> {
+  const rows = await supabaseRestRequest<IncomeSourceRow[]>(`income_sources?id=eq.${id}`, 'PATCH', payload);
+  return rows[0];
+}
+
+export async function updateExpense(
+  id: string,
+  payload: {
+    category: string;
+    amount: number;
+    type: ExpenseType;
+  }
+): Promise<ExpenseRow> {
+  const rows = await supabaseRestRequest<ExpenseRow[]>(`expenses?id=eq.${id}`, 'PATCH', payload);
+  return rows[0];
+}
+
+export async function deleteIncomeSource(id: string): Promise<void> {
+  await supabaseRestRequest<IncomeSourceRow[]>(`income_sources?id=eq.${id}`, 'DELETE');
+}
+
+export async function deleteExpense(id: string): Promise<void> {
+  await supabaseRestRequest<ExpenseRow[]>(`expenses?id=eq.${id}`, 'DELETE');
+}
+
 export async function createRentalHouse(payload: {
   name: string;
   status: RentalHouseStatus;
