@@ -1,0 +1,49 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+
+import { createRunLog } from '@/lib/running/quest.server';
+import { parseDurationToSeconds } from '@/lib/running/quest';
+
+const isEffort = (value: string): value is 'easy' | 'normal' | 'hard' => {
+  return value === 'easy' || value === 'normal' || value === 'hard';
+};
+
+export async function createRunnerRunLogAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const runDate = String(formData.get('run_date') ?? '').trim();
+  const distanceRaw = String(formData.get('distance_km') ?? '').trim();
+  const durationRaw = String(formData.get('duration') ?? '').trim();
+  const noStopRaw = String(formData.get('no_stop') ?? '').trim();
+  const note = String(formData.get('note') ?? '').trim();
+  const effortRaw = String(formData.get('effort') ?? '').trim();
+
+  const distance = Number(distanceRaw);
+  const durationSeconds = parseDurationToSeconds(durationRaw);
+
+  if (!runDate) {
+    return { success: false, message: 'Run date is required.' };
+  }
+
+  if (!Number.isFinite(distance) || distance <= 0) {
+    return { success: false, message: 'Distance must be greater than 0 km.' };
+  }
+
+  if (!durationSeconds || durationSeconds <= 0) {
+    return { success: false, message: 'Duration must be valid. Use mm:ss or hh:mm:ss.' };
+  }
+
+  const noStop = noStopRaw === 'true';
+  const effort = isEffort(effortRaw) ? effortRaw : undefined;
+
+  const result = await createRunLog({
+    run_date: runDate,
+    distance_km: distance,
+    duration_seconds: durationSeconds,
+    no_stop: noStop,
+    note: note || undefined,
+    effort
+  });
+
+  revalidatePath('/health');
+  return result;
+}
