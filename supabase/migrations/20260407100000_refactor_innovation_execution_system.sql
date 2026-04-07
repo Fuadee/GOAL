@@ -21,10 +21,16 @@ create index if not exists idx_innovation_process_steps_innovation_id on public.
 create index if not exists idx_innovation_logs_innovation_id on public.innovation_logs(innovation_id);
 create index if not exists idx_innovation_logs_created_at_desc on public.innovation_logs(created_at desc);
 
+drop trigger if exists set_innovation_process_steps_updated_at on public.innovation_process_steps;
 create trigger set_innovation_process_steps_updated_at
 before update on public.innovation_process_steps
 for each row
 execute function public.set_updated_at_timestamp();
+
+-- Remove old trigger dependencies first, then old function.
+drop trigger if exists touch_innovation_updated_at_after_log_insert on public.innovation_logs;
+drop trigger if exists touch_innovation_updated_at_after_log_change on public.innovation_logs;
+drop trigger if exists touch_innovation_updated_at_after_step_change on public.innovation_process_steps;
 
 drop function if exists public.touch_innovation_updated_at_from_log();
 
@@ -41,7 +47,6 @@ begin
 end;
 $$;
 
-drop trigger if exists touch_innovation_updated_at_after_log_insert on public.innovation_logs;
 create trigger touch_innovation_updated_at_after_log_change
 after insert or update or delete on public.innovation_logs
 for each row
