@@ -34,16 +34,16 @@ export function InnovationCard({ innovation }: InnovationCardProps) {
         <p className="text-sm leading-relaxed text-slate-300">{innovation.description || 'No description yet.'}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 text-xs text-slate-300 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 text-xs text-slate-300 sm:grid-cols-3">
         <div>
           <p className="text-slate-400">Progress</p>
-          <p className="font-semibold text-white">{innovation.progress_percent}%</p>
+          <p className="font-semibold text-white">{innovation.progressPercent}%</p>
         </div>
         <div>
-          <p className="text-slate-400">Logs</p>
-          <p className="font-semibold text-white">{innovation.logCount}</p>
+          <p className="text-slate-400">Steps</p>
+          <p className="font-semibold text-white">{innovation.completedStepCount} / {innovation.stepTotal}</p>
         </div>
-        <div className="col-span-2 sm:col-span-2">
+        <div className="col-span-2 sm:col-span-1">
           <p className="text-slate-400">Updated</p>
           <p className="font-semibold text-white">{formatTimestamp(innovation.updated_at)}</p>
         </div>

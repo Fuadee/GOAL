@@ -2,15 +2,69 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { addInnovationLog, updateInnovationProgressAndStatus } from '@/lib/innovation/service';
-import { INNOVATION_LOG_TYPES, INNOVATION_STATUS, InnovationLogType, InnovationStatus } from '@/lib/innovation/types';
-
-function isInnovationStatus(value: string): value is InnovationStatus {
-  return INNOVATION_STATUS.includes(value as InnovationStatus);
-}
+import { addInnovationLog, addInnovationProcessStep, updateInnovationStepStatus } from '@/lib/innovation/service';
+import {
+  INNOVATION_LOG_TYPES,
+  INNOVATION_STEP_STATUS,
+  InnovationLogType,
+  InnovationStepStatus
+} from '@/lib/innovation/types';
 
 function isInnovationLogType(value: string): value is InnovationLogType {
   return INNOVATION_LOG_TYPES.includes(value as InnovationLogType);
+}
+
+function isInnovationStepStatus(value: string): value is InnovationStepStatus {
+  return INNOVATION_STEP_STATUS.includes(value as InnovationStepStatus);
+}
+
+export async function createInnovationProcessStepAction(
+  innovationId: string,
+  formData: FormData
+): Promise<{ success: boolean; message: string }> {
+  const title = String(formData.get('title') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
+
+  if (!title) {
+    return { success: false, message: 'Step title is required.' };
+  }
+
+  const stepOrderRaw = String(formData.get('step_order') ?? '').trim();
+  const stepOrder = stepOrderRaw ? Number(stepOrderRaw) : undefined;
+
+  await addInnovationProcessStep({
+    innovation_id: innovationId,
+    title,
+    description: description || undefined,
+    step_order: Number.isFinite(stepOrder) ? stepOrder : undefined
+  });
+
+  revalidatePath('/innovation');
+  revalidatePath(`/innovation/${innovationId}`);
+
+  return { success: true, message: 'Process step added.' };
+}
+
+export async function updateInnovationProcessStepStatusAction(
+  innovationId: string,
+  stepId: string,
+  formData: FormData
+): Promise<{ success: boolean; message: string }> {
+  const statusRaw = String(formData.get('status') ?? '').trim();
+
+  if (!isInnovationStepStatus(statusRaw)) {
+    return { success: false, message: 'Invalid process step status.' };
+  }
+
+  await updateInnovationStepStatus(stepId, innovationId, {
+    status: statusRaw,
+    completed_at: statusRaw === 'done' ? new Date().toISOString() : null
+  });
+
+  revalidatePath('/innovation');
+  revalidatePath(`/innovation/${innovationId}`);
+
+  return { success: true, message: 'Process step updated.' };
 }
 
 export async function createInnovationLogAction(
@@ -39,34 +93,6 @@ export async function createInnovationLogAction(
     lesson_learned: String(formData.get('lesson_learned') ?? '').trim() || undefined,
     next_step: String(formData.get('next_step') ?? '').trim() || undefined
   });
-
-  const progressRaw = String(formData.get('progress_percent') ?? '').trim();
-  const statusRaw = String(formData.get('status') ?? '').trim();
-
-  if (progressRaw || statusRaw) {
-    const patch: { progress_percent?: number; status?: InnovationStatus; completed_at?: string | null; started_at?: string | null } = {};
-
-    if (progressRaw) {
-      const progress = Number(progressRaw);
-      if (!Number.isNaN(progress)) {
-        patch.progress_percent = Math.max(0, Math.min(100, Math.round(progress)));
-      }
-    }
-
-    if (statusRaw && isInnovationStatus(statusRaw)) {
-      patch.status = statusRaw;
-      if (statusRaw === 'completed') {
-        patch.completed_at = new Date().toISOString();
-      }
-      if (statusRaw === 'building') {
-        patch.started_at = new Date().toISOString();
-      }
-    }
-
-    if (Object.keys(patch).length > 0) {
-      await updateInnovationProgressAndStatus(innovationId, patch);
-    }
-  }
 
   revalidatePath('/innovation');
   revalidatePath(`/innovation/${innovationId}`);
