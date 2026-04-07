@@ -12,14 +12,13 @@ const isEffort = (value: string): value is 'easy' | 'normal' | 'hard' => {
 export async function createRunnerRunLogAction(formData: FormData): Promise<{ success: boolean; message: string }> {
   const runDate = String(formData.get('run_date') ?? '').trim();
   const distanceRaw = String(formData.get('distance_km') ?? '').trim();
-  const durationMinutesRaw = String(formData.get('duration_minutes') ?? '').trim();
-  const durationSecondsRaw = String(formData.get('duration_seconds') ?? '').trim();
+  const durationInputRaw = String(formData.get('duration_input') ?? '').trim();
   const noStopRaw = String(formData.get('no_stop') ?? '').trim();
   const note = String(formData.get('note') ?? '').trim();
   const effortRaw = String(formData.get('effort') ?? '').trim();
 
   const distance = Number(distanceRaw);
-  const durationResult = parseMinuteSecondDuration(durationMinutesRaw, durationSecondsRaw);
+  const durationResult = parseMinuteSecondDuration(durationInputRaw);
   const durationSeconds = durationResult.durationSeconds;
 
   if (!runDate) {
