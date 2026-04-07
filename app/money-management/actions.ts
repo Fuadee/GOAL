@@ -2,7 +2,15 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { createExpense, createIncomeSource, createRentalHouse } from '@/lib/money/mutations';
+import {
+  createExpense,
+  createIncomeSource,
+  createRentalHouse,
+  deleteExpense,
+  deleteIncomeSource,
+  updateExpense,
+  updateIncomeSource
+} from '@/lib/money/mutations';
 import { EXPENSE_TYPES, INCOME_SOURCE_TYPES, RENTAL_HOUSE_STATUSES } from '@/lib/money/types';
 
 const isIncomeType = (value: string): value is (typeof INCOME_SOURCE_TYPES)[number] =>
@@ -15,6 +23,7 @@ const isRentalStatus = (value: string): value is (typeof RENTAL_HOUSE_STATUSES)[
   RENTAL_HOUSE_STATUSES.includes(value as (typeof RENTAL_HOUSE_STATUSES)[number]);
 
 export async function createIncomeSourceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const id = String(formData.get('id') ?? '').trim() || null;
   const name = String(formData.get('name') ?? '').trim();
   const typeRaw = String(formData.get('type') ?? '').trim();
   const expectedRaw = Number(String(formData.get('expected_income') ?? '').trim());
@@ -25,12 +34,17 @@ export async function createIncomeSourceAction(formData: FormData): Promise<{ su
   if (!Number.isFinite(expectedRaw) || expectedRaw < 0) return { success: false, message: 'Expected income must be 0 or greater.' };
   if (!Number.isFinite(actualRaw) || actualRaw < 0) return { success: false, message: 'Actual income must be 0 or greater.' };
 
-  await createIncomeSource({ name, type: typeRaw, expected_income: expectedRaw, actual_income: actualRaw });
+  if (id) {
+    await updateIncomeSource(id, { name, type: typeRaw, expected_income: expectedRaw, actual_income: actualRaw });
+  } else {
+    await createIncomeSource({ name, type: typeRaw, expected_income: expectedRaw, actual_income: actualRaw });
+  }
   revalidatePath('/money-management');
-  return { success: true, message: 'Income source added.' };
+  return { success: true, message: id ? 'Income source updated.' : 'Income source added.' };
 }
 
 export async function createExpenseAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const id = String(formData.get('id') ?? '').trim() || null;
   const category = String(formData.get('category') ?? '').trim();
   const typeRaw = String(formData.get('type') ?? '').trim();
   const amount = Number(String(formData.get('amount') ?? '').trim());
@@ -39,9 +53,13 @@ export async function createExpenseAction(formData: FormData): Promise<{ success
   if (!isExpenseType(typeRaw)) return { success: false, message: 'Expense type is invalid.' };
   if (!Number.isFinite(amount) || amount < 0) return { success: false, message: 'Amount must be 0 or greater.' };
 
-  await createExpense({ category, type: typeRaw, amount });
+  if (id) {
+    await updateExpense(id, { category, type: typeRaw, amount });
+  } else {
+    await createExpense({ category, type: typeRaw, amount });
+  }
   revalidatePath('/money-management');
-  return { success: true, message: 'Expense added.' };
+  return { success: true, message: id ? 'Expense updated.' : 'Expense added.' };
 }
 
 export async function createRentalHouseAction(formData: FormData): Promise<{ success: boolean; message: string }> {
@@ -56,4 +74,20 @@ export async function createRentalHouseAction(formData: FormData): Promise<{ suc
   await createRentalHouse({ name, status: statusRaw, monthly_income: monthlyIncome });
   revalidatePath('/money-management');
   return { success: true, message: 'Rental house plan added.' };
+}
+
+export async function deleteIncomeSourceAction(id: string): Promise<{ success: boolean; message: string }> {
+  if (!id) return { success: false, message: 'Income source id is required.' };
+
+  await deleteIncomeSource(id);
+  revalidatePath('/money-management');
+  return { success: true, message: 'Income source deleted.' };
+}
+
+export async function deleteExpenseAction(id: string): Promise<{ success: boolean; message: string }> {
+  if (!id) return { success: false, message: 'Expense id is required.' };
+
+  await deleteExpense(id);
+  revalidatePath('/money-management');
+  return { success: true, message: 'Expense deleted.' };
 }
