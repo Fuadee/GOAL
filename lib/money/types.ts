@@ -31,7 +31,7 @@ export type RentalHouseRow = {
 
 export type MoneyDashboardData = {
   targetIncome: number;
-  totalIncome: number;
+  grossIncome: number;
   totalExpense: number;
   netIncome: number;
   progressPercent: number;

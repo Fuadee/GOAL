@@ -89,17 +89,22 @@ export function IncomePlanningSystem({ data }: Props) {
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-200/70">Summary Dashboard</p>
             <h2 className="mt-2 text-3xl font-semibold text-white">Income Planning System</h2>
           </div>
-          <p className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-slate-200">
-            Progress: {data.progressPercent.toFixed(1)}%
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-slate-200">
+              Net progress: {data.progressPercent.toFixed(1)}%
+            </p>
+            {data.grossIncome > 0 && data.totalExpense / data.grossIncome > 0.7 ? (
+              <span className="rounded-full border border-amber-300/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">High expense ratio</span>
+            ) : null}
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <SummaryCard label="Target Income" value={currency.format(data.targetIncome)} />
-          <SummaryCard label="Total Income" value={currency.format(data.totalIncome)} tone="text-emerald-300" />
+          <SummaryCard label="Target Net Income" value={currency.format(data.targetIncome)} />
+          <SummaryCard label="Gross Income" value={currency.format(data.grossIncome)} tone="text-emerald-300" />
           <SummaryCard label="Total Expense" value={currency.format(data.totalExpense)} tone="text-amber-300" />
           <SummaryCard label="Net Income" value={currency.format(data.netIncome)} tone={data.netIncome >= 0 ? 'text-cyan-300' : 'text-rose-300'} />
-          <SummaryCard label="Gap" value={currency.format(data.gap)} tone="text-rose-300" />
+          <SummaryCard label="Remaining Gap" value={currency.format(data.gap)} tone="text-rose-300" />
         </div>
 
         <div className="space-y-2">
@@ -107,7 +112,11 @@ export function IncomePlanningSystem({ data }: Props) {
             <div className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-cyan-300" style={{ width: `${progress}%` }} />
           </div>
           <p className="text-sm text-slate-300">
-            Gap analysis: <span className="font-semibold text-rose-300">{currency.format(data.gap)}</span> needed to hit the {currency.format(data.targetIncome)} target.
+            Progress is based on net income after expenses.
+          </p>
+          <p className={`text-sm ${data.netIncome <= 0 ? 'text-rose-300' : 'text-slate-300'}`}>
+            You still need <span className="font-semibold text-rose-300">{currency.format(data.gap)}</span> net income to reach the {currency.format(data.targetIncome)} goal.
+            {data.netIncome <= 0 ? ' Expenses currently outweigh your income and are pushing you farther from the goal.' : ''}
           </p>
         </div>
       </section>
