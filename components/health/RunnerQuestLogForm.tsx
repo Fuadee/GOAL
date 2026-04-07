@@ -7,7 +7,6 @@ import { createRunnerRunLogAction } from '@/app/health/actions';
 import {
   calculatePaceSecondsPerKm,
   evaluateRunAttempt,
-  formatDuration,
   formatPace,
   getFailureReason,
   parseMinuteSecondDuration
@@ -24,15 +23,11 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [distance, setDistance] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState('');
-  const [durationSeconds, setDurationSeconds] = useState('');
+  const [durationInput, setDurationInput] = useState('');
   const [noStop, setNoStop] = useState(false);
   const [isDurationTouched, setIsDurationTouched] = useState(false);
 
-  const durationValidation = useMemo(
-    () => parseMinuteSecondDuration(durationMinutes, durationSeconds),
-    [durationMinutes, durationSeconds]
-  );
+  const durationValidation = useMemo(() => parseMinuteSecondDuration(durationInput), [durationInput]);
 
   const preview = useMemo(() => {
     if (!currentLevel) return null;
@@ -87,8 +82,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
 
             setMessage(result.message);
             setDistance('');
-            setDurationMinutes('');
-            setDurationSeconds('');
+            setDurationInput('');
             setNoStop(false);
             setIsDurationTouched(false);
             router.refresh();
@@ -125,50 +119,22 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
 
         <div className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1 text-sm text-slate-300">
-            <span>Duration</span>
-            <div className="grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-end">
-              <div className="space-y-1">
-                <span className="text-xs text-slate-400">Minutes</span>
-                <input
-                  type="number"
-                  name="duration_minutes"
-                  inputMode="numeric"
-                  min="0"
-                  step="1"
-                  required
-                  placeholder="12"
-                  value={durationMinutes}
-                  onBlur={() => setIsDurationTouched(true)}
-                  onChange={(event) => {
-                    setIsDurationTouched(true);
-                    setDurationMinutes(event.target.value);
-                  }}
-                  className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-white outline-none focus:border-sky-300"
-                />
-              </div>
-              <span className="hidden pb-2 text-slate-500 sm:inline">:</span>
-              <div className="space-y-1">
-                <span className="text-xs text-slate-400">Seconds</span>
-                <input
-                  type="number"
-                  name="duration_seconds"
-                  inputMode="numeric"
-                  min="0"
-                  max="59"
-                  step="1"
-                  required
-                  placeholder="45"
-                  value={durationSeconds}
-                  onBlur={() => setIsDurationTouched(true)}
-                  onChange={(event) => {
-                    setIsDurationTouched(true);
-                    setDurationSeconds(event.target.value);
-                  }}
-                  className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-white outline-none focus:border-sky-300"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-slate-400">Example: 12 min 45 sec</p>
+            <span>Duration (mmss)</span>
+            <input
+              type="text"
+              name="duration_input"
+              inputMode="numeric"
+              required
+              placeholder="0900"
+              value={durationInput}
+              onBlur={() => setIsDurationTouched(true)}
+              onChange={(event) => {
+                setIsDurationTouched(true);
+                setDurationInput(event.target.value);
+              }}
+              className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-white outline-none focus:border-sky-300"
+            />
+            <p className="text-xs text-slate-400">Examples: 0900 → 9:00, 1245 → 12:45, 45 → 0:45</p>
             {isDurationTouched && durationValidation.error ? (
               <p className="text-xs text-amber-300">{durationValidation.error}</p>
             ) : null}
@@ -204,7 +170,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
         {preview ? (
           <div className="rounded-xl border border-white/10 bg-slate-950/80 p-3 text-sm text-slate-200">
             <p>Pace preview: <span className="font-medium text-white">{formatPace(preview.pace)}</span></p>
-            <p>Duration: <span className="font-medium text-white">{formatDuration(preview.durationSeconds)}</span></p>
+            <p>Duration: <span className="font-medium text-white">{Math.floor(preview.durationSeconds / 60)}:{String(preview.durationSeconds % 60).padStart(2, '0')}</span></p>
             <p className={preview.evaluation.passed ? 'text-emerald-300' : 'text-amber-300'}>
               {preview.evaluation.passed ? 'This attempt will pass the level.' : getFailureReason(preview.evaluation)}
             </p>

@@ -61,27 +61,20 @@ export function parseDurationToSeconds(input: string): number | null {
   return null;
 }
 
-export function parseMinuteSecondDuration(minutesInput: string, secondsInput: string): {
+export function parseMinuteSecondDuration(input: string): {
   durationSeconds: number | null;
   error: string | null;
 } {
-  const minutesRaw = minutesInput.trim();
-  const secondsRaw = secondsInput.trim();
+  const numericValue = input.replace(/\D/g, '');
 
-  if (!minutesRaw && !secondsRaw) {
+  if (!numericValue) {
     return { durationSeconds: null, error: 'Please enter your run duration.' };
   }
 
-  if (!minutesRaw || !secondsRaw) {
-    return { durationSeconds: null, error: 'Please fill in both minutes and seconds.' };
-  }
-
-  if (!/^\d+$/.test(minutesRaw) || !/^\d+$/.test(secondsRaw)) {
-    return { durationSeconds: null, error: 'Duration must contain only numbers.' };
-  }
-
-  const minutes = Number(minutesRaw);
-  const seconds = Number(secondsRaw);
+  const minutesPart = numericValue.length > 2 ? numericValue.slice(0, -2) : '0';
+  const secondsPart = numericValue.slice(-2);
+  const minutes = Number(minutesPart);
+  const seconds = Number(secondsPart);
 
   if (!Number.isFinite(minutes) || !Number.isFinite(seconds) || minutes < 0 || seconds < 0) {
     return { durationSeconds: null, error: 'Duration must be a valid positive time.' };
