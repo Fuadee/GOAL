@@ -4,13 +4,13 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { createInnovationLogAction } from '@/app/innovation/[id]/actions';
-import { INNOVATION_LOG_TYPES, INNOVATION_STATUS, InnovationRow } from '@/lib/innovation/types';
+import { INNOVATION_LOG_TYPES } from '@/lib/innovation/types';
 
 type AddInnovationLogFormProps = {
-  innovation: InnovationRow;
+  innovationId: string;
 };
 
-export function AddInnovationLogForm({ innovation }: AddInnovationLogFormProps) {
+export function AddInnovationLogForm({ innovationId }: AddInnovationLogFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
@@ -24,7 +24,7 @@ export function AddInnovationLogForm({ innovation }: AddInnovationLogFormProps) 
           setError(null);
           setMessage(null);
           startTransition(async () => {
-            const result = await createInnovationLogAction(innovation.id, formData);
+            const result = await createInnovationLogAction(innovationId, formData);
             if (!result.success) {
               setError(result.message);
               return;
@@ -42,38 +42,18 @@ export function AddInnovationLogForm({ innovation }: AddInnovationLogFormProps) 
           placeholder="What happened?"
           className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300"
         />
-        <div className="grid gap-3 md:grid-cols-3">
-          <select
-            name="log_type"
-            defaultValue="update"
-            className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300"
-          >
-            {INNOVATION_LOG_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-          <select
-            name="status"
-            defaultValue={innovation.status}
-            className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300"
-          >
-            {INNOVATION_STATUS.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-          <input
-            name="progress_percent"
-            type="number"
-            min={0}
-            max={100}
-            defaultValue={innovation.progress_percent}
-            className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300"
-          />
-        </div>
+        <select
+          name="log_type"
+          defaultValue="update"
+          className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300"
+        >
+          {INNOVATION_LOG_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+
         <textarea name="detail" rows={3} placeholder="Detail" className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300" />
         <textarea name="problem" rows={2} placeholder="Problem" className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300" />
         <textarea name="solution" rows={2} placeholder="Solution" className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300" />

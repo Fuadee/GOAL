@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { AddInnovationLogForm } from '@/components/innovation/AddInnovationLogForm';
+import { InnovationProcessSection } from '@/components/innovation/InnovationProcessSection';
 import { Navbar } from '@/components/navbar';
 import { getInnovationDetailData } from '@/lib/innovation/service';
 import { InnovationLogType } from '@/lib/innovation/types';
@@ -24,11 +25,11 @@ function formatTimestamp(value: string): string {
 export default async function InnovationDetailPage({ params }: InnovationDetailPageProps) {
   const data = await getInnovationDetailData(params.id);
 
-  if (!data.innovation) {
+  if (!data) {
     notFound();
   }
 
-  const { innovation, logs } = data;
+  const { innovation, logs, steps, completedStepCount, progressPercent } = data;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
@@ -41,13 +42,22 @@ export default async function InnovationDetailPage({ params }: InnovationDetailP
           <p className="text-slate-300">Goal: {innovation.goal || 'No goal provided.'}</p>
           <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
             <p>Status: <span className="font-semibold text-white capitalize">{innovation.status}</span></p>
-            <p>Progress: <span className="font-semibold text-white">{innovation.progress_percent}%</span></p>
+            <p>Progress: <span className="font-semibold text-white">{progressPercent}%</span></p>
             <p>Created: <span className="text-white">{formatTimestamp(innovation.created_at)}</span></p>
             <p>Updated: <span className="text-white">{formatTimestamp(innovation.updated_at)}</span></p>
           </div>
+
+          <section className="space-y-2">
+            <div className="h-2 overflow-hidden rounded-full bg-slate-800">
+              <div className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400" style={{ width: `${progressPercent}%` }} />
+            </div>
+            <p className="text-sm text-slate-200">{completedStepCount} / {steps.length} steps completed</p>
+          </section>
         </section>
 
-        <AddInnovationLogForm innovation={innovation} />
+        <InnovationProcessSection innovationId={innovation.id} steps={steps} />
+
+        <AddInnovationLogForm innovationId={innovation.id} />
 
         <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
           <h2 className="text-xl font-semibold text-white">Execution Timeline</h2>

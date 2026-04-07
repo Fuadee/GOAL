@@ -1,9 +1,9 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
-import { InnovationLogRow, InnovationRow, InnovationWithLogCountRow } from '@/lib/innovation/types';
+import { InnovationDashboardRow, InnovationLogRow, InnovationProcessStepRow, InnovationRow } from '@/lib/innovation/types';
 
-export async function getInnovationsWithLogCount(): Promise<InnovationWithLogCountRow[]> {
-  return supabaseRestRequest<InnovationWithLogCountRow[]>(
-    'innovations?select=*,innovation_logs(count)&order=updated_at.desc',
+export async function getInnovationDashboardRows(): Promise<InnovationDashboardRow[]> {
+  return supabaseRestRequest<InnovationDashboardRow[]>(
+    'innovations?select=*,innovation_process_steps(status)&order=updated_at.desc',
     'GET'
   );
 }
@@ -11,6 +11,13 @@ export async function getInnovationsWithLogCount(): Promise<InnovationWithLogCou
 export async function getInnovationById(id: string): Promise<InnovationRow | null> {
   const rows = await supabaseRestRequest<InnovationRow[]>(`innovations?id=eq.${id}&limit=1`, 'GET');
   return rows[0] ?? null;
+}
+
+export async function getInnovationProcessStepsByInnovationId(innovationId: string): Promise<InnovationProcessStepRow[]> {
+  return supabaseRestRequest<InnovationProcessStepRow[]>(
+    `innovation_process_steps?innovation_id=eq.${innovationId}&order=step_order.asc.nullslast&order=created_at.asc`,
+    'GET'
+  );
 }
 
 export async function getInnovationLogsByInnovationId(innovationId: string): Promise<InnovationLogRow[]> {
