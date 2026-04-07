@@ -10,7 +10,7 @@ import {
   formatDuration,
   formatPace,
   getFailureReason,
-  parseDurationToSeconds
+  parseMinuteSecondDuration
 } from '@/lib/running/quest';
 import { RunnerDashboardLevel } from '@/lib/running/quest.types';
 
@@ -24,26 +24,33 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [distance, setDistance] = useState('');
-  const [duration, setDuration] = useState('');
+  const [durationMinutes, setDurationMinutes] = useState('');
+  const [durationSeconds, setDurationSeconds] = useState('');
   const [noStop, setNoStop] = useState(false);
+  const [isDurationTouched, setIsDurationTouched] = useState(false);
+
+  const durationValidation = useMemo(
+    () => parseMinuteSecondDuration(durationMinutes, durationSeconds),
+    [durationMinutes, durationSeconds]
+  );
 
   const preview = useMemo(() => {
     if (!currentLevel) return null;
 
     const distanceValue = Number(distance);
-    const durationSeconds = parseDurationToSeconds(duration);
+    const runDurationSeconds = durationValidation.durationSeconds;
 
-    if (!Number.isFinite(distanceValue) || distanceValue <= 0 || !durationSeconds) {
+    if (!Number.isFinite(distanceValue) || distanceValue <= 0 || !runDurationSeconds) {
       return null;
     }
 
-    const pace = calculatePaceSecondsPerKm(durationSeconds, distanceValue);
+    const pace = calculatePaceSecondsPerKm(runDurationSeconds, distanceValue);
     if (!pace) return null;
 
     const evaluation = evaluateRunAttempt(currentLevel, {
       run_date: '',
       distance_km: distanceValue,
-      duration_seconds: durationSeconds,
+      duration_seconds: runDurationSeconds,
       pace_seconds_per_km: pace,
       no_stop: noStop
     });
@@ -51,9 +58,9 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
     return {
       pace,
       evaluation,
-      durationSeconds
+      durationSeconds: runDurationSeconds
     };
-  }, [currentLevel, distance, duration, noStop]);
+  }, [currentLevel, distance, durationValidation.durationSeconds, noStop]);
 
   if (!currentLevel) {
     return (
@@ -66,7 +73,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
 
   return (
     <section className="space-y-4 rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-      <h3 className="text-lg font-semibold text-white">Quick Log Form</h3>
+      <h3 className="text-lg font-semibold text-white">Quick Run Log</h3>
       <form
         action={(formData) => {
           setError(null);
@@ -80,8 +87,10 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
 
             setMessage(result.message);
             setDistance('');
-            setDuration('');
+            setDurationMinutes('');
+            setDurationSeconds('');
             setNoStop(false);
+            setIsDurationTouched(false);
             router.refresh();
           });
         }}
@@ -116,15 +125,53 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
 
         <div className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1 text-sm text-slate-300">
-            <span>Duration (mm:ss or hh:mm:ss)</span>
-            <input
-              name="duration"
-              placeholder="12:45"
-              required
-              value={duration}
-              onChange={(event) => setDuration(event.target.value)}
-              className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-white outline-none focus:border-sky-300"
-            />
+            <span>Duration</span>
+            <div className="grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-end">
+              <div className="space-y-1">
+                <span className="text-xs text-slate-400">Minutes</span>
+                <input
+                  type="number"
+                  name="duration_minutes"
+                  inputMode="numeric"
+                  min="0"
+                  step="1"
+                  required
+                  placeholder="12"
+                  value={durationMinutes}
+                  onBlur={() => setIsDurationTouched(true)}
+                  onChange={(event) => {
+                    setIsDurationTouched(true);
+                    setDurationMinutes(event.target.value);
+                  }}
+                  className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-white outline-none focus:border-sky-300"
+                />
+              </div>
+              <span className="hidden pb-2 text-slate-500 sm:inline">:</span>
+              <div className="space-y-1">
+                <span className="text-xs text-slate-400">Seconds</span>
+                <input
+                  type="number"
+                  name="duration_seconds"
+                  inputMode="numeric"
+                  min="0"
+                  max="59"
+                  step="1"
+                  required
+                  placeholder="45"
+                  value={durationSeconds}
+                  onBlur={() => setIsDurationTouched(true)}
+                  onChange={(event) => {
+                    setIsDurationTouched(true);
+                    setDurationSeconds(event.target.value);
+                  }}
+                  className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-white outline-none focus:border-sky-300"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-slate-400">Example: 12 min 45 sec</p>
+            {isDurationTouched && durationValidation.error ? (
+              <p className="text-xs text-amber-300">{durationValidation.error}</p>
+            ) : null}
           </label>
           <label className="space-y-1 text-sm text-slate-300">
             <span>Effort</span>
@@ -142,7 +189,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
 
         <label className="flex items-center gap-2 text-sm text-slate-300">
           <input type="checkbox" checked={noStop} onChange={(event) => setNoStop(event.target.checked)} className="h-4 w-4" />
-          Completed without stopping
+          I finished this run without stopping
         </label>
 
         <label className="space-y-1 text-sm text-slate-300">
@@ -172,7 +219,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
           disabled={isPending}
           className="w-fit rounded-full bg-sky-400/20 px-4 py-2 text-sm font-semibold text-sky-200 transition hover:bg-sky-400/30 disabled:opacity-60"
         >
-          {isPending ? 'Saving...' : 'Save Run Log'}
+          {isPending ? 'Saving...' : 'Log This Run'}
         </button>
       </form>
     </section>
