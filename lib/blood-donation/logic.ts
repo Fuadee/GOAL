@@ -40,12 +40,12 @@ export const getBloodDonationSummary = (
 
   const nextPlannedDate = plannedEvents
     .map((event) => event.planned_date)
-    .filter((date): date is string => Boolean(date) && date >= toDateOnly(today))
+    .filter((date): date is string => date !== null && date >= toDateOnly(today))
     .sort((a, b) => a.localeCompare(b))[0] ?? null;
 
   const latestActualDate = completedEvents
     .map((event) => event.actual_date)
-    .filter((date): date is string => Boolean(date))
+    .filter((date): date is string => date !== null)
     .sort((a, b) => b.localeCompare(a))[0] ?? null;
 
   const completedCount = completedEvents.length;
@@ -85,7 +85,7 @@ export const getBloodDonationHistory = (events: BloodDonationEventRow[]): BloodD
     .filter((event) => event.status === 'completed')
     .map((event) => ({
       ...event,
-      derivedStatus: 'completed',
+      derivedStatus: 'completed' as const,
       isOverdue: false
     }))
     .sort((a, b) => {

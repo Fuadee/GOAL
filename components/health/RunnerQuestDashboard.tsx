@@ -1,5 +1,5 @@
 import { formatDuration, formatPace, getFailureReason } from '@/lib/running/quest';
-import { RunAttemptEvaluation, RunnerDashboardData, RunnerDashboardLevel, RunnerRunResult } from '@/lib/running/quest.types';
+import { RunAttemptEvaluation, RunnerDashboardData, RunnerDashboardLevel, RunnerProgressStatus, RunnerRunResult } from '@/lib/running/quest.types';
 import { RunnerQuestLogForm } from '@/components/health/RunnerQuestLogForm';
 
 const resultLabel: Record<RunnerRunResult, string> = {
@@ -18,13 +18,13 @@ const resultBadgeClass: Record<RunnerRunResult, string> = {
   failed_multiple: 'bg-fuchsia-500/20 text-fuchsia-200 border-fuchsia-400/30'
 };
 
-function statusBadge(status: RunnerDashboardLevel['progress']['status'] | undefined) {
+function statusBadge(status: RunnerProgressStatus | undefined) {
   if (status === 'passed') return 'border-emerald-400/30 bg-emerald-500/20 text-emerald-200';
   if (status === 'available') return 'border-sky-400/30 bg-sky-500/20 text-sky-200';
   return 'border-slate-500/30 bg-slate-700/50 text-slate-300';
 }
 
-function statusLabel(status: RunnerDashboardLevel['progress']['status'] | undefined) {
+function statusLabel(status: RunnerProgressStatus | undefined) {
   if (status === 'passed') return 'Passed';
   if (status === 'available') return 'Available';
   return 'Locked';
