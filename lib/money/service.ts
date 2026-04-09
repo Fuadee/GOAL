@@ -1,7 +1,8 @@
-import { getExpenses, getIncomeSources, getRentalHouses } from '@/lib/money/queries';
-import { MoneyDashboardData } from '@/lib/money/types';
+import { getExpenses, getIncomeSources, getMoneyGoalPlans, getRentalHouses } from '@/lib/money/queries';
+import { MoneyDashboardData, MoneyGoalPlanStatus, MoneyPlanPageData } from '@/lib/money/types';
 
 const TARGET_INCOME = 100000;
+const ACTIVE_PLAN_STATUSES: MoneyGoalPlanStatus[] = ['planned', 'in_progress', 'completed'];
 
 export async function getMoneyDashboardData(): Promise<MoneyDashboardData> {
   const [incomeSources, expenses, rentalHouses] = await Promise.all([getIncomeSources(), getExpenses(), getRentalHouses()]);
@@ -22,5 +23,27 @@ export async function getMoneyDashboardData(): Promise<MoneyDashboardData> {
     incomeSources,
     expenses,
     rentalHouses
+  };
+}
+
+export async function getMoneyPlanPageData(): Promise<MoneyPlanPageData> {
+  const [incomeSources, expenses, plans] = await Promise.all([getIncomeSources(), getExpenses(), getMoneyGoalPlans()]);
+
+  const grossIncome = incomeSources.reduce((sum, source) => sum + Number(source.actual_income), 0);
+  const totalExpense = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+  const currentNet = grossIncome - totalExpense;
+  const plannedIncrease = plans
+    .filter((plan) => ACTIVE_PLAN_STATUSES.includes(plan.status))
+    .reduce((sum, plan) => sum + Number(plan.net_increase), 0);
+  const projectedNet = currentNet + plannedIncrease;
+  const remainingGap = Math.max(TARGET_INCOME - projectedNet, 0);
+
+  return {
+    targetIncome: TARGET_INCOME,
+    currentNet,
+    plannedIncrease,
+    projectedNet,
+    remainingGap,
+    plans
   };
 }
