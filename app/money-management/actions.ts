@@ -5,13 +5,16 @@ import { revalidatePath } from 'next/cache';
 import {
   createExpense,
   createIncomeSource,
+  createMoneyGoalPlan,
   createRentalHouse,
+  deleteMoneyGoalPlan,
   deleteExpense,
   deleteIncomeSource,
   updateExpense,
-  updateIncomeSource
+  updateIncomeSource,
+  updateMoneyGoalPlan
 } from '@/lib/money/mutations';
-import { EXPENSE_TYPES, INCOME_SOURCE_TYPES, RENTAL_HOUSE_STATUSES } from '@/lib/money/types';
+import { EXPENSE_TYPES, INCOME_SOURCE_TYPES, MONEY_GOAL_PLAN_STATUSES, RENTAL_HOUSE_STATUSES } from '@/lib/money/types';
 
 const isIncomeType = (value: string): value is (typeof INCOME_SOURCE_TYPES)[number] =>
   INCOME_SOURCE_TYPES.includes(value as (typeof INCOME_SOURCE_TYPES)[number]);
@@ -21,6 +24,9 @@ const isExpenseType = (value: string): value is (typeof EXPENSE_TYPES)[number] =
 
 const isRentalStatus = (value: string): value is (typeof RENTAL_HOUSE_STATUSES)[number] =>
   RENTAL_HOUSE_STATUSES.includes(value as (typeof RENTAL_HOUSE_STATUSES)[number]);
+
+const isMoneyGoalPlanStatus = (value: string): value is (typeof MONEY_GOAL_PLAN_STATUSES)[number] =>
+  MONEY_GOAL_PLAN_STATUSES.includes(value as (typeof MONEY_GOAL_PLAN_STATUSES)[number]);
 
 export async function createIncomeSourceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
   const id = String(formData.get('id') ?? '').trim() || null;
@@ -90,4 +96,34 @@ export async function deleteExpenseAction(id: string): Promise<{ success: boolea
   await deleteExpense(id);
   revalidatePath('/money-management');
   return { success: true, message: 'Expense deleted.' };
+}
+
+export async function createMoneyGoalPlanAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const id = String(formData.get('id') ?? '').trim() || null;
+  const planName = String(formData.get('plan_name') ?? '').trim();
+  const statusRaw = String(formData.get('status') ?? '').trim();
+  const netIncrease = Number(String(formData.get('net_increase') ?? '').trim());
+
+  if (!planName) return { success: false, message: 'Plan name is required.' };
+  if (!isMoneyGoalPlanStatus(statusRaw)) return { success: false, message: 'Plan status is invalid.' };
+  if (!Number.isFinite(netIncrease) || netIncrease < 0) return { success: false, message: 'Net increase must be 0 or greater.' };
+
+  if (id) {
+    await updateMoneyGoalPlan(id, { plan_name: planName, net_increase: netIncrease, status: statusRaw });
+  } else {
+    await createMoneyGoalPlan({ plan_name: planName, net_increase: netIncrease, status: statusRaw });
+  }
+
+  revalidatePath('/money-management/plan');
+  revalidatePath('/money-management');
+  return { success: true, message: id ? 'Plan updated.' : 'Plan added.' };
+}
+
+export async function deleteMoneyGoalPlanAction(id: string): Promise<{ success: boolean; message: string }> {
+  if (!id) return { success: false, message: 'Plan id is required.' };
+
+  await deleteMoneyGoalPlan(id);
+  revalidatePath('/money-management/plan');
+  revalidatePath('/money-management');
+  return { success: true, message: 'Plan deleted.' };
 }

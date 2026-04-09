@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -90,6 +91,12 @@ export function IncomePlanningSystem({ data }: Props) {
             <h2 className="mt-2 text-3xl font-semibold text-white">Income Planning System</h2>
           </div>
           <div className="flex items-center gap-2">
+            <Link
+              href="/money-management/plan"
+              className="rounded-full border border-cyan-300/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-200 hover:bg-cyan-500/20"
+            >
+              Plan to 100K
+            </Link>
             <p className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-slate-200">
               Net progress: {data.progressPercent.toFixed(1)}%
             </p>

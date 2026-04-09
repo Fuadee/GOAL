@@ -1,5 +1,14 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
-import { ExpenseRow, ExpenseType, IncomeSourceRow, IncomeSourceType, RentalHouseRow, RentalHouseStatus } from '@/lib/money/types';
+import {
+  ExpenseRow,
+  ExpenseType,
+  IncomeSourceRow,
+  IncomeSourceType,
+  MoneyGoalPlanRow,
+  MoneyGoalPlanStatus,
+  RentalHouseRow,
+  RentalHouseStatus
+} from '@/lib/money/types';
 
 export async function createIncomeSource(payload: {
   name: string;
@@ -56,4 +65,21 @@ export async function createRentalHouse(payload: {
 }): Promise<RentalHouseRow> {
   const rows = await supabaseRestRequest<RentalHouseRow[]>('rental_houses', 'POST', payload);
   return rows[0];
+}
+
+export async function createMoneyGoalPlan(payload: { plan_name: string; net_increase: number; status: MoneyGoalPlanStatus }): Promise<MoneyGoalPlanRow> {
+  const rows = await supabaseRestRequest<MoneyGoalPlanRow[]>('money_goal_plans', 'POST', payload);
+  return rows[0];
+}
+
+export async function updateMoneyGoalPlan(
+  id: string,
+  payload: { plan_name: string; net_increase: number; status: MoneyGoalPlanStatus }
+): Promise<MoneyGoalPlanRow> {
+  const rows = await supabaseRestRequest<MoneyGoalPlanRow[]>(`money_goal_plans?id=eq.${id}`, 'PATCH', payload);
+  return rows[0];
+}
+
+export async function deleteMoneyGoalPlan(id: string): Promise<void> {
+  await supabaseRestRequest<MoneyGoalPlanRow[]>(`money_goal_plans?id=eq.${id}`, 'DELETE');
 }
