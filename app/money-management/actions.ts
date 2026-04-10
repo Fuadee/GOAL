@@ -13,6 +13,7 @@ import {
   completeConstructionStep,
   createStepUpdate,
   syncConstructionStepLatestUpdate,
+  updateConstructionStepTargetDate,
   updateExpense,
   updateIncomeSource,
   updateMoneyGoalPlan
@@ -164,4 +165,16 @@ export async function addConstructionStepUpdateAction(stepId: string, message: s
 
   revalidatePath('/money-management');
   return { success: true, message: 'Step update saved.' };
+}
+
+export async function updateConstructionStepTargetDateAction(stepId: string, targetDate: string): Promise<{ success: boolean; message: string }> {
+  const trimmedStepId = stepId.trim();
+  const normalizedTargetDate = targetDate.trim();
+
+  if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
+
+  await updateConstructionStepTargetDate(trimmedStepId, normalizedTargetDate || null);
+
+  revalidatePath('/money-management');
+  return { success: true, message: 'Target date updated.' };
 }

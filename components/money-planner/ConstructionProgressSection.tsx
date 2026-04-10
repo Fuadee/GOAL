@@ -2,7 +2,11 @@
 
 import { FormEvent, useMemo, useState, useTransition } from 'react';
 
-import { addConstructionStepUpdateAction, markConstructionStepCompletedAction } from '@/app/money-management/actions';
+import {
+  addConstructionStepUpdateAction,
+  markConstructionStepCompletedAction,
+  updateConstructionStepTargetDateAction
+} from '@/app/money-management/actions';
 import { ConstructionStepRow, ConstructionStepStatus } from '@/lib/money/types';
 
 type Props = {
@@ -148,6 +152,23 @@ export function ConstructionProgressSection({ steps }: Props) {
     });
   };
 
+  const handleUpdateTargetDate = (stepId: string, date: string) => {
+    const previous = stepState;
+    const normalizedDate = date || null;
+
+    setStepState((current) => current.map((step) => (step.id === stepId ? { ...step, target_date: normalizedDate } : step)));
+    setErrorMessage(null);
+
+    startTransition(async () => {
+      const result = await updateConstructionStepTargetDateAction(stepId, date);
+
+      if (!result.success) {
+        setStepState(previous);
+        setErrorMessage(result.message);
+      }
+    });
+  };
+
   return (
     <section className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 md:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -227,9 +248,21 @@ export function ConstructionProgressSection({ steps }: Props) {
                     </div>
 
                     <div className="mt-3 space-y-2 text-xs text-slate-300">
-                      <p>
-                        Target date: <span className="font-medium text-slate-100">{formatTargetDate(step.target_date)}</span>
-                      </p>
+                      <div>
+                        <label htmlFor={`target-date-${step.id}`} className="mb-1 block text-[11px] uppercase tracking-wide text-slate-400">
+                          Target date
+                        </label>
+                        <input
+                          id={`target-date-${step.id}`}
+                          type="date"
+                          value={step.target_date || ''}
+                          onChange={(event) => handleUpdateTargetDate(step.id, event.target.value)}
+                          className="w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-xs text-slate-100 outline-none transition focus:border-cyan-300"
+                        />
+                        <p className="mt-1 text-[11px] text-slate-400">
+                          {step.target_date ? `Selected: ${formatTargetDate(step.target_date)}` : 'No target date selected'}
+                        </p>
+                      </div>
                       <p className="rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-slate-200">
                         Latest update: {step.latest_update?.trim() ? step.latest_update : 'No updates logged yet.'}
                       </p>
