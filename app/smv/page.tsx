@@ -44,6 +44,20 @@ export default async function SmvOverviewPage() {
           <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">SMV Module</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">Evidence-based SMV System</h1>
           <p className="mt-2 text-sm text-slate-300">No manual score edits. Scores are calculated from evidence logs + metric guards.</p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link
+              href="/smv/log"
+              className="rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-200"
+            >
+              Add Evidence
+            </Link>
+            <Link
+              href="/smv/plan"
+              className="rounded-full border border-white/20 bg-white/5 px-5 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+            >
+              Improvement Plan
+            </Link>
+          </div>
         </header>
 
         <section className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
@@ -59,7 +73,11 @@ export default async function SmvOverviewPage() {
             <h2 className="text-lg font-semibold text-white">Dimension Cards</h2>
             <div className="grid gap-3 md:grid-cols-2">
               {data.dimensions.map((item) => (
-                <Link key={item.dimension.id} href={`/smv/${item.dimension.key}`} className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
+                <Link
+                  key={item.dimension.id}
+                  href={`/smv/${item.dimension.key}`}
+                  className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 transition hover:border-cyan-300/40 hover:bg-slate-900/80"
+                >
                   <p className="text-sm text-slate-300">{item.dimension.label}</p>
                   <p className="mt-1 text-2xl font-semibold text-white">{item.score.toFixed(1)}</p>
                   <p className="mt-2 text-xs text-slate-400">{item.guardSummary}</p>

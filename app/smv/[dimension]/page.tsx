@@ -23,6 +23,14 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
           <p className="mt-2 text-4xl font-semibold text-cyan-100">{detail.overview.score.toFixed(1)}</p>
           <p className="mt-2 text-sm text-slate-300">{detail.overview.explanation}</p>
           <p className="mt-2 text-xs text-amber-200">{detail.overview.guardSummary}</p>
+          <div className="mt-5">
+            <Link
+              href={`/smv/log?dimension=${detail.overview.dimension.key}`}
+              className="inline-flex rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-200"
+            >
+              Add Evidence
+            </Link>
+          </div>
         </header>
 
         <section className="grid gap-4 lg:grid-cols-2">

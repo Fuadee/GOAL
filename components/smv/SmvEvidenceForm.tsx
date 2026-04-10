@@ -9,11 +9,12 @@ import { SmvDimensionRow, SmvMetricRow } from '@/lib/smv/types';
 type Props = {
   dimensions: SmvDimensionRow[];
   metricsByDimension: Record<string, SmvMetricRow[]>;
+  initialDimensionId?: string;
 };
 
-export function SmvEvidenceForm({ dimensions, metricsByDimension }: Props) {
+export function SmvEvidenceForm({ dimensions, metricsByDimension, initialDimensionId }: Props) {
   const router = useRouter();
-  const [dimensionId, setDimensionId] = useState(dimensions[0]?.id ?? '');
+  const [dimensionId, setDimensionId] = useState(initialDimensionId || dimensions[0]?.id || '');
   const [message, setMessage] = useState<string>('');
   const [pending, startTransition] = useTransition();
 
