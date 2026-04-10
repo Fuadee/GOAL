@@ -10,11 +10,13 @@ import {
   deleteMoneyGoalPlan,
   deleteExpense,
   deleteIncomeSource,
+  completeConstructionStep,
   updateExpense,
   updateIncomeSource,
   updateMoneyGoalPlan
 } from '@/lib/money/mutations';
 import { EXPENSE_TYPES, INCOME_SOURCE_TYPES, MONEY_GOAL_PLAN_STATUSES, RENTAL_HOUSE_STATUSES } from '@/lib/money/types';
+import { getConstructionSteps } from '@/lib/money/queries';
 
 const isIncomeType = (value: string): value is (typeof INCOME_SOURCE_TYPES)[number] =>
   INCOME_SOURCE_TYPES.includes(value as (typeof INCOME_SOURCE_TYPES)[number]);
@@ -130,4 +132,20 @@ export async function deleteMoneyGoalPlanAction(id: string): Promise<{ success: 
   revalidatePath('/money-management/plan');
   revalidatePath('/money-management');
   return { success: true, message: 'Plan deleted.' };
+}
+
+
+export async function markConstructionStepCompletedAction(stepId: string): Promise<{ success: boolean; message: string }> {
+  if (!stepId) return { success: false, message: 'Step id is required.' };
+
+  const steps = await getConstructionSteps();
+  const targetStep = steps.find((step) => step.id === stepId);
+
+  if (!targetStep) return { success: false, message: 'Step not found.' };
+  if (targetStep.is_completed) return { success: true, message: 'Step already completed.' };
+
+  await completeConstructionStep(stepId);
+
+  revalidatePath('/money-management');
+  return { success: true, message: 'Construction step updated.' };
 }
