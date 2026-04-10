@@ -1,6 +1,8 @@
 import { formatDuration, formatPace, getFailureReason } from '@/lib/running/quest';
 import { RunAttemptEvaluation, RunnerDashboardData, RunnerDashboardLevel, RunnerProgressStatus, RunnerRunResult } from '@/lib/running/quest.types';
 import { RunnerQuestLogForm } from '@/components/health/RunnerQuestLogForm';
+import { HealthTodayMissionCard } from '@/components/health/HealthTodayMissionCard';
+import { HealthExecutionStrip } from '@/components/health/HealthExecutionStrip';
 
 const resultLabel: Record<RunnerRunResult, string> = {
   passed: 'Passed',
@@ -53,121 +55,90 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
 
   return (
     <section className="space-y-6">
-      <article className="rounded-2xl border border-sky-400/20 bg-gradient-to-br from-slate-900 to-slate-950 p-6 shadow-[0_0_40px_rgba(14,165,233,0.14)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-300">Runner Quest</p>
-        <h2 className="mt-2 text-3xl font-semibold text-white">Structured progression from 1 km to 5 km</h2>
-        <p className="mt-2 text-sm text-slate-300">Discipline compounds. Clear the active level to unlock the next challenge immediately.</p>
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-            <p className="text-xs text-slate-400">Current Level</p>
-            <p className="text-lg font-semibold text-white">{currentLevel ? `Level ${currentLevel.level_number} · ${currentLevel.title}` : 'All levels passed'}</p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-            <p className="text-xs text-slate-400">Next Goal</p>
-            <p className="text-lg font-semibold text-white">
-              {data.nextLevel ? `${data.nextLevel.distance_target_km} km @ ${formatPace(data.nextLevel.pace_target_seconds_per_km)}` : 'No remaining goals'}
-            </p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-            <p className="text-xs text-slate-400">Final Goal</p>
-            <p className="text-lg font-semibold text-white">5 km @ 8:00 /km</p>
-          </div>
-        </div>
-        <div className="mt-5">
-          <div className="mb-1 flex items-center justify-between text-sm text-slate-300">
-            <span>Overall progress</span>
-            <span>{data.completionPercent}%</span>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-slate-800">
-            <div className="h-full bg-gradient-to-r from-sky-500 to-indigo-400" style={{ width: `${data.completionPercent}%` }} />
-          </div>
-        </div>
-      </article>
+      <HealthTodayMissionCard todayStatus={data.todayStatus} currentLevel={currentLevel} latestAttempt={currentLevel?.latestAttempt ?? null} />
+      <HealthExecutionStrip todayStatus={data.todayStatus} />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          ['Total Attempts', String(data.totalAttempts)],
-          ['Passed Levels', `${data.passedLevelsCount} / ${data.levels.length}`],
-          ['Best Pace Ever', formatPace(data.bestPaceEver)],
-          ['Longest No-Stop Distance', data.longestNoStopDistance ? `${data.longestNoStopDistance.toFixed(2)} km` : '--']
-        ].map(([label, value]) => (
-          <article key={label} className="rounded-xl border border-white/10 bg-slate-900/70 p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
-            <p className="mt-2 text-xl font-semibold text-white">{value}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        {data.levels.map((level) => {
-          const evaluation = buildEvaluation(level);
-          const isCurrent = currentLevel?.id === level.id;
-
-          return (
-            <article
-              key={level.id}
-              className={`rounded-2xl border p-4 ${
-                isCurrent
-                  ? 'border-sky-300/50 bg-sky-500/10 shadow-[0_0_30px_rgba(56,189,248,0.2)]'
-                  : 'border-white/10 bg-slate-900/70'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-white">Level {level.level_number}</p>
-                <span className={`rounded-full border px-2 py-0.5 text-xs ${statusBadge(level.progress?.status)}`}>
-                  {statusLabel(level.progress?.status)}
-                </span>
-              </div>
-              <p className="mt-2 text-lg font-semibold text-white">{level.title}</p>
-              <p className="text-sm text-slate-300">Target {level.distance_target_km} km · {formatPace(level.pace_target_seconds_per_km)}</p>
-              <p className="mt-1 inline-flex rounded-full border border-violet-400/30 bg-violet-500/10 px-2 py-0.5 text-xs text-violet-200">No Stop Required</p>
-
-              <div className="mt-3 space-y-1 text-xs text-slate-300">
-                <p>{evaluation && evaluation.distanceRemainingKm === 0 ? '✅' : '⬜'} Distance reached</p>
-                <p>{evaluation && !evaluation.unmetConditions.includes('no_stop') ? '✅' : '⬜'} No stop</p>
-                <p>{evaluation && !evaluation.unmetConditions.includes('pace') ? '✅' : '⬜'} Pace met</p>
-              </div>
-
-              <p className="mt-3 text-xs text-slate-400">
-                Best: {level.progress?.best_distance_km ? `${level.progress.best_distance_km.toFixed(2)} km` : '--'} ·{' '}
-                {formatPace(level.progress?.best_pace_seconds_per_km ?? null)}
-              </p>
-            </article>
-          );
-        })}
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-3">
-        <article className="space-y-3 rounded-2xl border border-white/10 bg-slate-900/70 p-5 xl:col-span-2">
-          <h3 className="text-lg font-semibold text-white">Current Level Focus</h3>
-          {currentLevel ? (
-            <>
-              <p className="text-slate-300">Level {currentLevel.level_number} · {currentLevel.title}</p>
-              <ul className="space-y-1 text-sm text-slate-200">
-                <li>Target distance: {currentLevel.distance_target_km} km</li>
-                <li>Target pace: {formatPace(currentLevel.pace_target_seconds_per_km)}</li>
-                <li>No stop required for pass</li>
-              </ul>
-              {currentLevel.latestAttempt ? (
-                <div className="rounded-xl border border-white/10 bg-slate-950/70 p-3 text-sm text-slate-200">
-                  <p>Last attempt: {currentLevel.latestAttempt.distance_km.toFixed(2)} km · {formatDuration(currentLevel.latestAttempt.duration_seconds)} · {formatPace(currentLevel.latestAttempt.pace_seconds_per_km)}</p>
-                  {buildEvaluation(currentLevel) ? (
-                    <p className="mt-1 text-amber-300">{getFailureReason(buildEvaluation(currentLevel)!)}</p>
-                  ) : null}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-400">No attempts yet. First run sets your baseline.</p>
-              )}
-            </>
-          ) : (
-            <p className="text-emerald-300">All levels complete. You reached 5 km with target pace unlocked.</p>
-          )}
+      <section className="grid gap-3 sm:grid-cols-2">
+        <article className="rounded-xl border border-white/10 bg-slate-900/70 p-4">
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Current Level</p>
+          <p className="mt-2 text-xl font-semibold text-white">{currentLevel ? `Level ${currentLevel.level_number} · ${currentLevel.title}` : 'All levels passed'}</p>
         </article>
-
-        <RunnerQuestLogForm currentLevel={currentLevel} />
+        <article className="rounded-xl border border-white/10 bg-slate-900/70 p-4">
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Best Recent Attempt</p>
+          <p className="mt-2 text-xl font-semibold text-white">
+            {data.logs[0] ? `${data.logs[0].distance_km.toFixed(2)} km · ${formatPace(data.logs[0].pace_seconds_per_km)}` : 'No attempt yet'}
+          </p>
+        </article>
       </section>
 
-      <article className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+      <section className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+        <h3 className="text-lg font-semibold text-white">Current Level Focus</h3>
+        {currentLevel ? (
+          <>
+            <p className="text-slate-300">ภารกิจของวันนี้ชัดเจน: วิ่ง {currentLevel.distance_target_km} km แบบไม่หยุด</p>
+            <ul className="mt-2 space-y-1 text-sm text-slate-200">
+              <li>Target distance: {currentLevel.distance_target_km} km</li>
+              <li>Target pace: {formatPace(currentLevel.pace_target_seconds_per_km)}</li>
+              <li>No stop required for pass</li>
+            </ul>
+            {currentLevel.latestAttempt ? (
+              <div className="mt-3 rounded-xl border border-white/10 bg-slate-950/70 p-3 text-sm text-slate-200">
+                <p>Last attempt: {currentLevel.latestAttempt.distance_km.toFixed(2)} km · {formatDuration(currentLevel.latestAttempt.duration_seconds)} · {formatPace(currentLevel.latestAttempt.pace_seconds_per_km)}</p>
+                {buildEvaluation(currentLevel) ? (
+                  <p className="mt-1 text-amber-300">{getFailureReason(buildEvaluation(currentLevel)!)}</p>
+                ) : null}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-slate-400">เริ่มก่อน แล้วค่อยดูสถิติ</p>
+            )}
+          </>
+        ) : (
+          <p className="text-emerald-300">All levels complete. You reached 5 km with target pace unlocked.</p>
+        )}
+      </section>
+
+      <div id="quick-log">
+        <RunnerQuestLogForm currentLevel={currentLevel} />
+      </div>
+
+      <section>
+        <h3 className="mb-3 text-lg font-semibold text-white">Level Progression</h3>
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          {data.levels.map((level) => {
+            const evaluation = buildEvaluation(level);
+            const isCurrent = currentLevel?.id === level.id;
+
+            return (
+              <article
+                key={level.id}
+                className={`rounded-2xl border p-4 ${
+                  isCurrent
+                    ? 'border-sky-300/50 bg-sky-500/10 shadow-[0_0_30px_rgba(56,189,248,0.2)]'
+                    : 'border-white/10 bg-slate-900/70'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-white">Level {level.level_number}</p>
+                  <span className={`rounded-full border px-2 py-0.5 text-xs ${statusBadge(level.progress?.status)}`}>
+                    {statusLabel(level.progress?.status)}
+                  </span>
+                </div>
+                <p className="mt-2 text-lg font-semibold text-white">{level.title}</p>
+                <p className="text-sm text-slate-300">Target {level.distance_target_km} km · {formatPace(level.pace_target_seconds_per_km)}</p>
+                <p className="mt-1 inline-flex rounded-full border border-violet-400/30 bg-violet-500/10 px-2 py-0.5 text-xs text-violet-200">No Stop Required</p>
+
+                <div className="mt-3 space-y-1 text-xs text-slate-300">
+                  <p>{evaluation && evaluation.distanceRemainingKm === 0 ? '✅' : '⬜'} Distance reached</p>
+                  <p>{evaluation && !evaluation.unmetConditions.includes('no_stop') ? '✅' : '⬜'} No stop</p>
+                  <p>{evaluation && !evaluation.unmetConditions.includes('pace') ? '✅' : '⬜'} Pace met</p>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      </section>
+
+      <article id="attempt-history" className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
         <h3 className="text-lg font-semibold text-white">Attempt History</h3>
         {data.logs.length === 0 ? (
           <p className="mt-2 text-sm text-slate-400">No run logs yet. Start with Level 1 and record your first attempt.</p>
@@ -208,6 +179,20 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
           </div>
         )}
       </article>
+
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          ['Total Attempts', String(data.totalAttempts)],
+          ['Passed Levels', `${data.passedLevelsCount} / ${data.levels.length}`],
+          ['Best Pace Ever', formatPace(data.bestPaceEver)],
+          ['Longest No-Stop Distance', data.longestNoStopDistance ? `${data.longestNoStopDistance.toFixed(2)} km` : '--']
+        ].map(([label, value]) => (
+          <article key={label} className="rounded-xl border border-white/10 bg-slate-900/70 p-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
+            <p className="mt-2 text-xl font-semibold text-white">{value}</p>
+          </article>
+        ))}
+      </section>
     </section>
   );
 }

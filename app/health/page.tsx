@@ -11,9 +11,9 @@ export default async function HealthPage() {
 
       <section className="page-container space-y-8">
         <header className="page-header">
-          <p className="page-kicker">Health Dashboard</p>
-          <h1 className="page-title">Runner Quest Control Panel</h1>
-          <p className="text-base text-[color:var(--text-secondary)]">Track every run, pass levels by performance, and unlock the full 5 km progression.</p>
+          <p className="page-kicker">Mission Control</p>
+          <h1 className="page-title">Runner Quest: ลงมือทำวันนี้</h1>
+          <p className="text-base text-[color:var(--text-secondary)]">อย่าดู progress อย่างเดียว ให้ลงมือจริง แล้วค่อยกลับมาดูรายงาน.</p>
         </header>
 
         <RunnerQuestDashboard data={dashboard} />
