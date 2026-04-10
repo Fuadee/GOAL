@@ -75,7 +75,7 @@ export function ConstructionProgressSection({ steps }: Props) {
   ];
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-6">
       <ConstructionWaitingStatusCard summary={waitingSummary} executionState={executionState} riskLevel={riskLevel} showControls={false} />
 
       <ConstructionHeroCard statusLabel={status} progressPercent={progressPercent} actionItems={actionItems}>
