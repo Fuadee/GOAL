@@ -13,10 +13,10 @@ export default async function Home() {
   const urgentAlerts = dashboard.alerts.filter((item) => item.severity === 'high').length;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    <main className="app-shell">
       <Navbar />
 
-      <div className="mx-auto w-full max-w-6xl space-y-6 px-6 py-8 md:px-10 md:py-10">
+      <div className="page-container space-y-6">
         <DashboardHero
           lifeDirection={dashboard.lifeDirection}
           activeGoals={dashboard.activeGoals}

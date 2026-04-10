@@ -77,24 +77,24 @@ export function SmvEditScoresModal({
       <button
         type="button"
         aria-label="Close modal backdrop"
-        className="absolute inset-0 bg-slate-950/75 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
         onClick={onClose}
         disabled={isSaving}
       />
 
-      <div className="relative z-10 w-full max-w-3xl rounded-3xl border border-white/15 bg-slate-900/95 p-5 shadow-2xl shadow-cyan-500/10 md:p-7">
+      <div className="theme-card relative z-10 w-full max-w-3xl p-5 md:p-7">
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-white">Edit SMV Scores</h2>
-          <p className="mt-1 text-sm text-slate-300">ปรับคะแนนพลังชีวิตทั้ง 8 ด้าน</p>
+          <h2 className="section-title text-2xl">Edit SMV Scores</h2>
+          <p className="mt-1 text-sm text-[color:var(--text-secondary)]">ปรับคะแนนพลังชีวิตทั้ง 8 ด้าน</p>
         </div>
 
         <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
           {SMV_AXIS_KEYS.map((axisKey, index) => (
-            <div key={axisKey} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <div key={axisKey} className="surface-elevated p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="text-sm font-medium text-slate-100">{SMV_AXIS_LABELS[axisKey]}</p>
-                  <p className="text-xs text-slate-400">{axisKey}</p>
+                  <p className="label-text text-[color:var(--text-primary)]">{SMV_AXIS_LABELS[axisKey]}</p>
+                  <p className="helper-text">{axisKey}</p>
                 </div>
                 <input
                   type="number"
@@ -105,7 +105,7 @@ export function SmvEditScoresModal({
                   value={draftScores[axisKey]}
                   onChange={(event) => handleScoreChange(axisKey, event.target.value)}
                   onBlur={(event) => handleNumberBlur(axisKey, event)}
-                  className="w-20 rounded-xl border border-white/15 bg-slate-950/80 px-3 py-2 text-right text-sm text-white outline-none transition focus:border-cyan-300"
+                  className="theme-input w-20 py-2 text-right text-sm"
                   disabled={isSaving}
                   autoFocus={index === 0}
                 />
@@ -118,14 +118,14 @@ export function SmvEditScoresModal({
                 step={1}
                 value={draftScores[axisKey]}
                 onChange={(event) => handleScoreChange(axisKey, event.target.value)}
-                className="mt-3 h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700 accent-cyan-300"
+                className="mt-3 h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700 accent-sky-300"
                 disabled={isSaving}
               />
             </div>
           ))}
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <label htmlFor="smv-reflection" className="text-sm font-medium text-slate-100">
+          <div className="surface-elevated p-4">
+            <label htmlFor="smv-reflection" className="label-text text-[color:var(--text-primary)]">
               หมายเหตุ (optional)
             </label>
             <textarea
@@ -133,14 +133,14 @@ export function SmvEditScoresModal({
               rows={3}
               value={draftReflection}
               onChange={(event) => setDraftReflection(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-white/15 bg-slate-950/80 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300"
+              className="theme-textarea mt-2 text-sm"
               placeholder="บันทึกสั้น ๆ เกี่ยวกับการประเมินครั้งนี้"
               disabled={isSaving}
             />
           </div>
         </div>
 
-        <p className="mt-4 text-xs text-slate-400">
+        <p className="mt-4 helper-text">
           คะแนนนี้เป็นการประเมินตัวเอง ณ ตอนนี้ และสามารถปรับใหม่ได้ภายหลัง
         </p>
 
@@ -150,7 +150,7 @@ export function SmvEditScoresModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+            className="theme-button-secondary rounded-xl disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSaving}
           >
             Cancel
@@ -158,7 +158,7 @@ export function SmvEditScoresModal({
           <button
             type="button"
             onClick={() => onSave(draftScores, draftReflection)}
-            className="rounded-xl bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-70"
+            className="theme-button-primary rounded-xl disabled:cursor-not-allowed disabled:opacity-70"
             disabled={isSaving || !hasChanges}
           >
             {isSaving ? 'Saving...' : 'Save Changes'}

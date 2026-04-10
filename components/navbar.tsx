@@ -12,16 +12,13 @@ type MenuItem = {
 const menuItems: MenuItem[] = [
   { label: 'SMV', href: '/smv' },
   { label: 'Money Management', href: '/money-management' },
-  { label: 'HealtH', href: '/health' },
+  { label: 'Health', href: '/health' },
   { label: 'Innovation', href: '/innovation' },
-  { label: 'Heal the WORLD', href: '/heal-the-world' }
+  { label: 'Heal the World', href: '/heal-the-world' }
 ];
 
 const isPathActive = (pathname: string, href: string) => {
-  if (pathname === href) {
-    return true;
-  }
-
+  if (pathname === href) return true;
   return pathname.startsWith(`${href}/`);
 };
 
@@ -30,20 +27,21 @@ export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const baseItemClass =
-    'rounded-full px-4 py-2 text-sm font-medium tracking-wide text-slate-300 transition duration-200 hover:bg-white/10 hover:text-white';
+    'theme-focus rounded-full border border-transparent px-4 py-2 text-sm font-medium tracking-[0.02em] text-slate-300 transition duration-200 hover:border-white/10 hover:bg-white/5 hover:text-slate-100';
 
-  const activeItemClass = 'bg-white text-slate-900 shadow-lg shadow-white/20';
+  const activeItemClass =
+    'border-[color:var(--border-strong)] bg-[color:color-mix(in_srgb,var(--surface-action)_88%,black_12%)] text-cyan-100 shadow-[0_0_0_1px_rgba(98,185,255,0.2)]';
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4 md:px-10">
-        <Link href="/" className="text-sm font-semibold uppercase tracking-[0.32em] text-white">
+    <header className="sticky top-0 z-50 border-b border-[color:var(--border)] bg-[color:rgba(10,17,30,0.86)] backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-8">
+        <Link href="/" className="theme-focus rounded-lg text-sm font-semibold uppercase tracking-[0.32em] text-slate-100">
           GOAL
         </Link>
 
         <button
           type="button"
-          className="inline-flex items-center rounded-full border border-white/20 px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-white/40 hover:text-white md:hidden"
+          className="theme-button-secondary inline-flex items-center md:hidden"
           onClick={() => setIsMenuOpen((prev) => !prev)}
           aria-expanded={isMenuOpen}
           aria-label="Toggle menu"
@@ -56,11 +54,7 @@ export function Navbar() {
             const isActive = isPathActive(pathname, item.href);
 
             return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`${baseItemClass} ${isActive ? activeItemClass : ''}`}
-              >
+              <Link key={item.label} href={item.href} className={`${baseItemClass} ${isActive ? activeItemClass : ''}`}>
                 {item.label}
               </Link>
             );
@@ -69,8 +63,8 @@ export function Navbar() {
       </div>
 
       {isMenuOpen ? (
-        <nav className="border-t border-white/10 px-6 py-4 md:hidden" aria-label="Mobile main menu">
-          <div className="mx-auto flex max-w-6xl flex-col gap-2">
+        <nav className="border-t border-[color:var(--border)] px-4 py-4 md:hidden" aria-label="Mobile main menu">
+          <div className="mx-auto flex max-w-7xl flex-col gap-2">
             {menuItems.map((item) => {
               const isActive = isPathActive(pathname, item.href);
 
