@@ -1,22 +1,42 @@
+import { CriticalAlertsSection } from '@/components/dashboard/CriticalAlertsSection';
+import { DashboardHero } from '@/components/dashboard/DashboardHero';
+import { FocusNowSection } from '@/components/dashboard/FocusNowSection';
+import { GoalModuleGrid } from '@/components/dashboard/GoalModuleGrid';
+import { LifeBalanceCard } from '@/components/dashboard/LifeBalanceCard';
+import { LifeDirectionCard } from '@/components/dashboard/LifeDirectionCard';
+import { MomentumSection } from '@/components/dashboard/MomentumSection';
 import { Navbar } from '@/components/navbar';
+import { getDashboardData } from '@/lib/dashboard/service';
 
-export default function Home() {
+export default async function Home() {
+  const dashboard = await getDashboardData();
+  const urgentAlerts = dashboard.alerts.filter((item) => item.severity === 'high').length;
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <Navbar />
 
-      <section className="mx-auto flex min-h-[calc(100vh-80px)] w-full max-w-6xl items-center px-6 py-20 md:px-10">
-        <div className="max-w-2xl space-y-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Foundation</p>
-          <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
-            Clean, modern homepage starter
-          </h1>
-          <p className="text-base leading-relaxed text-slate-300 md:text-lg">
-            Initial structure is ready for scalable development. Current scope includes only the premium navbar and
-            a minimal hero placeholder.
-          </p>
-        </div>
-      </section>
+      <div className="mx-auto w-full max-w-6xl space-y-6 px-6 py-8 md:px-10 md:py-10">
+        <DashboardHero
+          lifeDirection={dashboard.lifeDirection}
+          activeGoals={dashboard.activeGoals}
+          urgentAlerts={urgentAlerts}
+        />
+
+        <section className="grid gap-6 xl:grid-cols-2">
+          <LifeDirectionCard summary={dashboard.lifeDirection} />
+          <LifeBalanceCard
+            points={dashboard.balancePoints}
+            strongestAreas={dashboard.strongestAreas}
+            weakestAreas={dashboard.weakestAreas}
+          />
+        </section>
+
+        <FocusNowSection items={dashboard.focusItems} />
+        <MomentumSection items={dashboard.momentum} />
+        <CriticalAlertsSection alerts={dashboard.alerts} />
+        <GoalModuleGrid modules={dashboard.modules} />
+      </div>
     </main>
   );
 }
