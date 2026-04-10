@@ -9,7 +9,6 @@ import {
   markConstructionStepCompletedAction,
   updateConstructionExecutionStateAction,
   updateConstructionStepStatusAction,
-  updateConstructionStepTargetDateAction,
   updateConstructionWaitingDetailsAction
 } from '@/app/money-management/actions';
 import { ConstructionExecutionState, ConstructionRiskLevel, ConstructionStepRow, ConstructionStepStatus } from '@/lib/money/types';
@@ -131,23 +130,6 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
 
     startTransition(async () => {
       const result = await addConstructionStepUpdateAction(activeStepId, message);
-
-      if (!result.success) {
-        setStepState(previous);
-        setErrorMessage(result.message);
-      }
-    });
-  };
-
-  const handleUpdateTargetDate = (stepId: string, date: string) => {
-    const previous = stepState;
-    const normalizedDate = date || null;
-
-    setStepState((current) => current.map((step) => (step.id === stepId ? { ...step, target_date: normalizedDate } : step)));
-    setErrorMessage(null);
-
-    startTransition(async () => {
-      const result = await updateConstructionStepTargetDateAction(stepId, date);
 
       if (!result.success) {
         setStepState(previous);
@@ -365,17 +347,7 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
                   </div>
                 </div>
 
-                <div className="mt-3 grid gap-3 md:grid-cols-2">
-                  <label htmlFor={`target-date-${step.id}`} className="space-y-1 text-[11px] uppercase tracking-wide text-slate-400">
-                    <span className="block">Target date</span>
-                    <input
-                      id={`target-date-${step.id}`}
-                      type="date"
-                      value={step.target_date || ''}
-                      onChange={(event) => handleUpdateTargetDate(step.id, event.target.value)}
-                      className="w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-xs text-slate-100 outline-none transition focus:border-cyan-300"
-                    />
-                  </label>
+                <div className="mt-3">
                   <p className="rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-xs text-slate-200">
                     Latest update: {step.latest_update_text?.trim() || step.latest_update?.trim() || 'No updates logged yet.'}
                   </p>
@@ -445,7 +417,7 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
                 <input type="date" name="waiting_since" defaultValue={editingWaitingStep.waiting_since ?? ''} className="w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-sm text-slate-100" />
               </label>
               <label className="space-y-1 text-xs text-slate-300">
-                <span>Expected response date</span>
+                <span>Expected by</span>
                 <input type="date" name="expected_response_date" defaultValue={editingWaitingStep.expected_response_date ?? ''} className="w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-sm text-slate-100" />
               </label>
               <label className="space-y-1 text-xs text-slate-300">
