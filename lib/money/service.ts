@@ -1,4 +1,4 @@
-import { getConstructionSteps, getExpenses, getIncomeSources, getMoneyGoalPlans } from '@/lib/money/queries';
+import { getConstructionSteps, getExpenses, getIncomeSources, getMoneyGoalPlans, getStepUpdates } from '@/lib/money/queries';
 import { ExpenseManagementPageData, IncomeManagementPageData, MoneyDashboardData, MoneyGoalPlanStatus, MoneyPlanPageData } from '@/lib/money/types';
 
 const TARGET_INCOME = 100000;
@@ -66,6 +66,19 @@ export async function getMoneyPlanPageData(): Promise<MoneyPlanPageData> {
 
 
 export async function getConstructionProgressData() {
-  const steps = await getConstructionSteps();
-  return { steps };
+  const [steps, updates] = await Promise.all([getConstructionSteps(), getStepUpdates()]);
+  const latestByStepId = new Map<string, string>();
+
+  updates.forEach((update) => {
+    if (!latestByStepId.has(update.step_id)) {
+      latestByStepId.set(update.step_id, update.message);
+    }
+  });
+
+  return {
+    steps: steps.map((step) => ({
+      ...step,
+      latest_update: latestByStepId.get(step.id) ?? step.latest_update
+    }))
+  };
 }

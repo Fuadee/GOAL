@@ -8,7 +8,8 @@ import {
   MoneyGoalPlanRow,
   MoneyGoalPlanStatus,
   RentalHouseRow,
-  RentalHouseStatus
+  RentalHouseStatus,
+  StepUpdateRow
 } from '@/lib/money/types';
 
 export async function createIncomeSource(payload: {
@@ -88,8 +89,24 @@ export async function deleteMoneyGoalPlan(id: string): Promise<void> {
 
 export async function completeConstructionStep(id: string): Promise<ConstructionStepRow> {
   const rows = await supabaseRestRequest<ConstructionStepRow[]>(`construction_steps?id=eq.${id}`, 'PATCH', {
+    status: 'completed',
     is_completed: true,
     completed_at: new Date().toISOString()
+  });
+  return rows[0];
+}
+
+export async function createStepUpdate(stepId: string, message: string): Promise<StepUpdateRow> {
+  const rows = await supabaseRestRequest<StepUpdateRow[]>('step_updates', 'POST', {
+    step_id: stepId,
+    message
+  });
+  return rows[0];
+}
+
+export async function syncConstructionStepLatestUpdate(stepId: string, latestUpdate: string): Promise<ConstructionStepRow> {
+  const rows = await supabaseRestRequest<ConstructionStepRow[]>(`construction_steps?id=eq.${stepId}`, 'PATCH', {
+    latest_update: latestUpdate
   });
   return rows[0];
 }
