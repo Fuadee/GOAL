@@ -11,14 +11,15 @@ export type DiscoveryCandidateStatus = (typeof DISCOVERY_CANDIDATE_STATUS)[numbe
 export type DiscoveryCandidateState = 'observed' | 'pain_point' | 'concept' | 'validated' | 'converted';
 export type DiscoveryCandidateStateAction =
   | 'define_problem'
-  | 'delete_candidate'
+  | 'edit_basic_info'
   | 'add_concept'
   | 'edit_problem'
   | 'mark_validated'
   | 'edit_concept'
   | 'convert_to_innovation'
   | 'edit_validation_notes'
-  | 'open_innovation';
+  | 'open_innovation'
+  | 'view_linked_innovation_info';
 
 export type InnovationDerivedState = 'idea' | 'building' | 'blocked' | 'completed';
 export type InnovationStateAction =

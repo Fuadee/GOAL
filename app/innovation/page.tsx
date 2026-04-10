@@ -1,4 +1,3 @@
-import { AddInnovationForm } from '@/components/innovation/AddInnovationForm';
 import { CurrentMissionSection } from '@/components/innovation/CurrentMissionSection';
 import { DiscoveryCandidatesSection } from '@/components/innovation/DiscoveryCandidatesSection';
 import { DiscoveryGapSection } from '@/components/innovation/DiscoveryGapSection';
@@ -37,9 +36,6 @@ export default async function InnovationPage() {
 
         <DiscoveryCandidatesSection candidates={discoveryCandidates} />
 
-        <section id="add-innovation">
-          <AddInnovationForm currentCount={innovations.length} maxCount={TARGET_INNOVATIONS} />
-        </section>
 
         {innovations.length === 0 ? (
           <section className="theme-card border-dashed p-10 text-center backdrop-blur">
