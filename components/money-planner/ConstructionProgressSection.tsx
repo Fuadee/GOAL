@@ -8,7 +8,9 @@ import {
   updateConstructionStepStatusAction,
   updateConstructionStepTargetDateAction
 } from '@/app/money-management/actions';
-import { ConstructionStepRow, ConstructionStepStatus } from '@/lib/money/types';
+import { ConstructionFocusView, ConstructionMetricView, ConstructionMilestoneView, ConstructionStepRow, ConstructionStepStatus } from '@/lib/money/types';
+
+import { ConstructionHeroCard } from './ConstructionHeroCard';
 
 type Props = {
   steps: ConstructionStepRow[];
@@ -23,10 +25,10 @@ const STATUS_BADGES: Record<ConstructionStepStatus, BadgeConfig> = {
     selectClassName: 'border-slate-500/50 bg-slate-800 text-slate-100'
   },
   in_progress: {
-    selectClassName: 'border-amber-400/60 bg-amber-950/40 text-amber-100'
+    selectClassName: 'border-cyan-400/60 bg-cyan-950/30 text-cyan-100'
   },
   waiting: {
-    selectClassName: 'border-red-400/60 bg-red-950/40 text-red-100'
+    selectClassName: 'border-amber-400/60 bg-amber-950/40 text-amber-100'
   },
   blocked: {
     selectClassName: 'border-rose-500/70 bg-rose-950/60 text-rose-100'
@@ -36,11 +38,19 @@ const STATUS_BADGES: Record<ConstructionStepStatus, BadgeConfig> = {
   }
 };
 
+const STATUS_LABELS: Record<ConstructionStepStatus, string> = {
+  not_started: 'Not Started',
+  in_progress: 'In Progress',
+  waiting: 'Waiting',
+  blocked: 'Blocked',
+  completed: 'Completed'
+};
+
 function getStatusLabel(completedSteps: number, totalSteps: number) {
-  if (totalSteps === 0) return 'Not started';
-  if (completedSteps === 0) return 'Not started';
+  if (totalSteps === 0) return 'Not Started';
+  if (completedSteps === 0) return 'In Progress';
   if (completedSteps >= totalSteps) return 'Completed';
-  return 'In progress';
+  return 'In Progress';
 }
 
 function formatTargetDate(value: string | null) {
@@ -70,7 +80,48 @@ export function ConstructionProgressSection({ steps }: Props) {
     return stepState.find((step) => step.status !== 'completed' && !step.is_completed) ?? stepState[stepState.length - 1] ?? null;
   }, [stepState]);
 
+  const nextStep = useMemo(() => {
+    if (!currentStep) return null;
+    return stepState.find((step) => step.step_order > currentStep.step_order && step.status !== 'completed' && !step.is_completed) ?? null;
+  }, [currentStep, stepState]);
+
   const status = getStatusLabel(completedSteps, totalSteps);
+
+  const milestones: ConstructionMilestoneView[] = useMemo(
+    () =>
+      stepState.map((step) => {
+        const isCurrent = currentStep?.id === step.id && step.status !== 'completed' && !step.is_completed;
+        let stepStatus: ConstructionMilestoneView['status'] = 'upcoming';
+
+        if (step.status === 'completed' || step.is_completed) stepStatus = 'done';
+        else if (step.status === 'blocked' || step.status === 'waiting') stepStatus = 'blocked';
+        else if (isCurrent) stepStatus = 'current';
+
+        return {
+          id: step.id,
+          order: step.step_order,
+          title: step.step_name,
+          status: stepStatus,
+          targetDateLabel: formatTargetDate(step.target_date)
+        };
+      }),
+    [currentStep?.id, stepState]
+  );
+
+  const focus: ConstructionFocusView = {
+    currentStep: currentStep?.step_name ?? 'No active step',
+    progressLabel: `${progressPercent}%`,
+    nextMilestone: nextStep?.step_name ?? 'Complete and rent out',
+    targetDateLabel: currentStep?.target_date ? formatTargetDate(currentStep.target_date) : 'TBD',
+    latestUpdate: currentStep?.latest_update?.trim() || 'Waiting for authority submission documents'
+  };
+
+  const metrics: ConstructionMetricView[] = [
+    { label: 'Total units planned', value: '12 units' },
+    { label: 'Current phase', value: currentStep?.step_name ?? 'Planning' },
+    { label: 'Milestones done', value: `${completedSteps}/${totalSteps}` },
+    { label: 'Estimated income after completion', value: '$120,000/mo' }
+  ];
 
   const handleCompleteStep = (stepId: string) => {
     const previous = stepState;
@@ -193,112 +244,78 @@ export function ConstructionProgressSection({ steps }: Props) {
   };
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 md:p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-100">Construction – Baan Na Teen</h3>
-          <div className="mt-2 space-y-1 text-sm text-slate-300">
-            <p>
-              Progress: <span className="font-semibold text-slate-100">{progressPercent}%</span>
-            </p>
-            <p>
-              Status: <span className="font-semibold text-slate-100">{status}</span>
-            </p>
-            <p>
-              Current step: <span className="font-semibold text-slate-100">{currentStep?.step_name ?? 'No steps configured'}</span>
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setExpanded((value) => !value)}
-          className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-white/10"
-        >
-          {expanded ? 'Hide progress' : 'View progress'}
-        </button>
-      </div>
+    <section className="space-y-4">
+      <ConstructionHeroCard
+        statusLabel={status}
+        progressPercent={progressPercent}
+        focus={focus}
+        metrics={metrics}
+        milestones={milestones}
+        onToggleDetails={() => setExpanded((value) => !value)}
+        expanded={expanded}
+      />
 
       {expanded ? (
-        <div className="mt-4 border-t border-white/10 pt-4">
+        <div className="rounded-3xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Full progress controls</p>
           <ol className="space-y-3">
-            {stepState.map((step, index) => {
+            {stepState.map((step) => {
               const isCurrent = Boolean(currentStep) && currentStep.id === step.id && step.status !== 'completed' && !step.is_completed;
               const badge = STATUS_BADGES[step.status];
 
               return (
-                <li key={step.id} className="relative pl-7">
-                  <span
-                    className={`absolute left-0 top-1.5 h-3 w-3 rounded-full ${
-                      step.status === 'completed' || step.is_completed ? 'bg-emerald-400' : isCurrent ? 'bg-cyan-300' : 'bg-slate-600'
-                    }`}
-                  />
-                  {index < stepState.length - 1 ? <span className="absolute left-[5px] top-5 h-28 w-px bg-slate-700" aria-hidden /> : null}
-
-                  <div
-                    className={`rounded-xl border p-4 ${
-                      isCurrent ? 'border-cyan-300/50 bg-cyan-500/5' : 'border-white/10 bg-slate-950/50'
-                    }`}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="space-y-2">
-                        <p className="text-sm font-semibold text-slate-100">
-                          {step.step_order}. {step.step_name}
-                        </p>
-                        <select
-                          value={step.status}
-                          onChange={(event) => handleUpdateStatus(step.id, event.target.value)}
-                          disabled={isPending}
-                          className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide outline-none transition disabled:cursor-not-allowed disabled:opacity-50 ${badge.selectClassName}`}
-                        >
-                          <option value="not_started">Not started</option>
-                          <option value="in_progress">In progress</option>
-                          <option value="waiting">Waiting</option>
-                          <option value="blocked">Blocked</option>
-                          <option value="completed">Completed</option>
-                        </select>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          disabled={step.status === 'completed' || step.is_completed || isPending}
-                          onClick={() => handleCompleteStep(step.id)}
-                          className="rounded-full border border-emerald-400/40 px-3 py-1 text-xs text-emerald-200 transition enabled:hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {step.status === 'completed' || step.is_completed ? 'Completed' : 'Mark completed'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openAddUpdateModal(step.id)}
-                          disabled={isPending}
-                          className="rounded-full border border-white/20 px-3 py-1 text-xs text-slate-200 transition enabled:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Add update
-                        </button>
-                      </div>
+                <li key={step.id} className={`rounded-2xl border p-4 ${isCurrent ? 'border-cyan-300/45 bg-cyan-500/5' : 'border-white/10 bg-slate-950/60'}`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-100">{step.step_order}. {step.step_name}</p>
+                      <p className="mt-1 text-xs text-slate-400">{STATUS_LABELS[step.status]}</p>
                     </div>
-
-                    <div className="mt-3 space-y-2 text-xs text-slate-300">
-                      <div>
-                        <label htmlFor={`target-date-${step.id}`} className="mb-1 block text-[11px] uppercase tracking-wide text-slate-400">
-                          Target date
-                        </label>
-                        <input
-                          id={`target-date-${step.id}`}
-                          type="date"
-                          value={step.target_date || ''}
-                          onChange={(event) => handleUpdateTargetDate(step.id, event.target.value)}
-                          className="w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-xs text-slate-100 outline-none transition focus:border-cyan-300"
-                        />
-                        <p className="mt-1 text-[11px] text-slate-400">
-                          {step.target_date ? `Selected: ${formatTargetDate(step.target_date)}` : 'No target date selected'}
-                        </p>
-                      </div>
-                      <p className="rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-slate-200">
-                        Latest update: {step.latest_update?.trim() ? step.latest_update : 'No updates logged yet.'}
-                      </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <select
+                        value={step.status}
+                        onChange={(event) => handleUpdateStatus(step.id, event.target.value)}
+                        disabled={isPending}
+                        className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide outline-none transition disabled:cursor-not-allowed disabled:opacity-50 ${badge.selectClassName}`}
+                      >
+                        <option value="not_started">Not started</option>
+                        <option value="in_progress">In progress</option>
+                        <option value="waiting">Waiting</option>
+                        <option value="blocked">Blocked</option>
+                        <option value="completed">Completed</option>
+                      </select>
+                      <button
+                        type="button"
+                        disabled={step.status === 'completed' || step.is_completed || isPending}
+                        onClick={() => handleCompleteStep(step.id)}
+                        className="rounded-full border border-emerald-400/40 px-3 py-1 text-xs text-emerald-200 transition enabled:hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {step.status === 'completed' || step.is_completed ? 'Completed' : 'Mark completed'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openAddUpdateModal(step.id)}
+                        disabled={isPending}
+                        className="rounded-full border border-white/20 px-3 py-1 text-xs text-slate-200 transition enabled:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Add update
+                      </button>
                     </div>
+                  </div>
+
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <label htmlFor={`target-date-${step.id}`} className="space-y-1 text-[11px] uppercase tracking-wide text-slate-400">
+                      <span className="block">Target date</span>
+                      <input
+                        id={`target-date-${step.id}`}
+                        type="date"
+                        value={step.target_date || ''}
+                        onChange={(event) => handleUpdateTargetDate(step.id, event.target.value)}
+                        className="w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-xs text-slate-100 outline-none transition focus:border-cyan-300"
+                      />
+                    </label>
+                    <p className="rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-xs text-slate-200">
+                      Latest update: {step.latest_update?.trim() ? step.latest_update : 'No updates logged yet.'}
+                    </p>
                   </div>
                 </li>
               );
@@ -307,7 +324,7 @@ export function ConstructionProgressSection({ steps }: Props) {
         </div>
       ) : null}
 
-      {errorMessage ? <p className="mt-4 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">{errorMessage}</p> : null}
+      {errorMessage ? <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">{errorMessage}</p> : null}
 
       {activeStepId ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">

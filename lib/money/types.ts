@@ -53,6 +53,30 @@ export type ConstructionStepRow = {
   completed_at: string | null;
 };
 
+
+export type ConstructionMilestoneViewStatus = 'done' | 'current' | 'upcoming' | 'blocked';
+
+export type ConstructionMilestoneView = {
+  id: string;
+  order: number;
+  title: string;
+  status: ConstructionMilestoneViewStatus;
+  targetDateLabel: string;
+};
+
+export type ConstructionFocusView = {
+  currentStep: string;
+  progressLabel: string;
+  nextMilestone: string;
+  targetDateLabel: string;
+  latestUpdate: string;
+};
+
+export type ConstructionMetricView = {
+  label: string;
+  value: string;
+};
+
 export type StepUpdateRow = {
   id: string;
   step_id: string;
