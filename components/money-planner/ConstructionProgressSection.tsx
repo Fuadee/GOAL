@@ -362,35 +362,40 @@ export function ConstructionProgressSection({ steps }: Props) {
         statusLabel={status}
         progressPercent={progressPercent}
         metrics={metrics}
-      />
+      >
+        <ConstructionWaitingStatusCard
+          summary={waitingSummary}
+          executionState={executionState}
+          riskLevel={riskLevel}
+          onAddUpdate={() => (currentStepId ? openAddUpdateModal(currentStepId) : undefined)}
+          onMarkResponseReceived={handleMarkResponseReceived}
+          onEditWaitingDetails={() => setEditWaitingStepId(currentStepId)}
+        />
 
-      <ConstructionWaitingStatusCard
-        summary={waitingSummary}
-        executionState={executionState}
-        riskLevel={riskLevel}
-        onAddUpdate={() => (currentStepId ? openAddUpdateModal(currentStepId) : undefined)}
-        onMarkResponseReceived={handleMarkResponseReceived}
-        onEditWaitingDetails={() => setEditWaitingStepId(currentStepId)}
-      />
-
-      <div className="rounded-3xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Milestone preview</p>
-          <p className="text-xs text-slate-400">{previewMilestones.length} of {milestones.length} steps shown</p>
+        <div className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Milestone preview</p>
+            <div className="flex items-center gap-3">
+              <p className="text-xs text-slate-400">
+                {previewMilestones.length} of {milestones.length} steps shown
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowAllSteps((value) => !value)}
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+              >
+                {showAllSteps ? 'Hide full steps' : 'View full steps'} →
+              </button>
+            </div>
+          </div>
+          <ConstructionMilestoneStepper milestones={previewMilestones} />
         </div>
-        <ConstructionMilestoneStepper milestones={previewMilestones} />
-      </div>
+      </ConstructionHeroCard>
 
       <div className="rounded-3xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Full progress controls</p>
-          <button
-            type="button"
-            onClick={() => setShowAllSteps((value) => !value)}
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-white/10"
-          >
-            {showAllSteps ? 'Hide full steps' : 'View full steps'} →
-          </button>
+          <p className="text-xs text-slate-400">{showAllSteps ? 'Expanded from project command card' : 'Collapsed — use "View full steps" above to expand'}</p>
         </div>
         {showAllSteps ? (
           <ol className="space-y-3">

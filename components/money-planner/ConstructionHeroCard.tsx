@@ -1,9 +1,11 @@
 import { ConstructionMetricView } from '@/lib/money/types';
+import { ReactNode } from 'react';
 
 type Props = {
   statusLabel: string;
   progressPercent: number;
   metrics: ConstructionMetricView[];
+  children?: ReactNode;
 };
 
 function ProgressRing({ progressPercent }: { progressPercent: number }) {
@@ -37,7 +39,8 @@ function ProgressRing({ progressPercent }: { progressPercent: number }) {
 export function ConstructionHeroCard({
   statusLabel,
   progressPercent,
-  metrics
+  metrics,
+  children
 }: Props) {
   return (
     <section className="rounded-3xl border border-cyan-300/20 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 p-5 shadow-2xl shadow-cyan-950/20 md:p-7">
@@ -64,6 +67,8 @@ export function ConstructionHeroCard({
           <ProgressRing progressPercent={progressPercent} />
         </div>
       </div>
+
+      {children ? <div className="mt-6 space-y-4">{children}</div> : null}
     </section>
   );
 }
