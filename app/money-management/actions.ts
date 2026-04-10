@@ -13,12 +13,19 @@ import {
   completeConstructionStep,
   createStepUpdate,
   syncConstructionStepLatestUpdate,
+  updateConstructionStepStatus,
   updateConstructionStepTargetDate,
   updateExpense,
   updateIncomeSource,
   updateMoneyGoalPlan
 } from '@/lib/money/mutations';
-import { EXPENSE_TYPES, INCOME_SOURCE_TYPES, MONEY_GOAL_PLAN_STATUSES, RENTAL_HOUSE_STATUSES } from '@/lib/money/types';
+import {
+  CONSTRUCTION_STEP_STATUSES,
+  EXPENSE_TYPES,
+  INCOME_SOURCE_TYPES,
+  MONEY_GOAL_PLAN_STATUSES,
+  RENTAL_HOUSE_STATUSES
+} from '@/lib/money/types';
 import { getConstructionSteps } from '@/lib/money/queries';
 
 const isIncomeType = (value: string): value is (typeof INCOME_SOURCE_TYPES)[number] =>
@@ -32,6 +39,9 @@ const isRentalStatus = (value: string): value is (typeof RENTAL_HOUSE_STATUSES)[
 
 const isMoneyGoalPlanStatus = (value: string): value is (typeof MONEY_GOAL_PLAN_STATUSES)[number] =>
   MONEY_GOAL_PLAN_STATUSES.includes(value as (typeof MONEY_GOAL_PLAN_STATUSES)[number]);
+
+const isConstructionStepStatus = (value: string): value is (typeof CONSTRUCTION_STEP_STATUSES)[number] =>
+  CONSTRUCTION_STEP_STATUSES.includes(value as (typeof CONSTRUCTION_STEP_STATUSES)[number]);
 
 export async function createIncomeSourceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
   const id = String(formData.get('id') ?? '').trim() || null;
@@ -177,4 +187,17 @@ export async function updateConstructionStepTargetDateAction(stepId: string, tar
 
   revalidatePath('/money-management');
   return { success: true, message: 'Target date updated.' };
+}
+
+export async function updateConstructionStepStatusAction(stepId: string, status: string): Promise<{ success: boolean; message: string }> {
+  const trimmedStepId = stepId.trim();
+  const normalizedStatus = status.trim();
+
+  if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
+  if (!isConstructionStepStatus(normalizedStatus)) return { success: false, message: 'Invalid step status.' };
+
+  await updateConstructionStepStatus(trimmedStepId, normalizedStatus);
+
+  revalidatePath('/money-management');
+  return { success: true, message: 'Step status updated.' };
 }

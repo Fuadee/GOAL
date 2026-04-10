@@ -1,6 +1,7 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
 import {
   ConstructionStepRow,
+  ConstructionStepStatus,
   ExpenseRow,
   ExpenseType,
   IncomeSourceRow,
@@ -114,6 +115,15 @@ export async function syncConstructionStepLatestUpdate(stepId: string, latestUpd
 export async function updateConstructionStepTargetDate(stepId: string, targetDate: string | null): Promise<ConstructionStepRow> {
   const rows = await supabaseRestRequest<ConstructionStepRow[]>(`construction_steps?id=eq.${stepId}`, 'PATCH', {
     target_date: targetDate
+  });
+  return rows[0];
+}
+
+export async function updateConstructionStepStatus(stepId: string, status: ConstructionStepStatus): Promise<ConstructionStepRow> {
+  const rows = await supabaseRestRequest<ConstructionStepRow[]>(`construction_steps?id=eq.${stepId}`, 'PATCH', {
+    status,
+    is_completed: status === 'completed',
+    completed_at: status === 'completed' ? new Date().toISOString() : null
   });
   return rows[0];
 }

@@ -5,6 +5,7 @@ import { FormEvent, useMemo, useState, useTransition } from 'react';
 import {
   addConstructionStepUpdateAction,
   markConstructionStepCompletedAction,
+  updateConstructionStepStatusAction,
   updateConstructionStepTargetDateAction
 } from '@/app/money-management/actions';
 import { ConstructionStepRow, ConstructionStepStatus } from '@/lib/money/types';
@@ -14,30 +15,24 @@ type Props = {
 };
 
 type BadgeConfig = {
-  label: string;
-  className: string;
+  selectClassName: string;
 };
 
 const STATUS_BADGES: Record<ConstructionStepStatus, BadgeConfig> = {
   not_started: {
-    label: 'Not started',
-    className: 'border-slate-500/40 bg-slate-500/10 text-slate-200'
+    selectClassName: 'border-slate-500/50 bg-slate-800 text-slate-100'
   },
   in_progress: {
-    label: 'In progress',
-    className: 'border-amber-400/50 bg-amber-500/15 text-amber-200'
+    selectClassName: 'border-amber-400/60 bg-amber-950/40 text-amber-100'
   },
   waiting: {
-    label: 'Waiting',
-    className: 'border-red-400/50 bg-red-500/15 text-red-200'
+    selectClassName: 'border-red-400/60 bg-red-950/40 text-red-100'
   },
   blocked: {
-    label: 'Blocked',
-    className: 'border-rose-400/50 bg-rose-500/15 text-rose-200'
+    selectClassName: 'border-rose-500/70 bg-rose-950/60 text-rose-100'
   },
   completed: {
-    label: 'Completed',
-    className: 'border-emerald-400/50 bg-emerald-500/15 text-emerald-200'
+    selectClassName: 'border-emerald-400/60 bg-emerald-950/40 text-emerald-100'
   }
 };
 
@@ -169,6 +164,34 @@ export function ConstructionProgressSection({ steps }: Props) {
     });
   };
 
+  const handleUpdateStatus = (stepId: string, status: string) => {
+    const previous = stepState;
+    const nextStatus = status as ConstructionStepStatus;
+
+    setStepState((current) =>
+      current.map((step) =>
+        step.id === stepId
+          ? {
+              ...step,
+              status: nextStatus,
+              is_completed: nextStatus === 'completed',
+              completed_at: nextStatus === 'completed' ? step.completed_at ?? new Date().toISOString() : null
+            }
+          : step
+      )
+    );
+    setErrorMessage(null);
+
+    startTransition(async () => {
+      const result = await updateConstructionStepStatusAction(stepId, status);
+
+      if (!result.success) {
+        setStepState(previous);
+        setErrorMessage(result.message);
+      }
+    });
+  };
+
   return (
     <section className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 md:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -222,9 +245,18 @@ export function ConstructionProgressSection({ steps }: Props) {
                         <p className="text-sm font-semibold text-slate-100">
                           {step.step_order}. {step.step_name}
                         </p>
-                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${badge.className}`}>
-                          {badge.label}
-                        </span>
+                        <select
+                          value={step.status}
+                          onChange={(event) => handleUpdateStatus(step.id, event.target.value)}
+                          disabled={isPending}
+                          className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide outline-none transition disabled:cursor-not-allowed disabled:opacity-50 ${badge.selectClassName}`}
+                        >
+                          <option value="not_started">Not started</option>
+                          <option value="in_progress">In progress</option>
+                          <option value="waiting">Waiting</option>
+                          <option value="blocked">Blocked</option>
+                          <option value="completed">Completed</option>
+                        </select>
                       </div>
 
                       <div className="flex flex-wrap gap-2">
