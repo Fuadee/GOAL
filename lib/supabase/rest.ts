@@ -15,6 +15,8 @@ export async function supabaseRestRequest<TResponse>(
   body?: Record<string, unknown> | Record<string, unknown>[]
 ): Promise<TResponse> {
   ensureEnv();
+  const isUpsert = method === 'POST' && path.includes('on_conflict=');
+  const preferHeader = isUpsert ? 'resolution=merge-duplicates,return=representation' : 'return=representation';
 
   const response = await fetch(`${baseUrl}/rest/v1/${path}`, {
     method,
@@ -22,7 +24,7 @@ export async function supabaseRestRequest<TResponse>(
       apikey: serviceRoleKey as string,
       Authorization: `Bearer ${serviceRoleKey as string}`,
       'Content-Type': 'application/json',
-      Prefer: 'return=representation'
+      Prefer: preferHeader
     },
     cache: 'no-store',
     body: body ? JSON.stringify(body) : undefined
