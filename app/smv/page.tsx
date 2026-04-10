@@ -1,20 +1,17 @@
 import { Navbar } from '@/components/navbar';
+import { SMV_AXIS_META, SMV_SAMPLE_PROFILE, type SmvAxisKey } from '@/lib/smv/constants';
 
 type AxisScore = {
-  axis: string;
+  key: SmvAxisKey;
+  label: string;
   score: number;
 };
 
-const SMV_AXES: AxisScore[] = [
-  { axis: 'Self-Mastery', score: 82 },
-  { axis: 'Money', score: 68 },
-  { axis: 'Vitality', score: 75 },
-  { axis: 'Vision', score: 88 },
-  { axis: 'Innovation', score: 79 },
-  { axis: 'Relationships', score: 64 },
-  { axis: 'Impact', score: 71 },
-  { axis: 'Discipline', score: 86 }
-];
+const SMV_AXES: AxisScore[] = SMV_AXIS_META.map((axis) => ({
+  key: axis.key,
+  label: axis.label,
+  score: SMV_SAMPLE_PROFILE[axis.key]
+}));
 
 const RADAR_SIZE = 360;
 const CENTER = RADAR_SIZE / 2;
@@ -96,7 +93,7 @@ export default function SmvPage() {
                   const labelPoint = polarToCartesian(angle, OUTER_RADIUS + 20);
 
                   return (
-                    <g key={item.axis}>
+                    <g key={item.key}>
                       <line
                         x1={CENTER}
                         y1={CENTER}
@@ -113,7 +110,7 @@ export default function SmvPage() {
                         textAnchor="middle"
                         dominantBaseline="middle"
                       >
-                        {item.axis}
+                        {item.label}
                       </text>
                     </g>
                   );
@@ -131,7 +128,11 @@ export default function SmvPage() {
                   const radius = (item.score / 100) * OUTER_RADIUS;
                   const point = polarToCartesian(angle, radius);
 
-                  return <circle key={`${item.axis}-point`} cx={point.x} cy={point.y} r="3.5" fill="rgb(125 211 252)" />;
+                  return (
+                    <circle key={`${item.key}-point`} cx={point.x} cy={point.y} r="3.5" fill="rgb(125 211 252)">
+                      <title>{`${item.label}: ${item.score}`}</title>
+                    </circle>
+                  );
                 })}
               </svg>
             </div>
@@ -150,15 +151,15 @@ export default function SmvPage() {
                 <div>
                   <p className="text-slate-400">Strongest axis</p>
                   <p className="mt-1 font-medium text-emerald-300">
-                    {strongestAxis.axis} ({strongestAxis.score})
+                    {strongestAxis.label} ({strongestAxis.score})
                   </p>
                 </div>
                 <div>
                   <p className="text-slate-400">Weakest 2 axes</p>
                   <ul className="mt-1 space-y-1">
                     {weakestAxes.map((axis) => (
-                      <li key={axis.axis} className="font-medium text-amber-300">
-                        {axis.axis} ({axis.score})
+                      <li key={axis.key} className="font-medium text-amber-300">
+                        {axis.label} ({axis.score})
                       </li>
                     ))}
                   </ul>
@@ -170,8 +171,8 @@ export default function SmvPage() {
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {SMV_AXES.map((item) => (
-            <article key={item.axis} className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{item.axis}</p>
+            <article key={item.key} className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
               <p className="mt-2 text-2xl font-semibold text-white">{item.score}</p>
               <div className="mt-3 h-2 rounded-full bg-slate-800">
                 <div className="h-2 rounded-full bg-cyan-300" style={{ width: `${item.score}%` }} aria-hidden="true" />
