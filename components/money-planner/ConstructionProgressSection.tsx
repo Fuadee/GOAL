@@ -51,8 +51,6 @@ export function ConstructionProgressSection({ steps }: Props) {
       }),
     [currentStep?.id, steps]
   );
-  const previewMilestones = useMemo(() => milestones.slice(0, 4), [milestones]);
-
   const executionState = getCurrentExecutionState(currentStep);
   const riskLevel = getCurrentRiskLevel(currentStep);
   const waitingSummary = getWaitingSummary(currentStep);
@@ -71,11 +69,9 @@ export function ConstructionProgressSection({ steps }: Props) {
       <ConstructionHeroCard statusLabel={status} progressPercent={progressPercent} metrics={metrics}>
         <div className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Milestone preview</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Project milestones</p>
             <div className="flex items-center gap-3">
-              <p className="text-xs text-slate-400">
-                {previewMilestones.length} of {milestones.length} steps shown
-              </p>
+              <p className="text-xs text-slate-400">{milestones.length} total milestones</p>
               <button
                 type="button"
                 onClick={() => router.push('/money-management/construction/steps')}
@@ -85,7 +81,7 @@ export function ConstructionProgressSection({ steps }: Props) {
               </button>
             </div>
           </div>
-          <ConstructionMilestoneStepper milestones={previewMilestones} />
+          <ConstructionMilestoneStepper milestones={milestones} />
         </div>
       </ConstructionHeroCard>
     </section>
