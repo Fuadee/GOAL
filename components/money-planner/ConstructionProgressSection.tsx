@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { ConstructionMetricView, ConstructionMilestoneView, ConstructionStepRow } from '@/lib/money/types';
+import { ConstructionMilestoneView, ConstructionStepRow } from '@/lib/money/types';
 
 import { formatDateLabel, getCurrentConstructionStep, getCurrentExecutionState, getCurrentRiskLevel, getWaitingSummary } from './construction-helpers';
 import { ConstructionHeroCard } from './ConstructionHeroCard';
@@ -54,20 +54,38 @@ export function ConstructionProgressSection({ steps }: Props) {
   const executionState = getCurrentExecutionState(currentStep);
   const riskLevel = getCurrentRiskLevel(currentStep);
   const waitingSummary = getWaitingSummary(currentStep);
+  const waitingDurationDays = useMemo(() => {
+    if (!currentStep?.waiting_since) return null;
 
-  const metrics: ConstructionMetricView[] = [
-    { label: 'Total units planned', value: '12 units' },
-    { label: 'Current phase', value: currentStep?.step_name ?? 'Planning' },
-    { label: 'Milestones done', value: `${completedSteps}/${totalSteps}` },
-    { label: 'Estimated income after completion', value: '$120,000/mo' }
+    const startedAt = new Date(`${currentStep.waiting_since}T00:00:00Z`);
+    if (Number.isNaN(startedAt.getTime())) return null;
+
+    const now = new Date();
+    const diffInDays = Math.floor((now.getTime() - startedAt.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(diffInDays, 0);
+  }, [currentStep?.waiting_since]);
+
+  const actionItems = [
+    { label: 'Next action', value: waitingSummary.nextAction },
+    { label: 'Risk level', value: riskLevel ? riskLevel.replace('_', ' ') : 'Unknown' },
+    {
+      label: 'Waiting duration',
+      value: waitingDurationDays === null ? 'Not waiting' : `${waitingDurationDays} day${waitingDurationDays === 1 ? '' : 's'}`
+    }
   ];
 
   return (
     <section className="space-y-4">
       <ConstructionWaitingStatusCard summary={waitingSummary} executionState={executionState} riskLevel={riskLevel} showControls={false} />
 
-      <ConstructionHeroCard statusLabel={status} progressPercent={progressPercent} metrics={metrics}>
+      <ConstructionHeroCard statusLabel={status} progressPercent={progressPercent} actionItems={actionItems}>
         <div className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
+          {waitingDurationDays !== null || executionState === 'follow_up_needed' ? (
+            <p className="mb-3 rounded-lg border border-amber-300/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+              {waitingDurationDays !== null ? `Stuck for ${waitingDurationDays} day${waitingDurationDays === 1 ? '' : 's'}. ` : ''}
+              {executionState === 'follow_up_needed' ? 'Follow-up needed now.' : 'Monitor and push the next action.'}
+            </p>
+          ) : null}
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Project milestones</p>
             <div className="flex items-center gap-3">

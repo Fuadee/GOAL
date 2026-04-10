@@ -95,11 +95,6 @@ export type ConstructionWaitingSummaryView = {
   waitingReason: string;
 };
 
-export type ConstructionMetricView = {
-  label: string;
-  value: string;
-};
-
 export type StepUpdateRow = {
   id: string;
   step_id: string;
