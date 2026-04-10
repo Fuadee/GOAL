@@ -235,9 +235,10 @@ export async function updateConstructionWaitingDetailsAction(
   }
 ): Promise<{ success: boolean; message: string }> {
   const trimmedStepId = stepId.trim();
+  const trimmedRiskLevel = payload.risk_level.trim();
   if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
 
-  if (payload.risk_level && !isRiskLevel(payload.risk_level)) return { success: false, message: 'Invalid risk level.' };
+  if (trimmedRiskLevel && !isRiskLevel(trimmedRiskLevel)) return { success: false, message: 'Invalid risk level.' };
 
   await updateConstructionWaitingDetails(trimmedStepId, {
     waiting_on: payload.waiting_on.trim() || null,
@@ -245,7 +246,7 @@ export async function updateConstructionWaitingDetailsAction(
     expected_response_date: payload.expected_response_date.trim() || null,
     next_action_label: payload.next_action_label.trim() || null,
     latest_update_text: payload.latest_update_text.trim() || null,
-    risk_level: payload.risk_level.trim() ? payload.risk_level.trim() : null,
+    risk_level: trimmedRiskLevel && isRiskLevel(trimmedRiskLevel) ? trimmedRiskLevel : null,
     is_current_focus: payload.is_current_focus
   });
   revalidatePath('/money-management');
