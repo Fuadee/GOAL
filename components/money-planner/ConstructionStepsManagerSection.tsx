@@ -13,7 +13,7 @@ import {
 } from '@/app/money-management/actions';
 import { ConstructionExecutionState, ConstructionRiskLevel, ConstructionStepRow, ConstructionStepStatus } from '@/lib/money/types';
 
-import { formatDateLabel, getCurrentConstructionStep, getCurrentExecutionState, getNextActionAfterUnblock, getWaitingSummary } from './construction-helpers';
+import { formatDateLabel, getCurrentConstructionStep, getNextActionAfterUnblock, getWaitingSummary } from './construction-helpers';
 import { ConstructionWaitingStatusCard } from './ConstructionWaitingStatusCard';
 
 type Props = {
@@ -71,7 +71,6 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
   const [isPending, startTransition] = useTransition();
 
   const currentStep = useMemo(() => getCurrentConstructionStep(stepState), [stepState]);
-  const executionState = getCurrentExecutionState(currentStep);
   const waitingSummary = getWaitingSummary(currentStep);
   const currentStepId = currentStep?.id ?? null;
 
@@ -273,8 +272,6 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
 
       <ConstructionWaitingStatusCard
         summary={waitingSummary}
-        executionState={executionState}
-        riskLevel={currentStep?.risk_level ?? null}
         onAddUpdate={() => (currentStepId ? setActiveStepId(currentStepId) : undefined)}
         onMarkResponseReceived={handleMarkResponseReceived}
         onEditWaitingDetails={() => setEditWaitingStepId(currentStepId)}

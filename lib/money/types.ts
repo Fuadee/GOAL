@@ -72,7 +72,7 @@ export type ConstructionMilestoneView = {
   order: number;
   title: string;
   status: ConstructionMilestoneViewStatus;
-  expectedByLabel: string;
+  expectedByLabel?: string;
 };
 
 export type ConstructionFocusView = {

@@ -54,14 +54,16 @@ export function ConstructionHeroCard({
           <h2 className="mt-3 text-3xl font-semibold text-white md:text-4xl">Construction – Baan Na Teen</h2>
           <p className="mt-3 text-sm text-slate-300 md:text-base">12-unit rental house plan driving the path to 100K/month</p>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {actionItems.map((item) => (
-              <article key={item.label} className="rounded-xl border border-white/10 bg-slate-950/60 p-3">
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">{item.label}</p>
-                <p className="mt-1 text-base font-semibold text-slate-100">{item.value}</p>
-              </article>
-            ))}
-          </div>
+          {actionItems.length > 0 ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {actionItems.map((item) => (
+                <article key={item.label} className="rounded-xl border border-white/10 bg-slate-950/60 p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-400">{item.label}</p>
+                  <p className="mt-1 text-base font-semibold text-slate-100">{item.value}</p>
+                </article>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="flex flex-col items-end gap-3">
