@@ -78,7 +78,8 @@ export async function getConstructionProgressData() {
   return {
     steps: steps.map((step) => ({
       ...step,
-      latest_update: latestByStepId.get(step.id) ?? step.latest_update
+      latest_update: latestByStepId.get(step.id) ?? step.latest_update,
+      latest_update_text: step.latest_update_text ?? latestByStepId.get(step.id) ?? step.latest_update
     }))
   };
 }

@@ -12,15 +12,19 @@ import {
   deleteIncomeSource,
   completeConstructionStep,
   createStepUpdate,
+  updateConstructionExecutionState,
   syncConstructionStepLatestUpdate,
   updateConstructionStepStatus,
   updateConstructionStepTargetDate,
+  updateConstructionWaitingDetails,
   updateExpense,
   updateIncomeSource,
   updateMoneyGoalPlan
 } from '@/lib/money/mutations';
 import {
   CONSTRUCTION_STEP_STATUSES,
+  CONSTRUCTION_EXECUTION_STATES,
+  CONSTRUCTION_RISK_LEVELS,
   EXPENSE_TYPES,
   INCOME_SOURCE_TYPES,
   MONEY_GOAL_PLAN_STATUSES,
@@ -42,6 +46,10 @@ const isMoneyGoalPlanStatus = (value: string): value is (typeof MONEY_GOAL_PLAN_
 
 const isConstructionStepStatus = (value: string): value is (typeof CONSTRUCTION_STEP_STATUSES)[number] =>
   CONSTRUCTION_STEP_STATUSES.includes(value as (typeof CONSTRUCTION_STEP_STATUSES)[number]);
+const isExecutionState = (value: string): value is (typeof CONSTRUCTION_EXECUTION_STATES)[number] =>
+  CONSTRUCTION_EXECUTION_STATES.includes(value as (typeof CONSTRUCTION_EXECUTION_STATES)[number]);
+const isRiskLevel = (value: string): value is (typeof CONSTRUCTION_RISK_LEVELS)[number] =>
+  CONSTRUCTION_RISK_LEVELS.includes(value as (typeof CONSTRUCTION_RISK_LEVELS)[number]);
 
 export async function createIncomeSourceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
   const id = String(formData.get('id') ?? '').trim() || null;
@@ -200,4 +208,65 @@ export async function updateConstructionStepStatusAction(stepId: string, status:
 
   revalidatePath('/money-management');
   return { success: true, message: 'Step status updated.' };
+}
+
+export async function updateConstructionExecutionStateAction(stepId: string, executionState: string): Promise<{ success: boolean; message: string }> {
+  const trimmedStepId = stepId.trim();
+  const normalizedState = executionState.trim();
+
+  if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
+  if (!isExecutionState(normalizedState)) return { success: false, message: 'Invalid execution state.' };
+
+  await updateConstructionExecutionState(trimmedStepId, normalizedState);
+  revalidatePath('/money-management');
+  return { success: true, message: 'Execution state updated.' };
+}
+
+export async function updateConstructionWaitingDetailsAction(
+  stepId: string,
+  payload: {
+    waiting_on: string;
+    waiting_since: string;
+    expected_response_date: string;
+    next_action_label: string;
+    latest_update_text: string;
+    risk_level: string;
+    is_current_focus: boolean;
+  }
+): Promise<{ success: boolean; message: string }> {
+  const trimmedStepId = stepId.trim();
+  if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
+
+  if (payload.risk_level && !isRiskLevel(payload.risk_level)) return { success: false, message: 'Invalid risk level.' };
+
+  await updateConstructionWaitingDetails(trimmedStepId, {
+    waiting_on: payload.waiting_on.trim() || null,
+    waiting_since: payload.waiting_since.trim() || null,
+    expected_response_date: payload.expected_response_date.trim() || null,
+    next_action_label: payload.next_action_label.trim() || null,
+    latest_update_text: payload.latest_update_text.trim() || null,
+    risk_level: payload.risk_level.trim() ? payload.risk_level.trim() : null,
+    is_current_focus: payload.is_current_focus
+  });
+  revalidatePath('/money-management');
+  return { success: true, message: 'Waiting details updated.' };
+}
+
+export async function markConstructionResponseReceivedAction(stepId: string): Promise<{ success: boolean; message: string }> {
+  const trimmedStepId = stepId.trim();
+  if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
+
+  await updateConstructionWaitingDetails(trimmedStepId, {
+    waiting_on: null,
+    waiting_since: null,
+    expected_response_date: null,
+    next_action_label: null,
+    latest_update_text: 'Response received. Continue execution.',
+    risk_level: 'on_track',
+    is_current_focus: true
+  });
+  await updateConstructionExecutionState(trimmedStepId, 'doing');
+
+  revalidatePath('/money-management');
+  return { success: true, message: 'Response logged. Step set to doing.' };
 }
