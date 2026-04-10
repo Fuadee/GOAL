@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import { ConstructionMilestoneView, ConstructionStepRow } from '@/lib/money/types';
 
-import { formatDateLabel, getCurrentConstructionStep, getCurrentExecutionState, getCurrentRiskLevel, getWaitingSummary } from './construction-helpers';
+import { formatDateLabel, getCurrentConstructionStep, getWaitingSummary } from './construction-helpers';
 import { ConstructionHeroCard } from './ConstructionHeroCard';
 import { ConstructionMilestoneStepper } from './ConstructionMilestoneStepper';
 import { ConstructionWaitingStatusCard } from './ConstructionWaitingStatusCard';
@@ -46,50 +46,22 @@ export function ConstructionProgressSection({ steps }: Props) {
           order: step.step_order,
           title: step.step_name,
           status: stepStatus,
-          expectedByLabel: formatDateLabel(step.expected_response_date, 'No ETA')
+          expectedByLabel: step.expected_response_date ? formatDateLabel(step.expected_response_date) : undefined
         };
       }),
     [currentStep?.id, steps]
   );
-  const executionState = getCurrentExecutionState(currentStep);
-  const riskLevel = getCurrentRiskLevel(currentStep);
   const waitingSummary = getWaitingSummary(currentStep);
-  const waitingDurationDays = useMemo(() => {
-    if (!currentStep?.waiting_since) return null;
-
-    const startedAt = new Date(`${currentStep.waiting_since}T00:00:00Z`);
-    if (Number.isNaN(startedAt.getTime())) return null;
-
-    const now = new Date();
-    const diffInDays = Math.floor((now.getTime() - startedAt.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(diffInDays, 0);
-  }, [currentStep?.waiting_since]);
-
-  const actionItems = [
-    { label: 'Next action', value: waitingSummary.nextAction },
-    { label: 'Risk level', value: riskLevel ? riskLevel.replace('_', ' ') : 'Unknown' },
-    {
-      label: 'Waiting duration',
-      value: waitingDurationDays === null ? 'Not waiting' : `${waitingDurationDays} day${waitingDurationDays === 1 ? '' : 's'}`
-    }
-  ];
 
   return (
     <section className="space-y-6">
-      <ConstructionWaitingStatusCard summary={waitingSummary} executionState={executionState} riskLevel={riskLevel} showControls={false} />
+      <ConstructionWaitingStatusCard summary={waitingSummary} showControls={false} />
 
-      <ConstructionHeroCard statusLabel={status} progressPercent={progressPercent} actionItems={actionItems}>
+      <ConstructionHeroCard statusLabel={status} progressPercent={progressPercent} actionItems={[]}>
         <div className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
-          {waitingDurationDays !== null || executionState === 'follow_up_needed' ? (
-            <p className="mb-3 rounded-lg border border-amber-300/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
-              {waitingDurationDays !== null ? `Stuck for ${waitingDurationDays} day${waitingDurationDays === 1 ? '' : 's'}. ` : ''}
-              {executionState === 'follow_up_needed' ? 'Follow-up needed now.' : 'Monitor and push the next action.'}
-            </p>
-          ) : null}
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Project milestones</p>
             <div className="flex items-center gap-3">
-              <p className="text-xs text-slate-400">{milestones.length} total milestones</p>
               <button
                 type="button"
                 onClick={() => router.push('/money-management/construction/steps')}

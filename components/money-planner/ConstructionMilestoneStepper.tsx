@@ -10,6 +10,11 @@ const STATUS_STYLES: Record<ConstructionMilestoneView['status'], string> = {
     'border-cyan-300/70 bg-gradient-to-br from-cyan-400/20 via-cyan-500/10 to-indigo-950/70 text-cyan-50 shadow-[0_0_34px_rgba(56,189,248,0.28)] scale-[1.025]',
   upcoming: 'border-white/12 bg-gradient-to-br from-slate-900/95 via-slate-900/80 to-slate-950/95 text-slate-300 opacity-80'
 };
+const STATUS_LABELS: Record<ConstructionMilestoneView['status'], string> = {
+  done: 'Completed',
+  current: 'In progress',
+  upcoming: 'Waiting'
+};
 
 function StepIcon({ status }: { status: ConstructionMilestoneView['status'] }) {
   if (status === 'done') return <span aria-hidden>✓</span>;
@@ -44,7 +49,8 @@ export function ConstructionMilestoneStepper({ milestones }: Props) {
                 <span>Step {step.order}</span>
               </div>
               <p className="relative mt-2 text-sm font-semibold leading-snug">{step.title}</p>
-              <p className="relative mt-2 text-[11px] opacity-80">Expected by: {step.expectedByLabel}</p>
+              <p className="relative mt-2 text-[11px] uppercase tracking-[0.12em] opacity-80">Status: {STATUS_LABELS[step.status]}</p>
+              {step.expectedByLabel ? <p className="relative mt-2 text-[11px] opacity-80">{step.expectedByLabel}</p> : null}
             </article>
           </li>
         ))}
