@@ -110,3 +110,10 @@ export async function syncConstructionStepLatestUpdate(stepId: string, latestUpd
   });
   return rows[0];
 }
+
+export async function updateConstructionStepTargetDate(stepId: string, targetDate: string | null): Promise<ConstructionStepRow> {
+  const rows = await supabaseRestRequest<ConstructionStepRow[]>(`construction_steps?id=eq.${stepId}`, 'PATCH', {
+    target_date: targetDate
+  });
+  return rows[0];
+}
