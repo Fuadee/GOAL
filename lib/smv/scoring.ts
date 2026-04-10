@@ -4,14 +4,6 @@ type MetricValueMap = Record<string, number>;
 
 type RecencyBucket = 'last_14_days' | 'day_15_to_30' | 'day_31_to_60' | 'older_than_60';
 
-const CONFIDENCE_WEIGHTS: Record<string, number> = {
-  situation_coverage: 0.15,
-  frame_control: 0.3,
-  emotional_stability: 0.2,
-  leadership_signal: 0.25,
-  consistency: 0.1
-};
-
 const RECENCY_WEIGHTS: Record<RecencyBucket, number> = {
   last_14_days: 1,
   day_15_to_30: 0.7,
@@ -123,20 +115,6 @@ function weightedAverage(metrics: SmvMetricRow[], values: MetricValueMap, overri
   return { average: weightedTotal / weightTotal, breakdown };
 }
 
-function isHighPressureContext(log: SmvEvidenceLogRow): boolean {
-  const text = `${log.context ?? ''} ${log.note ?? ''}`.toLowerCase();
-  return ['high', 'pressure', 'conflict', 'difficult', 'negotiation', 'public', 'presentation', 'crisis', 'hard'].some((keyword) =>
-    text.includes(keyword)
-  );
-}
-
-function getEvidenceQualityMultiplier(interactionCount: number): number {
-  if (interactionCount >= 20) return 1;
-  if (interactionCount >= 10) return 0.9;
-  if (interactionCount >= 5) return 0.8;
-  return 0.65;
-}
-
 export function calculateSmvDimensionScore(input: {
   dimensionKey: SmvDimensionKey;
   metrics: SmvMetricRow[];
@@ -145,73 +123,16 @@ export function calculateSmvDimensionScore(input: {
 }): SmvScoreResult {
   const { dimensionKey, metrics, latestEvidenceValues, evidenceLogs30d } = input;
   const evidenceCount30d = evidenceLogs30d.length;
-  const { metricMap, recencyShareLast14d } = buildEvidenceWeightedMetricMap({
+  const { metricMap } = buildEvidenceWeightedMetricMap({
     metrics,
     evidenceValues: latestEvidenceValues,
     evidenceLogs: evidenceLogs30d
   });
-  const weightOverrides = dimensionKey === 'confidence' ? CONFIDENCE_WEIGHTS : undefined;
-  const { average, breakdown } = weightedAverage(metrics, metricMap, weightOverrides);
+  const { average, breakdown } = weightedAverage(metrics, metricMap);
 
   let score = clamp(average);
   const guardReasons: string[] = [];
   const suggestions: string[] = [];
-
-  if (dimensionKey === 'confidence') {
-    const qualityMultiplier = getEvidenceQualityMultiplier(evidenceCount30d);
-    score *= qualityMultiplier;
-
-    const highPressureCount = evidenceLogs30d.filter(isHighPressureContext).length;
-    const mixedContextCoverage = new Set(evidenceLogs30d.map((item) => item.context?.trim().toLowerCase()).filter(Boolean)).size;
-    const frameControl = breakdown.frame_control ?? 0;
-    const leadershipSignal = breakdown.leadership_signal ?? 0;
-    const emotionalStability = breakdown.emotional_stability ?? 0;
-    const consistency = breakdown.consistency ?? 0;
-
-    if (evidenceCount30d < 10) {
-      score = Math.min(score, 65);
-      guardReasons.push('Confidence capped at 65: total interaction evidence is below 10 logs.');
-      suggestions.push('Log at least 10 real interactions in the next 30 days.');
-    }
-
-    if (highPressureCount < 3) {
-      score = Math.min(score, 75);
-      guardReasons.push('Confidence capped at 75: fewer than 3 high-pressure interactions.');
-      suggestions.push('Add at least 3 high-pressure interactions (difficult conversations, public or conflict scenarios).');
-    }
-
-    if (frameControl < 50) {
-      score = Math.min(score, 69);
-      guardReasons.push('Confidence capped at 69: frame_control below 50.');
-      suggestions.push('Improve frame control quality before trying to raise confidence.');
-    }
-
-    if (leadershipSignal < 45) {
-      score = Math.min(score, 74);
-      guardReasons.push('Confidence capped at 74: leadership_signal below 45.');
-      suggestions.push('Show clearer initiative and decision ownership in recent interactions.');
-    }
-
-    if (emotionalStability < 50) {
-      score = Math.min(score, 72);
-      guardReasons.push('Confidence capped at 72: emotional_stability below 50.');
-      suggestions.push('Demonstrate emotional stability under stress before targeting higher scores.');
-    }
-
-    if (mixedContextCoverage < 2) {
-      score = Math.min(score, 78);
-      guardReasons.push('Confidence capped at 78: mixed context coverage is below 2 contexts.');
-      suggestions.push('Collect evidence across at least 2 distinct real-life contexts.');
-    }
-
-    const canReachNinety =
-      highPressureCount >= 3 && leadershipSignal >= 80 && consistency >= 75 && recencyShareLast14d >= 0.7 && evidenceCount30d >= 10;
-
-    if (!canReachNinety) {
-      score = Math.min(score, 89.99);
-      guardReasons.push('Confidence capped below 90: requires strong leadership, proven consistency, high-pressure evidence, and recent validation.');
-    }
-  }
 
   if (dimensionKey === 'status') {
     const incomeLevel = metricMap.income_level ?? 0;
@@ -254,7 +175,7 @@ export function calculateSmvDimensionScore(input: {
 
 export function buildDefaultRecommendations(weakest: Array<{ key: SmvDimensionKey; label: string }>) {
   return weakest.map((item) => {
-    if (item.key === 'confidence') return 'Confidence: complete 2 more high-pressure interactions.';
+    if (item.key === 'confidence') return 'Confidence: เดินหน้าผ่านด่านถัดไปให้ได้อีก 1 ด่าน';
     if (item.key === 'look') return 'Look: maintain grooming consistency for 14 days.';
     if (item.key === 'status') return 'Status: sustain 100k+ income for 3 months.';
     if (item.key === 'purpose') return 'Purpose: close one measurable weekly milestone for 4 weeks.';

@@ -2,6 +2,7 @@ export const SMV_DIMENSION_KEYS = ['confidence', 'fun', 'preselection', 'status'
 
 export type SmvDimensionKey = (typeof SMV_DIMENSION_KEYS)[number];
 export type SmvMetricValueType = 'score_0_100' | 'count' | 'boolean' | 'currency_monthly';
+export type SmvStageStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'PASSED';
 
 export type SmvDimensionRow = {
   id: string;
@@ -93,6 +94,32 @@ export type SmvImprovementTaskRow = {
   task_source: string;
   requirement: Record<string, unknown>;
   due_date: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SmvStageDefinitionRow = {
+  id: string;
+  dimension_key: SmvDimensionKey;
+  stage_number: number;
+  stage_key: string;
+  title_th: string;
+  description_th: string;
+  action_hint_th: string;
+  score_value: number;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SmvStageProgressRow = {
+  id: string;
+  dimension_key: SmvDimensionKey;
+  stage_key: string;
+  status: SmvStageStatus;
+  passed_at: string | null;
+  note: string | null;
   created_at: string;
   updated_at: string;
 };
