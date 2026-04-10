@@ -358,20 +358,20 @@ export function ConstructionProgressSection({ steps }: Props) {
 
   return (
     <section className="space-y-4">
+      <ConstructionWaitingStatusCard
+        summary={waitingSummary}
+        executionState={executionState}
+        riskLevel={riskLevel}
+        onAddUpdate={() => (currentStepId ? openAddUpdateModal(currentStepId) : undefined)}
+        onMarkResponseReceived={handleMarkResponseReceived}
+        onEditWaitingDetails={() => setEditWaitingStepId(currentStepId)}
+      />
+
       <ConstructionHeroCard
         statusLabel={status}
         progressPercent={progressPercent}
         metrics={metrics}
       >
-        <ConstructionWaitingStatusCard
-          summary={waitingSummary}
-          executionState={executionState}
-          riskLevel={riskLevel}
-          onAddUpdate={() => (currentStepId ? openAddUpdateModal(currentStepId) : undefined)}
-          onMarkResponseReceived={handleMarkResponseReceived}
-          onEditWaitingDetails={() => setEditWaitingStepId(currentStepId)}
-        />
-
         <div className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Milestone preview</p>
