@@ -4,7 +4,16 @@ import { useMemo, useState } from 'react';
 
 import { Navbar } from '@/components/navbar';
 import { SmvEditScoresModal } from '@/components/smv/SmvEditScoresModal';
-import { SMV_AXIS_KEYS, SMV_SAMPLE_PROFILE, buildSmvDashboardData, type SmvScores } from '@/lib/smv/constants';
+import {
+  SMV_AXIS_INSIGHTS,
+  SMV_AXIS_KEYS,
+  SMV_SAMPLE_PROFILE,
+  buildSmvDashboardData,
+  getAxisTier,
+  getSortedAxes,
+  type SmvAxisTier,
+  type SmvScores
+} from '@/lib/smv/constants';
 
 const RADAR_SIZE = 360;
 const CENTER = RADAR_SIZE / 2;
@@ -36,8 +45,13 @@ export default function SmvPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<'framework' | 'score'>('framework');
 
   const dashboardData = useMemo(() => buildSmvDashboardData(scores), [scores]);
+  const strongestAxisLabels = dashboardData.strongestAxes.map((axis) => axis.label);
+  const weakestAxisLabels = dashboardData.weakestAxes.map((axis) => axis.label);
+  const weakestInsight = dashboardData.weakestAxes.map((axis) => SMV_AXIS_INSIGHTS[axis.key]).join(' • ');
+  const sortedCardAxes = useMemo(() => getSortedAxes(scores, sortMode), [scores, sortMode]);
 
   const handleSaveScores = async (nextScores: SmvScores, nextReflection: string) => {
     setSaveError(null);
@@ -117,6 +131,7 @@ export default function SmvPage() {
                   const angle = -Math.PI / 2 + (2 * Math.PI * index) / SMV_AXIS_KEYS.length;
                   const outerPoint = polarToCartesian(angle, OUTER_RADIUS);
                   const labelPoint = polarToCartesian(angle, OUTER_RADIUS + 20);
+                  const tier = getAxisTier(item.key, scores);
 
                   return (
                     <g key={item.key}>
@@ -131,8 +146,9 @@ export default function SmvPage() {
                       <text
                         x={labelPoint.x}
                         y={labelPoint.y}
-                        fill="rgb(203 213 225)"
+                        fill={tier === 'weakness' ? 'rgb(253 230 138)' : 'rgb(203 213 225)'}
                         fontSize="10"
+                        fontWeight={tier === 'weakness' ? '700' : '500'}
                         textAnchor="middle"
                         dominantBaseline="middle"
                       >
@@ -153,10 +169,24 @@ export default function SmvPage() {
                   const angle = -Math.PI / 2 + (2 * Math.PI * index) / SMV_AXIS_KEYS.length;
                   const radius = (item.score / 100) * OUTER_RADIUS;
                   const point = polarToCartesian(angle, radius);
+                  const tier = getAxisTier(item.key, scores);
+                  const pointStyleByTier: Record<SmvAxisTier, { fill: string; radius: number }> = {
+                    strength: { fill: 'rgb(153 246 228)', radius: 4.8 },
+                    weakness: { fill: 'rgb(253 186 116)', radius: 4.3 },
+                    balanced: { fill: 'rgb(125 211 252)', radius: 3.5 }
+                  };
+                  const tierLabel =
+                    tier === 'strength' ? 'จุดแข็ง' : tier === 'weakness' ? 'ควรอัป' : 'สมดุล';
 
                   return (
-                    <circle key={`${item.key}-point`} cx={point.x} cy={point.y} r="3.5" fill="rgb(125 211 252)">
-                      <title>{`${item.label}: ${item.score}`}</title>
+                    <circle
+                      key={`${item.key}-point`}
+                      cx={point.x}
+                      cy={point.y}
+                      r={pointStyleByTier[tier].radius}
+                      fill={pointStyleByTier[tier].fill}
+                    >
+                      <title>{`${item.label} — ${tierLabel} (${item.score})`}</title>
                     </circle>
                   );
                 })}
@@ -174,21 +204,29 @@ export default function SmvPage() {
             <article className="rounded-3xl border border-white/10 bg-white/5 p-6">
               <h3 className="text-lg font-semibold text-white">Highlights</h3>
               <div className="mt-4 space-y-4 text-sm text-slate-300">
-                <div>
-                  <p className="text-slate-400">Strongest axis</p>
-                  <p className="mt-1 font-medium text-emerald-300">
-                    {dashboardData.strongestAxis.label} ({dashboardData.strongestAxis.score})
-                  </p>
+                <div className="rounded-2xl border border-teal-300/20 bg-teal-300/5 p-3">
+                  <p className="text-xs uppercase tracking-[0.2em] text-teal-200/70">Strongest</p>
+                  <p className="mt-1 text-[11px] text-slate-400">ด้านที่ตอนนี้เป็นพลังนำ</p>
+                  <p className="mt-2 font-medium text-teal-200">{strongestAxisLabels.join(' • ')}</p>
                 </div>
-                <div>
-                  <p className="text-slate-400">Weakest 2 axes</p>
-                  <ul className="mt-1 space-y-1">
+                <div className="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-3">
+                  <p className="text-xs uppercase tracking-[0.2em] text-amber-200/70">Weakest</p>
+                  <p className="mt-1 text-[11px] text-slate-400">ด้านที่ถ้าอัปแล้วภาพรวมจะดีขึ้นเร็ว</p>
+                  <ul className="mt-2 space-y-1">
                     {dashboardData.weakestAxes.map((axis) => (
-                      <li key={axis.key} className="font-medium text-amber-300">
+                      <li key={axis.key} className="font-medium text-amber-200">
                         {axis.label} ({axis.score})
                       </li>
                     ))}
                   </ul>
+                </div>
+                <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.06] p-3">
+                  <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">Focus Now</p>
+                  <p className="mt-1 text-[11px] text-slate-400">จุดที่ควรลงแรงก่อน</p>
+                  <p className="mt-2 font-medium text-cyan-100">
+                    ตอนนี้ควรเร่งอัปเกรด {weakestAxisLabels.join(' และ ')} ก่อน
+                  </p>
+                  <p className="mt-2 text-xs text-cyan-100/75">{weakestInsight}</p>
                 </div>
               </div>
             </article>
@@ -202,16 +240,81 @@ export default function SmvPage() {
           </aside>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {dashboardData.axes.map((item) => (
-            <article key={item.key} className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
-              <p className="mt-2 text-2xl font-semibold text-white">{item.score}</p>
-              <div className="mt-3 h-2 rounded-full bg-slate-800">
-                <div className="h-2 rounded-full bg-cyan-300" style={{ width: `${item.score}%` }} aria-hidden="true" />
-              </div>
-            </article>
-          ))}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold text-white">SMV Axis Breakdown</h2>
+            <div className="inline-flex rounded-xl border border-white/15 bg-slate-900/70 p-1">
+              <button
+                type="button"
+                onClick={() => setSortMode('framework')}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                  sortMode === 'framework'
+                    ? 'bg-white/10 text-cyan-100'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-slate-100'
+                }`}
+              >
+                เรียงตามโครงหลัก
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortMode('score')}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                  sortMode === 'score'
+                    ? 'bg-white/10 text-cyan-100'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-slate-100'
+                }`}
+              >
+                เรียงตามคะแนน
+              </button>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {sortedCardAxes.map((item) => {
+              const tier = getAxisTier(item.key, scores);
+              const isStrength = tier === 'strength';
+              const isWeakness = tier === 'weakness';
+
+              return (
+                <article
+                  key={item.key}
+                  className={`rounded-2xl border p-4 backdrop-blur transition ${
+                    isStrength
+                      ? 'border-teal-300/35 bg-teal-300/[0.07] shadow-[0_0_30px_rgba(45,212,191,0.15)]'
+                      : isWeakness
+                        ? 'border-amber-300/30 bg-amber-300/[0.06]'
+                        : 'border-white/10 bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-300">{item.label}</p>
+                    {isStrength ? (
+                      <span className="rounded-full border border-teal-200/35 bg-teal-300/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-100">
+                        จุดแข็ง
+                      </span>
+                    ) : null}
+                    {isWeakness ? (
+                      <span className="rounded-full border border-amber-200/35 bg-amber-300/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-100">
+                        ควรอัป
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className={`mt-2 text-2xl font-semibold ${isStrength ? 'text-teal-100' : 'text-white'}`}>{item.score}</p>
+                  <div className="mt-3 h-2 rounded-full bg-slate-800">
+                    <div
+                      className={`h-2 rounded-full ${
+                        isStrength ? 'bg-teal-300' : isWeakness ? 'bg-amber-300' : 'bg-cyan-300'
+                      }`}
+                      style={{ width: `${item.score}%` }}
+                      aria-hidden="true"
+                    />
+                  </div>
+                  {isWeakness ? (
+                    <p className="mt-3 text-xs leading-relaxed text-amber-100/80">{SMV_AXIS_INSIGHTS[item.key]}</p>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
         </section>
       </section>
 
