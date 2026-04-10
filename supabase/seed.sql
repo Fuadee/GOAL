@@ -38,3 +38,20 @@ select
   end as status
 from public.runner_levels as level
 on conflict (level_id) do nothing;
+
+-- SMV seed dimensions (idempotent).
+insert into public.smv_dimensions (key, label, description, color_token)
+values
+  ('confidence_leadership', 'เชื่อมั่นในตัวเอง / เป็นผู้นำ', 'ภาวะผู้นำ ความมั่นใจ และการตัดสินใจ', 'cyan'),
+  ('fun_playful', 'สนุกสนาน', 'พลังงานบวก ความขี้เล่น และการสร้างบรรยากาศ', 'violet'),
+  ('preselection', 'Pre-selection', 'social proof และภาพความน่าเชื่อถือทางสังคม', 'emerald'),
+  ('status_money', 'สถานะสังคม / อำนาจ / เงิน', 'ความมั่นคง ความรับผิดชอบ และภาพลักษณ์สถานะ', 'amber'),
+  ('social_connection', 'Social Connection', 'ความสามารถในการสร้างสัมพันธ์และเครือข่าย', 'sky'),
+  ('life_goal', 'เป้าหมายชีวิต', 'ความชัดเจนของทิศทางชีวิตและการลงมือทำ', 'indigo'),
+  ('protective_capable', 'ดูแล / ปกป้องผู้หญิงได้', 'ความสามารถในการดูแล ปกป้อง และเป็นที่พึ่ง', 'rose'),
+  ('looks_style', 'รูปร่างหน้าตา / บุคลิกที่ดี', 'การดูแลบุคลิก สุขภาพ และการแต่งกาย', 'fuchsia')
+on conflict (key) do nothing;
+
+insert into public.smv_dimension_scores (dimension_id, current_score, previous_score)
+select id, 50, 50 from public.smv_dimensions
+on conflict (dimension_id) do nothing;
