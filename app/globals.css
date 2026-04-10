@@ -4,9 +4,200 @@
 
 :root {
   color-scheme: dark;
+
+  --bg-base: #0b1220;
+  --bg-subtle: #0f1728;
+  --surface: #172235;
+  --surface-elevated: #1d2a3f;
+  --surface-action: #24344d;
+  --border: rgba(167, 184, 210, 0.18);
+  --border-strong: rgba(148, 195, 255, 0.42);
+
+  --text-primary: #e8eefc;
+  --text-secondary: #a8b5cb;
+  --text-muted: #7e8ca7;
+
+  --accent: #5db7ff;
+  --accent-strong: #3ea5ff;
+  --success: #43c98d;
+  --warning: #e0af4d;
+  --danger: #e06d82;
+
+  --radius-sm: 0.625rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.125rem;
+  --radius-xl: 1.5rem;
+
+  --shadow-soft: 0 10px 32px rgba(5, 10, 20, 0.36);
+  --shadow-elevated: 0 14px 40px rgba(7, 15, 30, 0.5);
+
+  --font-heading: 'IBM Plex Sans Thai', 'Noto Sans Thai', 'Sarabun', 'Segoe UI', sans-serif;
+  --font-body: 'Noto Sans Thai', 'IBM Plex Sans Thai', 'Sarabun', 'Segoe UI', sans-serif;
+}
+
+html,
+body {
+  min-height: 100%;
 }
 
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
   margin: 0;
+  background:
+    radial-gradient(circle at top right, rgba(80, 159, 255, 0.12), transparent 40%),
+    radial-gradient(circle at 20% 10%, rgba(112, 92, 255, 0.07), transparent 35%),
+    linear-gradient(180deg, var(--bg-subtle), var(--bg-base));
+  color: var(--text-primary);
+  font-family: var(--font-body), 'Noto Sans Thai', 'Sarabun', 'Segoe UI', sans-serif;
+  line-height: 1.6;
+  letter-spacing: 0.001em;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.page-title,
+.section-title,
+.card-title {
+  font-family: var(--font-heading), var(--font-body), 'Noto Sans Thai', sans-serif;
+  letter-spacing: 0.002em;
+}
+
+.numeric,
+.stat-value,
+.badge-value {
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.page-container {
+  @apply mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-12;
+}
+
+.page-header {
+  @apply mb-8 space-y-3;
+}
+
+.page-kicker {
+  color: var(--text-muted);
+  @apply text-xs font-semibold uppercase tracking-[0.24em];
+}
+
+.page-title {
+  color: var(--text-primary);
+  @apply text-3xl font-semibold leading-tight md:text-5xl;
+}
+
+.section-title {
+  color: var(--text-primary);
+  @apply text-xl font-semibold leading-tight;
+}
+
+.card-title {
+  color: var(--text-primary);
+  @apply text-lg font-semibold leading-snug;
+}
+
+.label-text {
+  color: var(--text-secondary);
+  @apply text-sm font-medium leading-snug;
+}
+
+.helper-text {
+  color: var(--text-secondary);
+  @apply text-xs leading-relaxed;
+}
+
+.theme-card {
+  background: color-mix(in srgb, var(--surface) 90%, black 10%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+}
+
+.surface-elevated {
+  background: color-mix(in srgb, var(--surface-elevated) 92%, black 8%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.action-surface {
+  background: color-mix(in srgb, var(--surface-action) 90%, black 10%);
+  border: 1px solid color-mix(in srgb, var(--border-strong) 72%, transparent);
+  border-radius: var(--radius-lg);
+}
+
+.theme-input,
+.theme-select,
+.theme-textarea,
+.theme-date {
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-action) 92%, black 8%);
+  color: var(--text-primary);
+  padding: 0.62rem 0.86rem;
+  min-height: 2.75rem;
+  line-height: 1.5;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.theme-input::placeholder,
+.theme-textarea::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 80%, transparent);
+}
+
+.theme-input:focus,
+.theme-select:focus,
+.theme-textarea:focus,
+.theme-date:focus,
+.theme-focus:focus-visible {
+  outline: none;
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.theme-button-primary {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 28%, transparent), color-mix(in srgb, #7f7dff 22%, transparent));
+  color: #dff0ff;
+  @apply px-4 py-2 text-sm font-semibold transition;
+}
+
+.theme-button-primary:hover {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 40%, transparent), color-mix(in srgb, #7f7dff 30%, transparent));
+}
+
+.theme-button-secondary {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  background: color-mix(in srgb, var(--surface) 88%, black 12%);
+  color: var(--text-secondary);
+  @apply px-4 py-2 text-sm font-medium transition;
+}
+
+.theme-button-secondary:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--surface-elevated) 92%, black 8%);
+}
+
+.theme-table {
+  @apply w-full text-left text-sm;
+}
+
+.theme-table thead {
+  color: var(--text-muted);
+}
+
+.theme-table tbody tr {
+  border-top: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  color: var(--text-primary);
 }

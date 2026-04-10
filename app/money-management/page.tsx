@@ -7,10 +7,10 @@ export default async function MoneyManagementPage() {
   const [data, construction] = await Promise.all([getMoneyDashboardData(), getConstructionProgressData()]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    <main className="app-shell">
       <Navbar />
 
-      <section className="mx-auto w-full max-w-7xl space-y-10 px-4 py-8 md:px-8 md:py-12">
+      <section className="page-container space-y-10">
         <ConstructionProgressSection steps={construction.steps} />
         <IncomePlanningSystem data={data} />
       </section>

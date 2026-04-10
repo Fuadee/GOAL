@@ -24,8 +24,8 @@ const defaultPlanForm: PlanFormState = {
 
 function SummaryCard({ label, value, tone = 'text-white' }: { label: string; value: string; tone?: string }) {
   return (
-    <article className="rounded-2xl border border-white/10 bg-slate-900/70 p-4">
-      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
+    <article className="surface-elevated p-4">
+      <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--text-muted)]">{label}</p>
       <p className={`mt-2 text-2xl font-semibold ${tone}`}>{value}</p>
     </article>
   );
@@ -47,25 +47,27 @@ export function MoneyPlanSystem({ data }: Props) {
 
   return (
     <div className="space-y-8">
-      <section className="space-y-4 rounded-3xl border border-indigo-300/20 bg-slate-900/80 p-6 shadow-2xl shadow-black/30">
+      <section className="theme-card space-y-4 p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-200/70">Plan to 100K</p>
-            <h2 className="mt-2 text-3xl font-semibold text-white">Net Income Plan</h2>
+            <p className="page-kicker text-cyan-200/85">Plan to 100K</p>
+            <h2 className="page-title mt-2 text-3xl md:text-4xl">Net Income Plan</h2>
           </div>
-          <p className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-slate-200">Target: {currency.format(data.targetIncome)}</p>
+          <p className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-action)] px-3 py-1 text-sm text-[color:var(--text-secondary)]">
+            Target: {currency.format(data.targetIncome)}
+          </p>
         </div>
 
         <SummaryCard label="Current Net Income" value={currency.format(data.currentNet)} tone={data.currentNet >= 0 ? 'text-cyan-300' : 'text-rose-300'} />
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-        <h3 className="text-xl font-semibold text-white">Plan List</h3>
-        <p className="text-sm text-slate-400">Add simple plans to increase monthly net income.</p>
+      <section className="theme-card p-5">
+        <h3 className="section-title">Plan List</h3>
+        <p className="helper-text">Add simple plans to increase monthly net income.</p>
 
         <div className="mt-4 overflow-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-slate-400">
+          <table className="theme-table">
+            <thead className="text-[color:var(--text-muted)]">
               <tr>
                 <th>Plan Name</th>
                 <th>Net Increase (Monthly)</th>
@@ -75,7 +77,7 @@ export function MoneyPlanSystem({ data }: Props) {
             </thead>
             <tbody>
               {data.plans.map((plan) => (
-                <tr key={plan.id} className="border-t border-white/10 text-slate-200">
+                <tr key={plan.id} className="text-[color:var(--text-primary)]">
                   <td className="py-2">{plan.plan_name}</td>
                   <td>{currency.format(plan.net_increase)}</td>
                   <td>{plan.status}</td>
@@ -92,7 +94,7 @@ export function MoneyPlanSystem({ data }: Props) {
                           });
                           setMessage(null);
                         }}
-                        className="rounded-md border border-white/15 px-2 py-1 text-xs text-slate-200 hover:bg-white/10"
+                        className="theme-button-secondary rounded-md px-2 py-1 text-xs"
                       >
                         Edit
                       </button>
@@ -112,7 +114,7 @@ export function MoneyPlanSystem({ data }: Props) {
                             }
                           });
                         }}
-                        className="rounded-md border border-rose-300/30 px-2 py-1 text-xs text-rose-200 hover:bg-rose-500/10 disabled:opacity-50"
+                        className="rounded-md border border-rose-300/35 bg-rose-500/10 px-2 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20 disabled:opacity-50"
                       >
                         Delete
                       </button>
@@ -146,7 +148,7 @@ export function MoneyPlanSystem({ data }: Props) {
             required
             value={planForm.plan_name}
             onChange={(event) => setPlanForm((prev) => ({ ...prev, plan_name: event.target.value }))}
-            className="rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-white"
+            className="theme-input"
           />
           <input
             name="net_increase"
@@ -157,20 +159,20 @@ export function MoneyPlanSystem({ data }: Props) {
             required
             value={planForm.net_increase}
             onChange={(event) => setPlanForm((prev) => ({ ...prev, net_increase: event.target.value }))}
-            className="rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-white"
+            className="theme-input"
           />
           <select
             name="status"
             value={planForm.status}
             onChange={(event) => setPlanForm((prev) => ({ ...prev, status: event.target.value as MoneyGoalPlanStatus }))}
-            className="rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-white"
+            className="theme-input"
           >
             <option value="planned">planned</option>
             <option value="in_progress">in_progress</option>
             <option value="completed">completed</option>
           </select>
           <div className="col-span-full flex items-center gap-2">
-            <button disabled={isPlanPending || isDeletePending} className="w-fit rounded-full bg-indigo-500/20 px-4 py-2 text-indigo-200 disabled:opacity-50">
+            <button disabled={isPlanPending || isDeletePending} className="theme-button-primary w-fit disabled:opacity-50">
               {editingPlanId ? 'Save changes' : 'Add plan'}
             </button>
             {editingPlanId ? (
@@ -178,19 +180,19 @@ export function MoneyPlanSystem({ data }: Props) {
                 type="button"
                 disabled={isPlanPending || isDeletePending}
                 onClick={clearEditor}
-                className="w-fit rounded-full border border-white/20 px-4 py-2 text-slate-200 disabled:opacity-50"
+                className="theme-button-secondary w-fit disabled:opacity-50"
               >
                 Cancel
               </button>
             ) : null}
           </div>
         </form>
-        {message ? <p className="mt-2 text-sm text-slate-300">{message}</p> : null}
+        {message ? <p className="mt-2 text-sm text-[color:var(--text-secondary)]">{message}</p> : null}
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-        <h3 className="text-xl font-semibold text-white">Summary</h3>
-        <p className="text-sm text-slate-400">System-calculated projection toward 100K target.</p>
+      <section className="theme-card p-5">
+        <h3 className="section-title">Summary</h3>
+        <p className="helper-text">System-calculated projection toward 100K target.</p>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <SummaryCard label="Current Net" value={currency.format(data.currentNet)} tone={data.currentNet >= 0 ? 'text-cyan-300' : 'text-rose-300'} />

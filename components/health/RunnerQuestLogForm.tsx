@@ -67,8 +67,8 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-      <h3 className="text-lg font-semibold text-white">Quick Run Log</h3>
+    <section className="theme-card space-y-4 p-5">
+      <h3 className="card-title">Quick Run Log</h3>
       <form
         action={(formData) => {
           setError(null);
@@ -92,17 +92,17 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
       >
         <input type="hidden" name="no_stop" value={String(noStop)} />
         <div className="grid gap-3 md:grid-cols-2">
-          <label className="space-y-1 text-sm text-slate-300">
+          <label className="space-y-1 label-text">
             <span>Run Date</span>
             <input
               type="date"
               name="run_date"
               required
               defaultValue={new Date().toISOString().slice(0, 10)}
-              className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-white outline-none focus:border-sky-300"
+              className="theme-input"
             />
           </label>
-          <label className="space-y-1 text-sm text-slate-300">
+          <label className="space-y-1 label-text">
             <span>Distance (km)</span>
             <input
               type="number"
@@ -112,13 +112,13 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
               required
               value={distance}
               onChange={(event) => setDistance(event.target.value)}
-              className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-white outline-none focus:border-sky-300"
+              className="theme-input"
             />
           </label>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
-          <label className="space-y-1 text-sm text-slate-300">
+          <label className="space-y-1 label-text">
             <span>Duration (mmss)</span>
             <input
               type="text"
@@ -132,19 +132,19 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
                 setIsDurationTouched(true);
                 setDurationInput(event.target.value);
               }}
-              className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-white outline-none focus:border-sky-300"
+              className="theme-input"
             />
-            <p className="text-xs text-slate-400">Examples: 0900 → 9:00, 1245 → 12:45, 45 → 0:45</p>
+            <p className="helper-text">Examples: 0900 → 9:00, 1245 → 12:45, 45 → 0:45</p>
             {isDurationTouched && durationValidation.error ? (
               <p className="text-xs text-amber-300">{durationValidation.error}</p>
             ) : null}
           </label>
-          <label className="space-y-1 text-sm text-slate-300">
+          <label className="space-y-1 label-text">
             <span>Effort</span>
             <select
               name="effort"
               defaultValue="normal"
-              className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-white outline-none focus:border-sky-300"
+              className="theme-input"
             >
               <option value="easy">Easy</option>
               <option value="normal">Normal</option>
@@ -153,22 +153,22 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
           </label>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <input type="checkbox" checked={noStop} onChange={(event) => setNoStop(event.target.checked)} className="h-4 w-4" />
+        <label className="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
+          <input type="checkbox" checked={noStop} onChange={(event) => setNoStop(event.target.checked)} className="h-4 w-4 accent-sky-300" />
           I finished this run without stopping
         </label>
 
-        <label className="space-y-1 text-sm text-slate-300">
+        <label className="space-y-1 label-text">
           <span>Note (optional)</span>
           <textarea
             name="note"
             rows={2}
-            className="w-full rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-white outline-none focus:border-sky-300"
+            className="theme-textarea"
           />
         </label>
 
         {preview ? (
-          <div className="rounded-xl border border-white/10 bg-slate-950/80 p-3 text-sm text-slate-200">
+          <div className="action-surface p-3 text-sm text-[color:var(--text-primary)]">
             <p>Pace preview: <span className="font-medium text-white">{formatPace(preview.pace)}</span></p>
             <p>Duration: <span className="font-medium text-white">{Math.floor(preview.durationSeconds / 60)}:{String(preview.durationSeconds % 60).padStart(2, '0')}</span></p>
             <p className={preview.evaluation.passed ? 'text-emerald-300' : 'text-amber-300'}>
@@ -183,7 +183,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="w-fit rounded-full bg-sky-400/20 px-4 py-2 text-sm font-semibold text-sky-200 transition hover:bg-sky-400/30 disabled:opacity-60"
+          className="theme-button-primary w-fit disabled:opacity-60"
         >
           {isPending ? 'Saving...' : 'Log This Run'}
         </button>

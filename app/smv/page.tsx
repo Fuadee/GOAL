@@ -6,13 +6,13 @@ export default async function SmvPage() {
   const data = await getSmvDashboardData();
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    <main className="app-shell">
       <Navbar />
-      <section className="mx-auto w-full max-w-7xl px-4 pt-10 md:px-8">
-        <header className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">SMV Analytics</p>
-          <h1 className="text-4xl font-semibold text-white md:text-5xl">SMV Scoring System</h1>
-          <p className="max-w-2xl text-base text-slate-300">
+      <section className="page-container pb-2">
+        <header className="page-header">
+          <p className="page-kicker">SMV Analytics</p>
+          <h1 className="page-title">SMV Scoring System</h1>
+          <p className="max-w-2xl text-base text-[color:var(--text-secondary)]">
             Checklist-driven scoring for all 8 SMV dimensions with trend tracking, strongest/weakest highlights, and score history.
           </p>
         </header>

@@ -6,10 +6,10 @@ export default async function MoneyManagementPlanPage() {
   const data = await getMoneyPlanPageData();
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    <main className="app-shell">
       <Navbar />
 
-      <section className="mx-auto w-full max-w-7xl space-y-8 px-4 py-10 md:px-8 md:py-14">
+      <section className="page-container space-y-8">
         <MoneyPlanSystem data={data} />
       </section>
     </main>
