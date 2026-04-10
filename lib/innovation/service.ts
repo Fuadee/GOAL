@@ -3,8 +3,10 @@ import {
   createInnovation,
   createInnovationLog,
   createInnovationProcessStep,
+  deleteDiscoveryCandidate,
   touchInnovationUpdatedAt,
-  updateDiscoveryCandidateStatus,
+  updateDiscoveryCandidate,
+  updateInnovation,
   updateInnovationProcessStep
 } from '@/lib/innovation/mutations';
 import {
@@ -15,6 +17,8 @@ import {
   getInnovationProcessStepsByInnovationId
 } from '@/lib/innovation/queries';
 import {
+  deriveDiscoveryCandidateState,
+  deriveInnovationState,
   getCurrentInnovation,
   getDiscoveryGap,
   getNextDiscoveryAction,
@@ -30,7 +34,8 @@ import {
   InnovationCardViewModel,
   InnovationDetailViewModel,
   InnovationProcessStepRow,
-  UpdateInnovationProcessStepPayload
+  UpdateInnovationProcessStepPayload,
+  InnovationStatus
 } from '@/lib/innovation/types';
 
 function calculateProgress(steps: Pick<InnovationProcessStepRow, 'status'>[]): { completedStepCount: number; stepTotal: number; progressPercent: number } {
@@ -48,6 +53,14 @@ function calculateProgress(steps: Pick<InnovationProcessStepRow, 'status'>[]): {
   };
 }
 
+function mapDerivedStateToStatus(state: ReturnType<typeof deriveInnovationState>): InnovationStatus {
+  if (state === 'building') {
+    return 'building';
+  }
+
+  return state;
+}
+
 export async function getInnovationDashboardData(): Promise<InnovationCardViewModel[]> {
   const rows = await getInnovationDashboardRows();
 
@@ -59,6 +72,9 @@ export async function getInnovationDashboardData(): Promise<InnovationCardViewMo
       description: row.description,
       goal: row.goal,
       status: row.status,
+      is_blocked: row.is_blocked,
+      blocked_reason: row.blocked_reason,
+      blocked_at: row.blocked_at,
       created_at: row.created_at,
       updated_at: row.updated_at,
       completedStepCount,
@@ -85,7 +101,7 @@ export async function getInnovationDashboardPageData(goal = 10): Promise<{
   return {
     innovations,
     currentMission: getCurrentInnovation(innovations),
-    discoveryCandidates: discoveryCandidates.sort((a, b) => sortDiscoveryCandidatesByPipeline(a.status) - sortDiscoveryCandidatesByPipeline(b.status)),
+    discoveryCandidates: discoveryCandidates.sort((a, b) => sortDiscoveryCandidatesByPipeline(a) - sortDiscoveryCandidatesByPipeline(b)),
     discoveryGap: getDiscoveryGap(innovations, goal),
     nextDiscoveryAction: getNextDiscoveryAction(getDiscoveryGap(innovations, goal))
   };
@@ -122,26 +138,57 @@ export async function addDiscoveryCandidate(payload: CreateDiscoveryCandidatePay
   return createDiscoveryCandidate(payload);
 }
 
+export async function defineCandidateProblem(candidateId: string, problem: string) {
+  return updateDiscoveryCandidate(candidateId, { problem });
+}
+
+export async function updateCandidateProblem(candidateId: string, problem: string) {
+  return updateDiscoveryCandidate(candidateId, { problem });
+}
+
+export async function addCandidateConcept(candidateId: string, concept: string) {
+  return updateDiscoveryCandidate(candidateId, { concept });
+}
+
+export async function updateCandidateConcept(candidateId: string, concept: string) {
+  return updateDiscoveryCandidate(candidateId, { concept });
+}
+
+export async function markCandidateValidated(candidateId: string, validationNotes?: string) {
+  return updateDiscoveryCandidate(candidateId, {
+    validated_at: new Date().toISOString(),
+    validation_notes: validationNotes || null
+  });
+}
+
+export async function removeDiscoveryCandidate(candidateId: string) {
+  await deleteDiscoveryCandidate(candidateId);
+}
+
 export async function convertDiscoveryCandidateToInnovation(candidate: DiscoveryCandidateRow) {
   const innovation = await createInnovation({
     title: candidate.title,
-    description: candidate.problem ?? undefined,
+    description: candidate.concept ?? candidate.problem ?? undefined,
     goal: candidate.notes ?? undefined
   });
 
-  await updateDiscoveryCandidateStatus(candidate.id, 'converted');
+  await updateDiscoveryCandidate(candidate.id, {
+    converted_at: new Date().toISOString(),
+    converted_innovation_id: innovation.id
+  });
+
   return innovation;
 }
 
 export async function addInnovationProcessStep(payload: CreateInnovationProcessStepPayload) {
   const created = await createInnovationProcessStep(payload);
-  await touchInnovationUpdatedAt(payload.innovation_id);
+  await syncInnovationStatus(payload.innovation_id);
   return created;
 }
 
 export async function updateInnovationStepStatus(stepId: string, innovationId: string, payload: UpdateInnovationProcessStepPayload) {
   const updated = await updateInnovationProcessStep(stepId, payload);
-  await touchInnovationUpdatedAt(innovationId);
+  await syncInnovationStatus(innovationId);
   return updated;
 }
 
@@ -150,3 +197,66 @@ export async function addInnovationLog(payload: CreateInnovationLogPayload) {
   await touchInnovationUpdatedAt(payload.innovation_id);
   return created;
 }
+
+export async function markInnovationNextStepDone(innovationId: string) {
+  const steps = await getInnovationProcessStepsByInnovationId(innovationId);
+  const nextStep = steps.find((step) => step.status !== 'done');
+
+  if (!nextStep) {
+    return null;
+  }
+
+  await updateInnovationProcessStep(nextStep.id, {
+    status: 'done',
+    completed_at: new Date().toISOString()
+  });
+
+  await syncInnovationStatus(innovationId);
+  return nextStep;
+}
+
+export async function blockInnovation(innovationId: string, blockedReason: string) {
+  return updateInnovation(innovationId, {
+    is_blocked: true,
+    blocked_reason: blockedReason,
+    blocked_at: new Date().toISOString(),
+    status: 'blocked'
+  });
+}
+
+export async function resumeInnovation(innovationId: string) {
+  await updateInnovation(innovationId, {
+    is_blocked: false,
+    blocked_at: null,
+    status: 'building'
+  });
+
+  await syncInnovationStatus(innovationId);
+}
+
+export async function updateInnovationBlockedReason(innovationId: string, blockedReason: string) {
+  return updateInnovation(innovationId, {
+    blocked_reason: blockedReason,
+    blocked_at: new Date().toISOString()
+  });
+}
+
+async function syncInnovationStatus(innovationId: string) {
+  const innovations = await getInnovationDashboardData();
+  const innovation = innovations.find((item) => item.id === innovationId);
+
+  if (!innovation) {
+    return;
+  }
+
+  const derivedState = deriveInnovationState(innovation);
+
+  await updateInnovation(innovationId, {
+    status: mapDerivedStateToStatus(derivedState),
+    blocked_at: innovation.is_blocked ? innovation.blocked_at ?? new Date().toISOString() : null
+  });
+
+  await touchInnovationUpdatedAt(innovationId);
+}
+
+export { deriveDiscoveryCandidateState };

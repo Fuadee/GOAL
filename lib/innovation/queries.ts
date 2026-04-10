@@ -16,7 +16,7 @@ export async function getInnovationDashboardRows(): Promise<InnovationDashboardR
 
 export async function getDiscoveryCandidates(): Promise<DiscoveryCandidateRow[]> {
   return supabaseRestRequest<DiscoveryCandidateRow[]>(
-    'discovery_candidates?status=neq.converted&order=created_at.desc',
+    'discovery_candidates?order=created_at.desc',
     'GET'
   );
 }

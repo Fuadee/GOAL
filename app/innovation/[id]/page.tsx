@@ -4,6 +4,7 @@ import { AddInnovationLogForm } from '@/components/innovation/AddInnovationLogFo
 import { InnovationProcessSection } from '@/components/innovation/InnovationProcessSection';
 import { Navbar } from '@/components/navbar';
 import { getInnovationDetailData } from '@/lib/innovation/service';
+import { deriveInnovationState, getInnovationStateMeta } from '@/lib/innovation/helpers';
 import { InnovationLogType } from '@/lib/innovation/types';
 
 type InnovationDetailPageProps = {
@@ -30,6 +31,16 @@ export default async function InnovationDetailPage({ params }: InnovationDetailP
   }
 
   const { innovation, logs, steps, completedStepCount, progressPercent } = data;
+  const innovationWithSteps = {
+    ...innovation,
+    stepTotal: steps.length,
+    completedStepCount,
+    progressPercent,
+    steps,
+    nextStep: steps.find((step) => step.status !== 'done') ?? null
+  };
+  const stateMeta = getInnovationStateMeta(innovationWithSteps);
+  const derivedState = deriveInnovationState(innovationWithSteps);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
@@ -41,11 +52,16 @@ export default async function InnovationDetailPage({ params }: InnovationDetailP
           <p className="text-slate-300">{innovation.description || 'No description provided.'}</p>
           <p className="text-slate-300">Goal: {innovation.goal || 'No goal provided.'}</p>
           <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-            <p>Status: <span className="font-semibold text-white capitalize">{innovation.status}</span></p>
+            <p>State: <span className="font-semibold text-white">{stateMeta.label}</span> ({derivedState})</p>
+            <p>Why: <span className="text-white">{stateMeta.description}</span></p>
             <p>Progress: <span className="font-semibold text-white">{progressPercent}%</span></p>
             <p>Created: <span className="text-white">{formatTimestamp(innovation.created_at)}</span></p>
             <p>Updated: <span className="text-white">{formatTimestamp(innovation.updated_at)}</span></p>
           </div>
+
+          {innovation.is_blocked && innovation.blocked_reason ? (
+            <p className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">Blocked reason: {innovation.blocked_reason}</p>
+          ) : null}
 
           <section className="space-y-2">
             <div className="h-2 overflow-hidden rounded-full bg-slate-800">
