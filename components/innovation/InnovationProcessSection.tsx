@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 
 import {
   createInnovationProcessStepAction,
-  updateInnovationProcessStepStatusAction
+  markStepAsDoneAction,
+  markStepInProgressAction,
+  markStepTodoAction
 } from '@/app/innovation/[id]/actions';
-import { INNOVATION_STEP_STATUS, InnovationProcessStepRow, InnovationStepStatus } from '@/lib/innovation/types';
+import { InnovationProcessStepRow, InnovationStepStatus } from '@/lib/innovation/types';
 
 type InnovationProcessSectionProps = {
   innovationId: string;
@@ -64,7 +66,7 @@ export function InnovationProcessSection({ innovationId, steps }: InnovationProc
           disabled={isPending}
           className="w-fit rounded-full bg-indigo-400/20 px-4 py-2 text-sm font-semibold text-indigo-200 transition hover:bg-indigo-400/30 disabled:opacity-50"
         >
-          {isPending ? 'Saving...' : 'Add step'}
+          {isPending ? 'Saving...' : 'Add Step'}
         </button>
       </form>
 
@@ -80,29 +82,50 @@ export function InnovationProcessSection({ innovationId, steps }: InnovationProc
                   {step.description ? <p className="text-sm text-slate-300">{step.description}</p> : null}
                 </div>
 
-                <form
-                  action={(formData) => {
-                    startTransition(async () => {
-                      await updateInnovationProcessStepStatusAction(innovationId, step.id, formData);
-                      router.refresh();
-                    });
-                  }}
-                >
-                  <select
-                    name="status"
-                    defaultValue={step.status}
-                    className={`rounded-full px-3 py-2 text-xs font-semibold ${stepStatusStyles[step.status]}`}
-                  >
-                    {INNOVATION_STEP_STATUS.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                  <button type="submit" className="ml-2 rounded-full bg-white/10 px-3 py-2 text-xs text-white">
-                    Update
-                  </button>
-                </form>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`rounded-full px-3 py-2 text-xs font-semibold ${stepStatusStyles[step.status]}`}>{step.status}</span>
+                  {step.status === 'todo' ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        startTransition(async () => {
+                          await markStepInProgressAction(innovationId, step.id);
+                          router.refresh();
+                        });
+                      }}
+                      className="rounded-full bg-amber-400/20 px-3 py-2 text-xs text-amber-100"
+                    >
+                      Start
+                    </button>
+                  ) : null}
+                  {step.status !== 'done' ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        startTransition(async () => {
+                          await markStepAsDoneAction(innovationId, step.id);
+                          router.refresh();
+                        });
+                      }}
+                      className="rounded-full bg-emerald-400/20 px-3 py-2 text-xs text-emerald-100"
+                    >
+                      Mark Done
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        startTransition(async () => {
+                          await markStepTodoAction(innovationId, step.id);
+                          router.refresh();
+                        });
+                      }}
+                      className="rounded-full bg-white/10 px-3 py-2 text-xs text-white"
+                    >
+                      Reopen
+                    </button>
+                  )}
+                </div>
               </div>
             </li>
           ))}

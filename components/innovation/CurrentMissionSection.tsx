@@ -56,7 +56,7 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
 
                 setError(null);
                 startTransition(async () => {
-                  const result = await markInnovationNextStepDoneAction(mission.id, mission.nextStep!.id);
+                  const result = await markInnovationNextStepDoneAction(mission.id);
                   if (!result.success) {
                     setError(result.message);
                     return;
@@ -66,7 +66,7 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
               }}
               className="rounded-full bg-emerald-400/30 px-4 py-2 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isPending ? 'Saving...' : 'Mark step done'}
+              {isPending ? 'Saving...' : 'Mark Next Step Done'}
             </button>
           </div>
         </>

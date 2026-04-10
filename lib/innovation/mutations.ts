@@ -8,6 +8,8 @@ import {
   InnovationLogRow,
   InnovationProcessStepRow,
   InnovationRow,
+  UpdateDiscoveryCandidatePayload,
+  UpdateInnovationPayload,
   UpdateInnovationProcessStepPayload
 } from '@/lib/innovation/types';
 
@@ -16,14 +18,23 @@ export async function createInnovation(payload: CreateInnovationPayload): Promis
   return rows[0];
 }
 
+export async function updateInnovation(id: string, payload: UpdateInnovationPayload): Promise<InnovationRow> {
+  const rows = await supabaseRestRequest<InnovationRow[]>(`innovations?id=eq.${id}`, 'PATCH', payload);
+  return rows[0];
+}
+
 export async function createDiscoveryCandidate(payload: CreateDiscoveryCandidatePayload): Promise<DiscoveryCandidateRow> {
   const rows = await supabaseRestRequest<DiscoveryCandidateRow[]>('discovery_candidates', 'POST', payload);
   return rows[0];
 }
 
-export async function updateDiscoveryCandidateStatus(id: string, status: DiscoveryCandidateRow['status']): Promise<DiscoveryCandidateRow> {
-  const rows = await supabaseRestRequest<DiscoveryCandidateRow[]>(`discovery_candidates?id=eq.${id}`, 'PATCH', { status });
+export async function updateDiscoveryCandidate(id: string, payload: UpdateDiscoveryCandidatePayload): Promise<DiscoveryCandidateRow> {
+  const rows = await supabaseRestRequest<DiscoveryCandidateRow[]>(`discovery_candidates?id=eq.${id}`, 'PATCH', payload);
   return rows[0];
+}
+
+export async function deleteDiscoveryCandidate(id: string): Promise<void> {
+  await supabaseRestRequest<DiscoveryCandidateRow[]>(`discovery_candidates?id=eq.${id}`, 'DELETE');
 }
 
 export async function createInnovationProcessStep(payload: CreateInnovationProcessStepPayload): Promise<InnovationProcessStepRow> {

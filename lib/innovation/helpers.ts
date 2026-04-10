@@ -1,11 +1,16 @@
 import {
-  DiscoveryCandidateStatus,
+  DiscoveryCandidateRow,
+  DiscoveryCandidateState,
+  DiscoveryCandidateStateAction,
+  DiscoveryCandidateStateMeta,
   InnovationCardViewModel,
+  InnovationDerivedState,
   InnovationProcessStepSummary,
-  InnovationStatus
+  InnovationStateAction,
+  InnovationStateMeta
 } from '@/lib/innovation/types';
 
-const CURRENT_MISSION_STATUS_PRIORITY: InnovationStatus[] = ['building', 'testing', 'idea', 'blocked'];
+const CURRENT_MISSION_STATUS_PRIORITY: InnovationDerivedState[] = ['building', 'idea', 'blocked', 'completed'];
 
 function compareSteps(a: InnovationProcessStepSummary, b: InnovationProcessStepSummary): number {
   const orderA = a.step_order ?? Number.MAX_SAFE_INTEGER;
@@ -22,13 +27,130 @@ export function getNextStep(innovation: InnovationCardViewModel): InnovationProc
   return innovation.steps.filter((step) => step.status !== 'done').sort(compareSteps)[0] ?? null;
 }
 
+export function deriveDiscoveryCandidateState(candidate: DiscoveryCandidateRow): DiscoveryCandidateState {
+  if (candidate.converted_at || candidate.converted_innovation_id) {
+    return 'converted';
+  }
+
+  if (candidate.validated_at) {
+    return 'validated';
+  }
+
+  if (candidate.concept) {
+    return 'concept';
+  }
+
+  if (candidate.problem) {
+    return 'pain_point';
+  }
+
+  return 'observed';
+}
+
+const DISCOVERY_STATE_META: Record<
+  DiscoveryCandidateState,
+  { label: string; description: string; allowedActions: DiscoveryCandidateStateAction[] }
+> = {
+  observed: {
+    label: 'OBSERVED',
+    description: 'ยังไม่ได้ระบุปัญหาให้ชัดเจน',
+    allowedActions: ['define_problem', 'delete_candidate']
+  },
+  pain_point: {
+    label: 'PAIN POINT',
+    description: 'ระบุปัญหาแล้ว แต่ยังไม่มีแนวคิดทางแก้',
+    allowedActions: ['add_concept', 'edit_problem']
+  },
+  concept: {
+    label: 'CONCEPT',
+    description: 'มีแนวคิดแล้ว รอการยืนยันก่อนลงมือทำ',
+    allowedActions: ['mark_validated', 'edit_concept']
+  },
+  validated: {
+    label: 'VALIDATED',
+    description: 'แนวคิดนี้พร้อมแปลงเป็น innovation',
+    allowedActions: ['convert_to_innovation', 'edit_validation_notes']
+  },
+  converted: {
+    label: 'CONVERTED',
+    description: 'แปลงเป็น innovation เรียบร้อยแล้ว',
+    allowedActions: ['open_innovation']
+  }
+};
+
+export function getDiscoveryCandidateStateMeta(candidate: DiscoveryCandidateRow): DiscoveryCandidateStateMeta {
+  const state = deriveDiscoveryCandidateState(candidate);
+  const meta = DISCOVERY_STATE_META[state];
+
+  return {
+    state,
+    label: meta.label,
+    description: meta.description,
+    allowedActions: meta.allowedActions
+  };
+}
+
+export function deriveInnovationState(innovation: InnovationCardViewModel): InnovationDerivedState {
+  if (innovation.is_blocked) {
+    return 'blocked';
+  }
+
+  if (innovation.stepTotal === 0) {
+    return 'idea';
+  }
+
+  if (innovation.stepTotal > 0 && innovation.completedStepCount < innovation.stepTotal) {
+    return 'building';
+  }
+
+  return 'completed';
+}
+
+const INNOVATION_STATE_META: Record<InnovationDerivedState, { label: string; description: string; allowedActions: InnovationStateAction[] }> = {
+  idea: {
+    label: 'IDEA',
+    description: 'ยังไม่ได้เริ่มลงมือ',
+    allowedActions: ['add_first_step', 'edit_innovation', 'block', 'open_details']
+  },
+  building: {
+    label: 'BUILDING',
+    description: 'กำลังพัฒนา',
+    allowedActions: ['mark_next_step_done', 'add_step', 'open_details', 'block']
+  },
+  blocked: {
+    label: 'BLOCKED',
+    description: 'ติดปัญหาที่ต้องแก้ก่อน',
+    allowedActions: ['resume', 'edit_block_reason', 'open_details']
+  },
+  completed: {
+    label: 'COMPLETED',
+    description: 'เสร็จครบทุกขั้นแล้ว',
+    allowedActions: ['open_details', 'create_follow_up']
+  }
+};
+
+export function getInnovationStateMeta(innovation: InnovationCardViewModel): InnovationStateMeta {
+  const state = deriveInnovationState(innovation);
+  const meta = INNOVATION_STATE_META[state];
+
+  return {
+    state,
+    label: meta.label,
+    description: meta.description,
+    allowedActions: meta.allowedActions
+  };
+}
+
 export function getCurrentInnovation(innovations: InnovationCardViewModel[]): InnovationCardViewModel | null {
   return (
     innovations
-      .filter((innovation) => innovation.status !== 'completed')
+      .filter((innovation) => deriveInnovationState(innovation) !== 'completed')
       .sort((a, b) => {
-        if (a.status !== b.status) {
-          return CURRENT_MISSION_STATUS_PRIORITY.indexOf(a.status) - CURRENT_MISSION_STATUS_PRIORITY.indexOf(b.status);
+        const aState = deriveInnovationState(a);
+        const bState = deriveInnovationState(b);
+
+        if (aState !== bState) {
+          return CURRENT_MISSION_STATUS_PRIORITY.indexOf(aState) - CURRENT_MISSION_STATUS_PRIORITY.indexOf(bState);
         }
 
         if (b.progressPercent !== a.progressPercent) {
@@ -52,8 +174,8 @@ export function getNextDiscoveryAction(gap: number): string {
   return 'review และ improve innovation ที่มี';
 }
 
-const DISCOVERY_STATUS_ORDER: DiscoveryCandidateStatus[] = ['observed', 'pain_point', 'concept', 'validated', 'converted'];
+const DISCOVERY_STATUS_ORDER: DiscoveryCandidateState[] = ['observed', 'pain_point', 'concept', 'validated', 'converted'];
 
-export function sortDiscoveryCandidatesByPipeline(status: DiscoveryCandidateStatus): number {
-  return DISCOVERY_STATUS_ORDER.indexOf(status);
+export function sortDiscoveryCandidatesByPipeline(candidate: DiscoveryCandidateRow): number {
+  return DISCOVERY_STATUS_ORDER.indexOf(deriveDiscoveryCandidateState(candidate));
 }

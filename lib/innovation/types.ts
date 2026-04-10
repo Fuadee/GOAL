@@ -8,12 +8,53 @@ export type InnovationLogType = (typeof INNOVATION_LOG_TYPES)[number];
 export type InnovationStepStatus = (typeof INNOVATION_STEP_STATUS)[number];
 export type DiscoveryCandidateStatus = (typeof DISCOVERY_CANDIDATE_STATUS)[number];
 
+export type DiscoveryCandidateState = 'observed' | 'pain_point' | 'concept' | 'validated' | 'converted';
+export type DiscoveryCandidateStateAction =
+  | 'define_problem'
+  | 'delete_candidate'
+  | 'add_concept'
+  | 'edit_problem'
+  | 'mark_validated'
+  | 'edit_concept'
+  | 'convert_to_innovation'
+  | 'edit_validation_notes'
+  | 'open_innovation';
+
+export type InnovationDerivedState = 'idea' | 'building' | 'blocked' | 'completed';
+export type InnovationStateAction =
+  | 'add_first_step'
+  | 'edit_innovation'
+  | 'mark_next_step_done'
+  | 'add_step'
+  | 'open_details'
+  | 'block'
+  | 'resume'
+  | 'edit_block_reason'
+  | 'create_follow_up';
+
+export type DiscoveryCandidateStateMeta = {
+  state: DiscoveryCandidateState;
+  label: string;
+  description: string;
+  allowedActions: DiscoveryCandidateStateAction[];
+};
+
+export type InnovationStateMeta = {
+  state: InnovationDerivedState;
+  label: string;
+  description: string;
+  allowedActions: InnovationStateAction[];
+};
+
 export type InnovationRow = {
   id: string;
   title: string;
   description: string | null;
   goal: string | null;
   status: InnovationStatus;
+  is_blocked: boolean;
+  blocked_reason: string | null;
+  blocked_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -50,6 +91,11 @@ export type DiscoveryCandidateRow = {
   id: string;
   title: string;
   problem: string | null;
+  concept: string | null;
+  validation_notes: string | null;
+  validated_at: string | null;
+  converted_at: string | null;
+  converted_innovation_id: string | null;
   source: string | null;
   impact_score: number;
   feasibility_score: number;
@@ -91,6 +137,13 @@ export type CreateInnovationProcessStepPayload = {
   step_order?: number;
 };
 
+export type UpdateInnovationPayload = {
+  is_blocked?: boolean;
+  blocked_reason?: string | null;
+  blocked_at?: string | null;
+  status?: InnovationStatus;
+};
+
 export type UpdateInnovationProcessStepPayload = {
   status?: InnovationStepStatus;
   completed_at?: string | null;
@@ -111,9 +164,18 @@ export type CreateInnovationLogPayload = {
 export type CreateDiscoveryCandidatePayload = {
   title: string;
   problem?: string;
+  concept?: string;
   source?: string;
   impact_score?: number;
   feasibility_score?: number;
-  status?: DiscoveryCandidateStatus;
   notes?: string;
+};
+
+export type UpdateDiscoveryCandidatePayload = {
+  problem?: string;
+  concept?: string;
+  validation_notes?: string | null;
+  validated_at?: string | null;
+  converted_at?: string | null;
+  converted_innovation_id?: string | null;
 };

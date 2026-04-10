@@ -5,17 +5,16 @@ import { revalidatePath } from 'next/cache';
 import { addInnovationLog, addInnovationProcessStep, updateInnovationStepStatus } from '@/lib/innovation/service';
 import {
   INNOVATION_LOG_TYPES,
-  INNOVATION_STEP_STATUS,
-  InnovationLogType,
-  InnovationStepStatus
+  InnovationLogType
 } from '@/lib/innovation/types';
 
 function isInnovationLogType(value: string): value is InnovationLogType {
   return INNOVATION_LOG_TYPES.includes(value as InnovationLogType);
 }
 
-function isInnovationStepStatus(value: string): value is InnovationStepStatus {
-  return INNOVATION_STEP_STATUS.includes(value as InnovationStepStatus);
+function revalidateInnovationPages(innovationId: string) {
+  revalidatePath('/innovation');
+  revalidatePath(`/innovation/${innovationId}`);
 }
 
 export async function createInnovationProcessStepAction(
@@ -39,32 +38,42 @@ export async function createInnovationProcessStepAction(
     step_order: Number.isFinite(stepOrder) ? stepOrder : undefined
   });
 
-  revalidatePath('/innovation');
-  revalidatePath(`/innovation/${innovationId}`);
+  revalidateInnovationPages(innovationId);
 
   return { success: true, message: 'Process step added.' };
 }
 
-export async function updateInnovationProcessStepStatusAction(
-  innovationId: string,
-  stepId: string,
-  formData: FormData
-): Promise<{ success: boolean; message: string }> {
-  const statusRaw = String(formData.get('status') ?? '').trim();
-
-  if (!isInnovationStepStatus(statusRaw)) {
-    return { success: false, message: 'Invalid process step status.' };
-  }
-
+export async function markStepAsDoneAction(innovationId: string, stepId: string): Promise<{ success: boolean; message: string }> {
   await updateInnovationStepStatus(stepId, innovationId, {
-    status: statusRaw,
-    completed_at: statusRaw === 'done' ? new Date().toISOString() : null
+    status: 'done',
+    completed_at: new Date().toISOString()
   });
 
-  revalidatePath('/innovation');
-  revalidatePath(`/innovation/${innovationId}`);
+  revalidateInnovationPages(innovationId);
 
-  return { success: true, message: 'Process step updated.' };
+  return { success: true, message: 'Process step completed.' };
+}
+
+export async function markStepInProgressAction(innovationId: string, stepId: string): Promise<{ success: boolean; message: string }> {
+  await updateInnovationStepStatus(stepId, innovationId, {
+    status: 'in_progress',
+    completed_at: null
+  });
+
+  revalidateInnovationPages(innovationId);
+
+  return { success: true, message: 'Process step started.' };
+}
+
+export async function markStepTodoAction(innovationId: string, stepId: string): Promise<{ success: boolean; message: string }> {
+  await updateInnovationStepStatus(stepId, innovationId, {
+    status: 'todo',
+    completed_at: null
+  });
+
+  revalidateInnovationPages(innovationId);
+
+  return { success: true, message: 'Process step reopened.' };
 }
 
 export async function createInnovationLogAction(
@@ -94,7 +103,6 @@ export async function createInnovationLogAction(
     next_step: String(formData.get('next_step') ?? '').trim() || undefined
   });
 
-  revalidatePath('/innovation');
-  revalidatePath(`/innovation/${innovationId}`);
+  revalidateInnovationPages(innovationId);
   return { success: true, message: 'Log recorded.' };
 }
