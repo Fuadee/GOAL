@@ -2,6 +2,12 @@
 
 import { FormEvent, ReactNode, useMemo, useState } from 'react';
 
+import {
+  BloodDonationPlanDisplayStatus,
+  getBloodDonationPlanDisplayStatus,
+  getCountdownLabel,
+  getCurrentBloodDonationPlan
+} from '@/lib/blood-donation/plan-display';
 import { BloodDonationDashboardViewModel, BloodDonationEventViewModel } from '@/lib/blood-donation/types';
 
 type Props = {
@@ -14,11 +20,27 @@ const dateFormatter = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 
 
 const formatDate = (value: string | null) => (value ? dateFormatter.format(new Date(`${value}T00:00:00`)) : '-');
 
-const statusPill = (status: BloodDonationEventViewModel['derivedStatus']) => {
-  if (status === 'completed') return 'bg-emerald-500/20 text-emerald-300';
-  if (status === 'overdue') return 'bg-amber-500/20 text-amber-300';
-  if (status === 'cancelled') return 'bg-slate-500/30 text-slate-300';
-  return 'bg-blue-500/20 text-blue-200';
+const displayStatusMeta: Record<BloodDonationPlanDisplayStatus, { label: string; className: string }> = {
+  CURRENT: { label: 'แผนปัจจุบัน', className: 'bg-rose-500/20 text-rose-100 border border-rose-300/40' },
+  TODAY: { label: 'วันนี้', className: 'bg-orange-500/20 text-orange-100 border border-orange-300/40' },
+  SOON: { label: 'ใกล้ถึงกำหนด', className: 'bg-sky-500/20 text-sky-100 border border-sky-300/40' },
+  UPCOMING: { label: 'วางแผนไว้แล้ว', className: 'bg-blue-500/20 text-blue-100 border border-blue-300/40' },
+  OVERDUE: { label: 'เลยกำหนด', className: 'bg-amber-500/20 text-amber-100 border border-amber-300/40' },
+  COMPLETED: { label: 'ทำแล้ว', className: 'bg-emerald-500/20 text-emerald-100 border border-emerald-300/40' },
+  CANCELLED: { label: 'ยกเลิกแล้ว', className: 'bg-slate-500/30 text-slate-200 border border-slate-300/30' }
+};
+
+const getPlanCardTone = (status: BloodDonationPlanDisplayStatus, isCurrent: boolean) => {
+  if (isCurrent || status === 'CURRENT') {
+    return 'border-rose-300/60 bg-gradient-to-br from-rose-500/15 via-slate-900/80 to-purple-500/10 shadow-lg shadow-rose-900/30';
+  }
+
+  if (status === 'OVERDUE') return 'border-amber-400/40 bg-amber-500/5';
+  if (status === 'TODAY') return 'border-orange-400/40 bg-orange-500/5';
+  if (status === 'CANCELLED') return 'border-slate-500/40 bg-slate-900/50 opacity-80';
+  if (status === 'COMPLETED') return 'border-emerald-400/40 bg-emerald-500/5';
+
+  return 'border-white/10 bg-slate-950/40';
 };
 
 export function BloodDonationDashboard({ initialData }: Props) {
@@ -29,6 +51,9 @@ export function BloodDonationDashboard({ initialData }: Props) {
   const [selectedEvent, setSelectedEvent] = useState<BloodDonationEventViewModel | null>(null);
 
   const canManageEvents = Boolean(data.goal);
+
+  const now = new Date();
+  const currentPlan = useMemo(() => getCurrentBloodDonationPlan(data.upcomingPlans), [data.upcomingPlans]);
 
   const refreshDashboard = async () => {
     const response = await fetch('/api/blood-donation', { cache: 'no-store' });
@@ -63,6 +88,8 @@ export function BloodDonationDashboard({ initialData }: Props) {
     if (!summary) return '0/0';
     return `${summary.completedCount}/${summary.targetCount}`;
   }, [summary]);
+
+  const nextPlanSummaryLabel = currentPlan ? formatDate(currentPlan.planned_date) : null;
 
   return (
     <section className="space-y-6">
@@ -109,6 +136,24 @@ export function BloodDonationDashboard({ initialData }: Props) {
 
       {summary && chance ? (
         <>
+          <BloodDonationNextMissionCard
+            currentPlan={currentPlan}
+            now={now}
+            onMarkDone={(event) => {
+              setSelectedEvent(event);
+              setModal('convert');
+            }}
+            onReschedule={(event) => {
+              setSelectedEvent(event);
+              setModal('reschedule');
+            }}
+            onCancel={(event) =>
+              submit(async () => {
+                await fetch(`/api/blood-donation/events/${event.id}/cancel`, { method: 'PATCH' });
+              })
+            }
+          />
+
           <section className="grid gap-4 md:grid-cols-4">
             {[
               ['เป้าหมาย', `${summary.targetCount} ครั้ง`],
@@ -119,6 +164,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
               <article key={label} className="rounded-2xl border border-white/10 bg-slate-900/70 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
                 <p className="mt-3 text-2xl font-semibold text-white">{value}</p>
+                {label === 'เหลืออีก' && nextPlanSummaryLabel ? <p className="mt-1 text-xs text-slate-400">แผนถัดไป: {nextPlanSummaryLabel}</p> : null}
               </article>
             ))}
           </section>
@@ -151,46 +197,25 @@ export function BloodDonationDashboard({ initialData }: Props) {
           ) : (
             <ul className="mt-4 space-y-3">
               {data.upcomingPlans.map((event) => (
-                <li key={event.id} className="rounded-xl border border-white/10 bg-slate-950/40 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-lg font-semibold text-white">{formatDate(event.planned_date)}</p>
-                      <p className="text-xs text-slate-400">{event.location || 'ไม่ระบุสถานที่'}</p>
-                      {event.note ? <p className="mt-1 text-sm text-slate-300">{event.note}</p> : null}
-                    </div>
-                    <span className={`rounded-full px-3 py-1 text-xs ${statusPill(event.derivedStatus)}`}>{event.derivedStatus}</span>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                    <button
-                      className="rounded-full bg-emerald-500/20 px-3 py-1 text-emerald-200"
-                      onClick={() => {
-                        setSelectedEvent(event);
-                        setModal('convert');
-                      }}
-                    >
-                      ทำจริงแล้ว
-                    </button>
-                    <button
-                      className="rounded-full bg-blue-500/20 px-3 py-1 text-blue-100"
-                      onClick={() => {
-                        setSelectedEvent(event);
-                        setModal('reschedule');
-                      }}
-                    >
-                      เลื่อนแผน
-                    </button>
-                    <button
-                      className="rounded-full bg-slate-500/30 px-3 py-1 text-slate-200"
-                      onClick={() =>
-                        submit(async () => {
-                          await fetch(`/api/blood-donation/events/${event.id}/cancel`, { method: 'PATCH' });
-                        })
-                      }
-                    >
-                      ยกเลิก
-                    </button>
-                  </div>
-                </li>
+                <BloodDonationPlanCard
+                  key={event.id}
+                  event={event}
+                  now={now}
+                  currentPlan={currentPlan}
+                  onMarkDone={() => {
+                    setSelectedEvent(event);
+                    setModal('convert');
+                  }}
+                  onReschedule={() => {
+                    setSelectedEvent(event);
+                    setModal('reschedule');
+                  }}
+                  onCancel={() =>
+                    submit(async () => {
+                      await fetch(`/api/blood-donation/events/${event.id}/cancel`, { method: 'PATCH' });
+                    })
+                  }
+                />
               ))}
             </ul>
           )}
@@ -307,6 +332,118 @@ export function BloodDonationDashboard({ initialData }: Props) {
         ) : null}
       </ModalShell>
     </section>
+  );
+}
+
+function BloodDonationNextMissionCard({
+  currentPlan,
+  now,
+  onMarkDone,
+  onReschedule,
+  onCancel
+}: {
+  currentPlan: BloodDonationEventViewModel | null;
+  now: Date;
+  onMarkDone: (event: BloodDonationEventViewModel) => void;
+  onReschedule: (event: BloodDonationEventViewModel) => void;
+  onCancel: (event: BloodDonationEventViewModel) => void;
+}) {
+  return (
+    <article className="rounded-3xl border border-rose-300/30 bg-gradient-to-br from-rose-500/15 via-slate-900/90 to-purple-500/10 p-6 shadow-2xl shadow-rose-900/20">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-200">Next Mission</p>
+          <h3 className="mt-2 text-2xl font-semibold text-white">ภารกิจถัดไป</h3>
+          <p className="mt-1 text-sm text-slate-300">ภารกิจที่ต้องโฟกัสตอนนี้</p>
+        </div>
+      </div>
+
+      {!currentPlan ? (
+        <div className="mt-5 rounded-2xl border border-dashed border-white/20 bg-slate-950/30 p-5">
+          <p className="text-lg font-medium text-white">ยังไม่มีแผนถัดไป</p>
+          <p className="mt-1 text-sm text-slate-400">ครบทุกแผนแล้ว หรือยังไม่ได้สร้างแผนใหม่</p>
+        </div>
+      ) : (
+        <div className="mt-5 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-slate-300">บริจาคเลือดครั้งถัดไป</p>
+              <p className="mt-1 text-3xl font-semibold text-white">{formatDate(currentPlan.planned_date)}</p>
+              <p className="mt-1 text-sm text-slate-300">{currentPlan.location || 'ไม่ระบุสถานที่'}</p>
+              {currentPlan.note ? <p className="mt-2 text-sm text-slate-400">{currentPlan.note}</p> : null}
+            </div>
+
+            <div className="space-y-2 text-right">
+              <span className="inline-flex rounded-full px-3 py-1 text-xs font-medium bg-rose-500/20 text-rose-100 border border-rose-300/40">แผนปัจจุบัน</span>
+              <p className="text-2xl font-semibold text-rose-100">{getCountdownLabel(currentPlan.planned_date, now)}</p>
+              <p className="text-xs text-slate-300">{displayStatusMeta[getBloodDonationPlanDisplayStatus(currentPlan, currentPlan, now)].label}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-xs">
+            <button className="rounded-full bg-emerald-500/20 px-3 py-1 text-emerald-100" onClick={() => onMarkDone(currentPlan)}>
+              ทำจริงแล้ว
+            </button>
+            <button className="rounded-full bg-blue-500/20 px-3 py-1 text-blue-100" onClick={() => onReschedule(currentPlan)}>
+              เลื่อนแผน
+            </button>
+            <button className="rounded-full bg-slate-500/30 px-3 py-1 text-slate-200" onClick={() => onCancel(currentPlan)}>
+              ยกเลิก
+            </button>
+          </div>
+        </div>
+      )}
+    </article>
+  );
+}
+
+function BloodDonationPlanCard({
+  event,
+  currentPlan,
+  now,
+  onMarkDone,
+  onReschedule,
+  onCancel
+}: {
+  event: BloodDonationEventViewModel;
+  currentPlan: BloodDonationEventViewModel | null;
+  now: Date;
+  onMarkDone: () => void;
+  onReschedule: () => void;
+  onCancel: () => void;
+}) {
+  const status = getBloodDonationPlanDisplayStatus(event, currentPlan, now);
+  const statusMeta = displayStatusMeta[status];
+  const isCurrent = event.id === currentPlan?.id;
+
+  return (
+    <li className={`rounded-xl border p-4 ${getPlanCardTone(status, isCurrent)}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-lg font-semibold text-white">{formatDate(event.planned_date)}</p>
+          <p className="text-sm font-medium text-rose-100">{getCountdownLabel(event.planned_date, now)}</p>
+          <p className="text-xs text-slate-400">{event.location || 'ไม่ระบุสถานที่'}</p>
+          {event.note ? <p className="mt-1 text-sm text-slate-300">{event.note}</p> : null}
+        </div>
+
+        <div className="flex flex-col items-end gap-1">
+          <span className={`rounded-full px-3 py-1 text-xs ${statusMeta.className}`}>{statusMeta.label}</span>
+          {isCurrent ? <span className="text-[11px] text-rose-200">โฟกัสตอนนี้</span> : null}
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2 text-xs">
+        <button className="rounded-full bg-emerald-500/20 px-3 py-1 text-emerald-200" onClick={onMarkDone}>
+          ทำจริงแล้ว
+        </button>
+        <button className="rounded-full bg-blue-500/20 px-3 py-1 text-blue-100" onClick={onReschedule}>
+          เลื่อนแผน
+        </button>
+        <button className="rounded-full bg-slate-500/30 px-3 py-1 text-slate-200" onClick={onCancel}>
+          ยกเลิก
+        </button>
+      </div>
+    </li>
   );
 }
 
