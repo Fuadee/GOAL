@@ -1,21 +1,9 @@
-import { ConstructionExecutionState, ConstructionMetricView, ConstructionMilestoneView, ConstructionRiskLevel, ConstructionWaitingSummaryView } from '@/lib/money/types';
-
-import { ConstructionMilestoneStepper } from './ConstructionMilestoneStepper';
-import { ConstructionWaitingStatusCard } from './ConstructionWaitingStatusCard';
+import { ConstructionMetricView } from '@/lib/money/types';
 
 type Props = {
   statusLabel: string;
   progressPercent: number;
   metrics: ConstructionMetricView[];
-  milestones: ConstructionMilestoneView[];
-  waitingSummary: ConstructionWaitingSummaryView;
-  executionState: ConstructionExecutionState | null;
-  riskLevel: ConstructionRiskLevel | null;
-  onToggleDetails: () => void;
-  onAddUpdate: () => void;
-  onMarkResponseReceived: () => void;
-  onEditWaitingDetails: () => void;
-  expanded: boolean;
 };
 
 function ProgressRing({ progressPercent }: { progressPercent: number }) {
@@ -49,16 +37,7 @@ function ProgressRing({ progressPercent }: { progressPercent: number }) {
 export function ConstructionHeroCard({
   statusLabel,
   progressPercent,
-  metrics,
-  milestones,
-  waitingSummary,
-  executionState,
-  riskLevel,
-  onToggleDetails,
-  onAddUpdate,
-  onMarkResponseReceived,
-  onEditWaitingDetails,
-  expanded
+  metrics
 }: Props) {
   return (
     <section className="rounded-3xl border border-cyan-300/20 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 p-5 shadow-2xl shadow-cyan-950/20 md:p-7">
@@ -83,26 +62,7 @@ export function ConstructionHeroCard({
 🏗 {statusLabel}
           </span>
           <ProgressRing progressPercent={progressPercent} />
-          <button
-            type="button"
-            onClick={onToggleDetails}
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-white/10"
-          >
-{expanded ? 'Hide full steps' : 'View all steps'} →
-          </button>
         </div>
-      </div>
-
-      <div className="mt-6 grid gap-4 xl:grid-cols-[1.8fr_1fr]">
-        <ConstructionMilestoneStepper milestones={milestones} />
-        <ConstructionWaitingStatusCard
-          summary={waitingSummary}
-          executionState={executionState}
-          riskLevel={riskLevel}
-          onAddUpdate={onAddUpdate}
-          onMarkResponseReceived={onMarkResponseReceived}
-          onEditWaitingDetails={onEditWaitingDetails}
-        />
       </div>
     </section>
   );

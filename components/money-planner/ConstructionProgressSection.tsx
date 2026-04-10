@@ -29,6 +29,8 @@ import {
   getWaitingSummary
 } from './construction-helpers';
 import { ConstructionHeroCard } from './ConstructionHeroCard';
+import { ConstructionMilestoneStepper } from './ConstructionMilestoneStepper';
+import { ConstructionWaitingStatusCard } from './ConstructionWaitingStatusCard';
 
 type Props = {
   steps: ConstructionStepRow[];
@@ -84,7 +86,7 @@ function getStatusLabel(completedSteps: number, totalSteps: number) {
 }
 
 export function ConstructionProgressSection({ steps }: Props) {
-  const [expanded, setExpanded] = useState(false);
+  const [showAllSteps, setShowAllSteps] = useState(false);
   const [stepState, setStepState] = useState(steps);
   const [activeStepId, setActiveStepId] = useState<string | null>(null);
   const [editWaitingStepId, setEditWaitingStepId] = useState<string | null>(null);
@@ -102,7 +104,7 @@ export function ConstructionProgressSection({ steps }: Props) {
 
   const milestones: ConstructionMilestoneView[] = useMemo(
     () =>
-      stepState.slice(0, 4).map((step) => {
+      stepState.map((step) => {
         const isCurrent = currentStep?.id === step.id && step.status !== 'completed' && !step.is_completed;
         let stepStatus: ConstructionMilestoneView['status'] = 'upcoming';
 
@@ -119,6 +121,7 @@ export function ConstructionProgressSection({ steps }: Props) {
       }),
     [currentStep?.id, stepState]
   );
+  const previewMilestones = useMemo(() => milestones.slice(0, 4), [milestones]);
 
   const executionState = getCurrentExecutionState(currentStep);
   const riskLevel = getCurrentRiskLevel(currentStep);
@@ -359,20 +362,37 @@ export function ConstructionProgressSection({ steps }: Props) {
         statusLabel={status}
         progressPercent={progressPercent}
         metrics={metrics}
-        milestones={milestones}
-        waitingSummary={waitingSummary}
+      />
+
+      <ConstructionWaitingStatusCard
+        summary={waitingSummary}
         executionState={executionState}
         riskLevel={riskLevel}
-        onToggleDetails={() => setExpanded((value) => !value)}
         onAddUpdate={() => (currentStepId ? openAddUpdateModal(currentStepId) : undefined)}
         onMarkResponseReceived={handleMarkResponseReceived}
         onEditWaitingDetails={() => setEditWaitingStepId(currentStepId)}
-        expanded={expanded}
       />
 
-      {expanded ? (
-        <div className="rounded-3xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Full progress controls</p>
+      <div className="rounded-3xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Milestone preview</p>
+          <p className="text-xs text-slate-400">{previewMilestones.length} of {milestones.length} steps shown</p>
+        </div>
+        <ConstructionMilestoneStepper milestones={previewMilestones} />
+      </div>
+
+      <div className="rounded-3xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Full progress controls</p>
+          <button
+            type="button"
+            onClick={() => setShowAllSteps((value) => !value)}
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+          >
+            {showAllSteps ? 'Hide full steps' : 'View full steps'} →
+          </button>
+        </div>
+        {showAllSteps ? (
           <ol className="space-y-3">
             {stepState.map((step) => {
               const isCurrent = Boolean(currentStep) && currentStep.id === step.id && step.status !== 'completed' && !step.is_completed;
@@ -462,8 +482,12 @@ export function ConstructionProgressSection({ steps }: Props) {
               );
             })}
           </ol>
-        </div>
-      ) : null}
+        ) : (
+          <p className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-300">
+            Full controls are collapsed. Expand to manage statuses, waiting details, target dates, and updates for all {totalSteps} milestones.
+          </p>
+        )}
+      </div>
 
       {errorMessage ? <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">{errorMessage}</p> : null}
 
