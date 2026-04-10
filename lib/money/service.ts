@@ -1,4 +1,4 @@
-import { getExpenses, getIncomeSources, getMoneyGoalPlans } from '@/lib/money/queries';
+import { getConstructionSteps, getExpenses, getIncomeSources, getMoneyGoalPlans } from '@/lib/money/queries';
 import { ExpenseManagementPageData, IncomeManagementPageData, MoneyDashboardData, MoneyGoalPlanStatus, MoneyPlanPageData } from '@/lib/money/types';
 
 const TARGET_INCOME = 100000;
@@ -62,4 +62,10 @@ export async function getMoneyPlanPageData(): Promise<MoneyPlanPageData> {
     remainingGap,
     plans
   };
+}
+
+
+export async function getConstructionProgressData() {
+  const steps = await getConstructionSteps();
+  return { steps };
 }

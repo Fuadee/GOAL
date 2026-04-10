@@ -40,6 +40,14 @@ export type MoneyGoalPlanRow = {
   updated_at: string;
 };
 
+export type ConstructionStepRow = {
+  id: string;
+  step_name: string;
+  step_order: number;
+  is_completed: boolean;
+  completed_at: string | null;
+};
+
 export type IncomeSummary = {
   count: number;
   totalExpected: number;

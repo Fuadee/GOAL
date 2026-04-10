@@ -1,5 +1,6 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
 import {
+  ConstructionStepRow,
   ExpenseRow,
   ExpenseType,
   IncomeSourceRow,
@@ -82,4 +83,13 @@ export async function updateMoneyGoalPlan(
 
 export async function deleteMoneyGoalPlan(id: string): Promise<void> {
   await supabaseRestRequest<MoneyGoalPlanRow[]>(`money_goal_plans?id=eq.${id}`, 'DELETE');
+}
+
+
+export async function completeConstructionStep(id: string): Promise<ConstructionStepRow> {
+  const rows = await supabaseRestRequest<ConstructionStepRow[]>(`construction_steps?id=eq.${id}`, 'PATCH', {
+    is_completed: true,
+    completed_at: new Date().toISOString()
+  });
+  return rows[0];
 }
