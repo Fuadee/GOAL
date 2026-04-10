@@ -11,6 +11,8 @@ import {
   deleteExpense,
   deleteIncomeSource,
   completeConstructionStep,
+  createStepUpdate,
+  syncConstructionStepLatestUpdate,
   updateExpense,
   updateIncomeSource,
   updateMoneyGoalPlan
@@ -142,10 +144,24 @@ export async function markConstructionStepCompletedAction(stepId: string): Promi
   const targetStep = steps.find((step) => step.id === stepId);
 
   if (!targetStep) return { success: false, message: 'Step not found.' };
-  if (targetStep.is_completed) return { success: true, message: 'Step already completed.' };
+  if (targetStep.status === 'completed' || targetStep.is_completed) return { success: true, message: 'Step already completed.' };
 
   await completeConstructionStep(stepId);
 
   revalidatePath('/money-management');
   return { success: true, message: 'Construction step updated.' };
+}
+
+export async function addConstructionStepUpdateAction(stepId: string, message: string): Promise<{ success: boolean; message: string }> {
+  const trimmedStepId = stepId.trim();
+  const trimmedMessage = message.trim();
+
+  if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
+  if (!trimmedMessage) return { success: false, message: 'Update message is required.' };
+
+  await createStepUpdate(trimmedStepId, trimmedMessage);
+  await syncConstructionStepLatestUpdate(trimmedStepId, trimmedMessage);
+
+  revalidatePath('/money-management');
+  return { success: true, message: 'Step update saved.' };
 }

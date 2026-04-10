@@ -1,5 +1,5 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
-import { ConstructionStepRow, ExpenseRow, IncomeSourceRow, MoneyGoalPlanRow, RentalHouseRow } from '@/lib/money/types';
+import { ConstructionStepRow, ExpenseRow, IncomeSourceRow, MoneyGoalPlanRow, RentalHouseRow, StepUpdateRow } from '@/lib/money/types';
 
 export async function getIncomeSources(): Promise<IncomeSourceRow[]> {
   return supabaseRestRequest<IncomeSourceRow[]>('income_sources?select=*&order=created_at.desc', 'GET');
@@ -20,4 +20,8 @@ export async function getMoneyGoalPlans(): Promise<MoneyGoalPlanRow[]> {
 
 export async function getConstructionSteps(): Promise<ConstructionStepRow[]> {
   return supabaseRestRequest<ConstructionStepRow[]>('construction_steps?select=*&order=step_order.asc', 'GET');
+}
+
+export async function getStepUpdates(): Promise<StepUpdateRow[]> {
+  return supabaseRestRequest<StepUpdateRow[]>('step_updates?select=*&order=created_at.desc', 'GET');
 }

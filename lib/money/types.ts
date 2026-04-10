@@ -2,11 +2,13 @@ export const INCOME_SOURCE_TYPES = ['active', 'passive'] as const;
 export const EXPENSE_TYPES = ['fixed', 'variable'] as const;
 export const RENTAL_HOUSE_STATUSES = ['planning', 'building', 'active'] as const;
 export const MONEY_GOAL_PLAN_STATUSES = ['planned', 'in_progress', 'completed'] as const;
+export const CONSTRUCTION_STEP_STATUSES = ['not_started', 'in_progress', 'waiting', 'blocked', 'completed'] as const;
 
 export type IncomeSourceType = (typeof INCOME_SOURCE_TYPES)[number];
 export type ExpenseType = (typeof EXPENSE_TYPES)[number];
 export type RentalHouseStatus = (typeof RENTAL_HOUSE_STATUSES)[number];
 export type MoneyGoalPlanStatus = (typeof MONEY_GOAL_PLAN_STATUSES)[number];
+export type ConstructionStepStatus = (typeof CONSTRUCTION_STEP_STATUSES)[number];
 
 export type IncomeSourceRow = {
   id: string;
@@ -44,8 +46,18 @@ export type ConstructionStepRow = {
   id: string;
   step_name: string;
   step_order: number;
+  status: ConstructionStepStatus;
+  target_date: string | null;
+  latest_update: string | null;
   is_completed: boolean;
   completed_at: string | null;
+};
+
+export type StepUpdateRow = {
+  id: string;
+  step_id: string;
+  message: string;
+  created_at: string;
 };
 
 export type IncomeSummary = {
