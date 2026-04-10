@@ -63,12 +63,12 @@ export function ConstructionProgressSection({ steps }: Props) {
   ];
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-6">
       <ConstructionWaitingStatusCard summary={waitingSummary} executionState={executionState} riskLevel={riskLevel} showControls={false} />
 
       <ConstructionHeroCard statusLabel={status} progressPercent={progressPercent} metrics={metrics}>
-        <div className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/70 via-slate-900/55 to-slate-950/80 p-4 md:p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Project milestones</p>
             <div className="flex items-center gap-3">
               <p className="text-xs text-slate-400">{milestones.length} total milestones</p>
