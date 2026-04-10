@@ -8,7 +8,10 @@ import {
   SmvLevelDefinitionRow,
   SmvMetricInputValue,
   SmvMetricRow,
-  SmvScoreHistoryRow
+  SmvScoreHistoryRow,
+  SmvStageDefinitionRow,
+  SmvStageProgressRow,
+  SmvStageStatus
 } from '@/lib/smv/types';
 
 export async function getSmvDimensions() {
@@ -150,6 +153,41 @@ export async function upsertImprovementTask(input: {
     status: 'todo',
     task_source: 'system'
   });
+
+  return rows[0];
+}
+
+export async function getSmvStageDefinitions(dimensionKey: string) {
+  return supabaseRestRequest<SmvStageDefinitionRow[]>(
+    `smv_stage_definitions?dimension_key=eq.${dimensionKey}&is_active=eq.true&order=sort_order.asc`,
+    'GET'
+  );
+}
+
+export async function getSmvStageProgress(dimensionKey: string) {
+  return supabaseRestRequest<SmvStageProgressRow[]>(
+    `smv_stage_progress?dimension_key=eq.${dimensionKey}&order=created_at.asc`,
+    'GET'
+  );
+}
+
+export async function upsertSmvStageProgress(input: {
+  dimension_key: string;
+  stage_key: string;
+  status: SmvStageStatus;
+  note?: string;
+  passed_at?: string | null;
+}) {
+  const rows = await supabaseRestRequest<SmvStageProgressRow[]>(
+    'smv_stage_progress?on_conflict=dimension_key,stage_key',
+    'POST',
+    {
+      ...input,
+      note: input.note ?? null,
+      passed_at: input.status === 'PASSED' ? input.passed_at ?? new Date().toISOString() : null,
+      updated_at: new Date().toISOString()
+    }
+  );
 
   return rows[0];
 }

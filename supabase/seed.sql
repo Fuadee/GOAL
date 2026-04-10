@@ -82,21 +82,16 @@ insert into public.smv_level_definitions (dimension_id, level_score, title, requ
 select d.id, l.level_score, l.title, l.requirement_text
 from public.smv_dimensions d
 cross join level_base l
+where d.key <> 'confidence'
 on conflict (dimension_id, level_score) do update
 set
   title = excluded.title,
   requirement_text = excluded.requirement_text;
 
--- Metrics: fully implemented for confidence, look, status, purpose; scaffold only for others.
+-- Metrics: fully implemented for look, status, purpose; scaffold only for others.
 with metric_seed as (
   select *
   from (values
-    ('confidence', 'situation_coverage', 'Situation Coverage', 'จำนวนสถานการณ์จริงที่พิสูจน์ความมั่นใจ', 'count', 0.20, true),
-    ('confidence', 'frame_control', 'Frame Control', 'ความสามารถคุมเฟรม/คุมบทสนทนา', 'score_0_100', 0.25, true),
-    ('confidence', 'emotional_stability', 'Emotional Stability', 'ความนิ่งและไม่เสียอาการ', 'score_0_100', 0.20, true),
-    ('confidence', 'leadership_signal', 'Leadership Signal', 'การแสดงภาวะผู้นำที่วัดได้', 'score_0_100', 0.20, true),
-    ('confidence', 'consistency', 'Consistency', 'ความสม่ำเสมอในช่วง 30 วัน', 'score_0_100', 0.15, true),
-
     ('look', 'body', 'Body', 'คุณภาพรูปร่างจากการดูแลต่อเนื่อง', 'score_0_100', 0.20, true),
     ('look', 'grooming', 'Grooming', 'การดูแลทรงผม หนวดเครา ผิว และรายละเอียด', 'score_0_100', 0.20, true),
     ('look', 'style', 'Style', 'ความเหมาะสมและความคมของการแต่งตัว', 'score_0_100', 0.15, true),
@@ -133,3 +128,37 @@ set
   value_type = excluded.value_type,
   weight = excluded.weight,
   is_required = excluded.is_required;
+
+-- Confidence uses stage-based progression, not metric scoring.
+insert into public.smv_stage_definitions (
+  dimension_key,
+  stage_number,
+  stage_key,
+  title_th,
+  description_th,
+  action_hint_th,
+  score_value,
+  sort_order,
+  is_active
+)
+values
+  ('confidence', 1, 'confidence_stage_1_start', 'กล้าเริ่ม', 'กล้าเข้าไปเริ่มต้นสถานการณ์ด้วยตัวเอง ไม่รอ ไม่ถอย', 'เริ่มคุยก่อนหรือเริ่มนำก่อนให้ได้อย่างน้อย 1 ครั้ง', 20, 1, true),
+  ('confidence', 2, 'confidence_stage_2_control', 'คุมบทสนทนา', 'ไม่ใช่แค่เริ่มได้ แต่พาสถานการณ์ต่อได้', 'นำบทสนทนาต่อเนื่องและไม่ปล่อยให้บทสนทนาตาย 1 ครั้ง', 20, 2, true),
+  ('confidence', 3, 'confidence_stage_3_pressure', 'เจอแรงกดดัน', 'อยู่ในสถานการณ์ที่กดดันแล้วยังไม่หลุด', 'อยู่ในบรรยากาศกดดันและคุมตัวเองให้นิ่งได้ 1 ครั้ง', 20, 3, true),
+  ('confidence', 4, 'confidence_stage_4_rejection', 'รับมือการปฏิเสธ', 'โดนปฏิเสธจริงแล้วไม่เสียตัวตน', 'หลังโดนปฏิเสธให้กลับมายืนระยะได้โดยไม่เสียอาการ 1 ครั้ง', 20, 4, true),
+  ('confidence', 5, 'confidence_stage_5_lead', 'เป็นผู้นำ', 'ไม่ได้แค่คุมตัวเอง แต่ทำให้คนอื่น follow ได้', 'ตัดสินใจนำสถานการณ์จริงและทำให้คนอื่นตอบสนองตาม direction', 20, 5, true)
+on conflict (dimension_key, stage_key) do update
+set
+  stage_number = excluded.stage_number,
+  title_th = excluded.title_th,
+  description_th = excluded.description_th,
+  action_hint_th = excluded.action_hint_th,
+  score_value = excluded.score_value,
+  sort_order = excluded.sort_order,
+  is_active = excluded.is_active;
+
+insert into public.smv_stage_progress (dimension_key, stage_key, status)
+select dimension_key, stage_key, 'NOT_STARTED'
+from public.smv_stage_definitions
+where dimension_key = 'confidence'
+on conflict (dimension_key, stage_key) do nothing;

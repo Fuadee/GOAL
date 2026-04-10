@@ -79,8 +79,9 @@ export default async function SmvOverviewPage() {
                   className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 transition hover:border-cyan-300/40 hover:bg-slate-900/80"
                 >
                   <p className="text-sm text-slate-300">{item.dimension.label}</p>
-                  <p className="mt-1 text-2xl font-semibold text-white">{item.score.toFixed(1)}</p>
+                  <p className="mt-1 text-2xl font-semibold text-white">{item.score.toFixed(0)} / 100</p>
                   <p className="mt-2 text-xs text-slate-400">{item.guardSummary}</p>
+                  {item.dimension.key === 'confidence' ? <p className="mt-1 text-xs text-cyan-100">{item.explanation}</p> : null}
                 </Link>
               ))}
             </div>

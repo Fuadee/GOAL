@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { createEvidenceAndRecalculate } from '@/lib/smv/service';
+import { createEvidenceAndRecalculate, markConfidenceStagePassed } from '@/lib/smv/service';
 import { getSmvMetrics } from '@/lib/smv/repository';
 
 export async function logSmvEvidenceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
@@ -56,6 +56,25 @@ export async function logSmvEvidenceAction(formData: FormData): Promise<{ succes
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Could not save evidence log.'
+    };
+  }
+}
+
+export async function markConfidenceStagePassedAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const stageKey = String(formData.get('stage_key') ?? '').trim();
+  if (!stageKey) {
+    return { success: false, message: 'ไม่พบด่านที่ต้องการยืนยัน' };
+  }
+
+  try {
+    await markConfidenceStagePassed(stageKey);
+    revalidatePath('/smv');
+    revalidatePath('/smv/confidence');
+    return { success: true, message: 'ยืนยันผ่านด่านเรียบร้อยแล้ว' };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'ไม่สามารถอัปเดตด่านได้'
     };
   }
 }

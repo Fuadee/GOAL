@@ -11,7 +11,7 @@ export const SMV_DIMENSION_LABELS: Record<SmvDimensionKey, string> = {
   look: 'รูปร่างหน้าตา / บุคลิกที่ดี'
 };
 
-export const SMV_FULLY_IMPLEMENTED_DIMENSIONS: SmvDimensionKey[] = ['confidence', 'look', 'status', 'purpose'];
+export const SMV_FULLY_IMPLEMENTED_DIMENSIONS: SmvDimensionKey[] = ['look', 'status', 'purpose'];
 
 export const SMV_LEVEL_TARGETS = [60, 75, 85, 95, 100] as const;
 
