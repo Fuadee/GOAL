@@ -44,7 +44,7 @@ export function ConstructionMilestoneStepper({ milestones }: Props) {
                 <span>Step {step.order}</span>
               </div>
               <p className="relative mt-2 text-sm font-semibold leading-snug">{step.title}</p>
-              <p className="relative mt-2 text-[11px] opacity-80">{step.targetDateLabel}</p>
+              <p className="relative mt-2 text-[11px] opacity-80">Expected by: {step.expectedByLabel}</p>
             </article>
           </li>
         ))}

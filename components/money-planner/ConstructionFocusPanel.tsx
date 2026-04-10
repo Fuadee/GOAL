@@ -24,8 +24,8 @@ export function ConstructionFocusPanel({ focus }: Props) {
           <dd className="font-medium text-slate-100">{focus.nextMilestone}</dd>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <dt className="text-slate-400">Target date</dt>
-          <dd className="font-medium text-slate-100">{focus.targetDateLabel}</dd>
+          <dt className="text-slate-400">Expected by</dt>
+          <dd className="font-medium text-slate-100">{focus.expectedByLabel}</dd>
         </div>
       </dl>
 

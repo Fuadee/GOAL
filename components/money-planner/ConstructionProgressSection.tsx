@@ -46,7 +46,7 @@ export function ConstructionProgressSection({ steps }: Props) {
           order: step.step_order,
           title: step.step_name,
           status: stepStatus,
-          targetDateLabel: formatDateLabel(step.target_date, 'No target date')
+          expectedByLabel: formatDateLabel(step.expected_response_date, 'No ETA')
         };
       }),
     [currentStep?.id, steps]

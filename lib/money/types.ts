@@ -72,14 +72,14 @@ export type ConstructionMilestoneView = {
   order: number;
   title: string;
   status: ConstructionMilestoneViewStatus;
-  targetDateLabel: string;
+  expectedByLabel: string;
 };
 
 export type ConstructionFocusView = {
   currentStep: string;
   progressLabel: string;
   nextMilestone: string;
-  targetDateLabel: string;
+  expectedByLabel: string;
   latestUpdate: string;
 };
 
