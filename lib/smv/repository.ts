@@ -1,157 +1,155 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
 import {
-  SmvChecklistItemRow,
-  SmvChecklistLogRow,
   SmvDimensionRow,
   SmvDimensionScoreRow,
-  SmvScoreEventRow,
-  SmvScoreEventType
+  SmvEvidenceLogRow,
+  SmvEvidenceMetricValueRow,
+  SmvImprovementTaskRow,
+  SmvLevelDefinitionRow,
+  SmvMetricInputValue,
+  SmvMetricRow,
+  SmvScoreHistoryRow
 } from '@/lib/smv/types';
 
-export async function getSmvDimensions(): Promise<SmvDimensionRow[]> {
+export async function getSmvDimensions() {
   return supabaseRestRequest<SmvDimensionRow[]>('smv_dimensions?select=*&order=created_at.asc', 'GET');
 }
 
-export async function getSmvDimensionScores(): Promise<SmvDimensionScoreRow[]> {
+export async function getSmvMetrics(dimensionId?: string) {
+  const filter = dimensionId ? `&dimension_id=eq.${dimensionId}` : '';
+  return supabaseRestRequest<SmvMetricRow[]>(`smv_metrics?select=*&is_active=eq.true${filter}&order=created_at.asc`, 'GET');
+}
+
+export async function getSmvLevelDefinitions(dimensionId: string) {
+  return supabaseRestRequest<SmvLevelDefinitionRow[]>(
+    `smv_level_definitions?dimension_id=eq.${dimensionId}&order=level_score.asc`,
+    'GET'
+  );
+}
+
+export async function getSmvDimensionScores() {
   return supabaseRestRequest<SmvDimensionScoreRow[]>('smv_dimension_scores?select=*', 'GET');
 }
 
-export async function getSmvDimensionScoreByDimensionId(dimensionId: string): Promise<SmvDimensionScoreRow | null> {
-  const rows = await supabaseRestRequest<SmvDimensionScoreRow[]>(
-    `smv_dimension_scores?dimension_id=eq.${dimensionId}&limit=1`,
-    'GET'
-  );
-
+export async function getSmvDimensionScore(dimensionId: string) {
+  const rows = await supabaseRestRequest<SmvDimensionScoreRow[]>(`smv_dimension_scores?dimension_id=eq.${dimensionId}&limit=1`, 'GET');
   return rows[0] ?? null;
 }
 
 export async function upsertSmvDimensionScore(input: {
   dimension_id: string;
-  current_score: number;
-  previous_score: number;
-  updated_at?: string;
-}): Promise<SmvDimensionScoreRow> {
-  const rows = await supabaseRestRequest<SmvDimensionScoreRow[]>(
-    'smv_dimension_scores?on_conflict=dimension_id',
-    'POST',
-    {
-      ...input,
-      updated_at: input.updated_at ?? new Date().toISOString()
-    }
-  );
-
-  return rows[0];
-}
-
-export async function getSmvChecklistItemsByDimensionId(dimensionId: string): Promise<SmvChecklistItemRow[]> {
-  return supabaseRestRequest<SmvChecklistItemRow[]>(
-    `smv_checklist_items?dimension_id=eq.${dimensionId}&is_active=eq.true&order=sort_order.asc&order=created_at.asc`,
-    'GET'
-  );
-}
-
-export async function getSmvChecklistItems(): Promise<SmvChecklistItemRow[]> {
-  return supabaseRestRequest<SmvChecklistItemRow[]>(
-    'smv_checklist_items?select=*&is_active=eq.true&order=sort_order.asc&order=created_at.asc',
-    'GET'
-  );
-}
-
-export async function getSmvChecklistItemById(id: string): Promise<SmvChecklistItemRow | null> {
-  const rows = await supabaseRestRequest<SmvChecklistItemRow[]>(`smv_checklist_items?id=eq.${id}&limit=1`, 'GET');
-  return rows[0] ?? null;
-}
-
-export async function createSmvChecklistLog(input: {
-  dimension_id: string;
-  checklist_item_id: string;
-  notes?: string;
-}): Promise<SmvChecklistLogRow> {
-  const rows = await supabaseRestRequest<SmvChecklistLogRow[]>('smv_checklist_logs', 'POST', {
-    dimension_id: input.dimension_id,
-    checklist_item_id: input.checklist_item_id,
-    notes: input.notes?.trim() ? input.notes.trim() : null,
-    completed_at: new Date().toISOString()
+  score: number;
+  evidence_count_30d: number;
+  guard_summary: string;
+  explanation: string;
+  calculated_at?: string;
+}) {
+  const rows = await supabaseRestRequest<SmvDimensionScoreRow[]>('smv_dimension_scores?on_conflict=dimension_id', 'POST', {
+    ...input,
+    calculated_at: input.calculated_at ?? new Date().toISOString(),
+    updated_at: new Date().toISOString()
   });
 
   return rows[0];
 }
 
-export async function getSmvChecklistLogsByDimensionId(dimensionId: string, limit = 8): Promise<SmvChecklistLogRow[]> {
-  return supabaseRestRequest<SmvChecklistLogRow[]>(
-    `smv_checklist_logs?dimension_id=eq.${dimensionId}&order=completed_at.desc&limit=${limit}`,
-    'GET'
-  );
-}
-
-export async function countSmvChecklistLogsByDimensionInRange(
-  dimensionId: string,
-  fromIso: string,
-  toIso: string
-): Promise<number> {
-  const rows = await supabaseRestRequest<{ id: string }[]>(
-    `smv_checklist_logs?select=id&dimension_id=eq.${dimensionId}&completed_at=gte.${fromIso}&completed_at=lte.${toIso}`,
-    'GET'
-  );
-
-  return rows.length;
-}
-
-export async function countSmvChecklistLogsInRange(fromIso: string, toIso: string): Promise<number> {
-  const rows = await supabaseRestRequest<{ id: string }[]>(
-    `smv_checklist_logs?select=id&completed_at=gte.${fromIso}&completed_at=lte.${toIso}`,
-    'GET'
-  );
-
-  return rows.length;
-}
-
-export async function getLatestSmvChecklistLogByItemId(checklistItemId: string): Promise<SmvChecklistLogRow | null> {
-  const rows = await supabaseRestRequest<SmvChecklistLogRow[]>(
-    `smv_checklist_logs?checklist_item_id=eq.${checklistItemId}&order=completed_at.desc&limit=1`,
-    'GET'
-  );
-
-  return rows[0] ?? null;
-}
-
-export async function getSmvChecklistLogsByItemId(checklistItemId: string): Promise<SmvChecklistLogRow[]> {
-  return supabaseRestRequest<SmvChecklistLogRow[]>(
-    `smv_checklist_logs?checklist_item_id=eq.${checklistItemId}&order=completed_at.desc`,
-    'GET'
-  );
-}
-
-export async function createSmvScoreEvent(input: {
+export async function createSmvScoreHistory(input: {
   dimension_id: string;
-  event_type: SmvScoreEventType;
-  score_before: number;
-  score_delta: number;
-  score_after: number;
-  reason?: string;
-  checklist_log_id?: string;
-}): Promise<SmvScoreEventRow> {
-  const rows = await supabaseRestRequest<SmvScoreEventRow[]>('smv_score_events', 'POST', {
+  score: number;
+  evidence_count_30d: number;
+  guard_summary: string;
+  explanation: string;
+  score_breakdown: Record<string, number>;
+}) {
+  const rows = await supabaseRestRequest<SmvScoreHistoryRow[]>('smv_score_history', 'POST', input);
+  return rows[0];
+}
+
+export async function getSmvScoreHistory(dimensionId: string, limit = 20) {
+  return supabaseRestRequest<SmvScoreHistoryRow[]>(
+    `smv_score_history?dimension_id=eq.${dimensionId}&order=calculated_at.desc&limit=${limit}`,
+    'GET'
+  );
+}
+
+export async function getSmvEvidenceLogs(dimensionId?: string, limit = 20) {
+  const filter = dimensionId ? `&dimension_id=eq.${dimensionId}` : '';
+  return supabaseRestRequest<SmvEvidenceLogRow[]>(
+    `smv_evidence_logs?select=*&order=logged_at.desc${filter}&limit=${limit}`,
+    'GET'
+  );
+}
+
+export async function getSmvEvidenceLogsSince(dimensionId: string, fromIso: string) {
+  return supabaseRestRequest<SmvEvidenceLogRow[]>(
+    `smv_evidence_logs?dimension_id=eq.${dimensionId}&logged_at=gte.${fromIso}&order=logged_at.desc`,
+    'GET'
+  );
+}
+
+export async function createSmvEvidenceLog(input: { dimension_id: string; context?: string; note?: string }) {
+  const rows = await supabaseRestRequest<SmvEvidenceLogRow[]>('smv_evidence_logs', 'POST', {
     dimension_id: input.dimension_id,
-    event_type: input.event_type,
-    score_before: input.score_before,
-    score_delta: input.score_delta,
-    score_after: input.score_after,
-    reason: input.reason?.trim() ? input.reason.trim() : null,
-    checklist_log_id: input.checklist_log_id ?? null
+    context: input.context?.trim() ? input.context.trim() : null,
+    note: input.note?.trim() ? input.note.trim() : null,
+    logged_at: new Date().toISOString()
   });
 
   return rows[0];
 }
 
-export async function getSmvScoreEventsByDimensionId(
-  dimensionId: string,
-  limit = 20,
-  eventType?: SmvScoreEventType
-): Promise<SmvScoreEventRow[]> {
-  const filter = eventType ? `&event_type=eq.${eventType}` : '';
-  return supabaseRestRequest<SmvScoreEventRow[]>(
-    `smv_score_events?dimension_id=eq.${dimensionId}${filter}&order=created_at.desc&limit=${limit}`,
+export async function createSmvEvidenceMetricValues(evidenceLogId: string, values: SmvMetricInputValue[]) {
+  if (values.length === 0) return [];
+
+  return supabaseRestRequest<SmvEvidenceMetricValueRow[]>('smv_evidence_metric_values', 'POST',
+    values.map((item) => ({
+      evidence_log_id: evidenceLogId,
+      metric_id: item.metricId,
+      numeric_value: item.numericValue ?? null,
+      boolean_value: item.booleanValue ?? null,
+      text_value: item.textValue ?? null
+    }))
+  );
+}
+
+export async function getSmvEvidenceMetricValuesByEvidenceIds(evidenceIds: string[]) {
+  if (evidenceIds.length === 0) return [];
+  const inClause = evidenceIds.join(',');
+  return supabaseRestRequest<SmvEvidenceMetricValueRow[]>(
+    `smv_evidence_metric_values?evidence_log_id=in.(${inClause})&order=created_at.desc`,
     'GET'
   );
+}
+
+export async function getLatestMetricValuesForDimension(metricIds: string[]) {
+  if (metricIds.length === 0) return [];
+  const inClause = metricIds.join(',');
+  return supabaseRestRequest<SmvEvidenceMetricValueRow[]>(
+    `smv_evidence_metric_values?metric_id=in.(${inClause})&order=created_at.desc&limit=${metricIds.length * 6}`,
+    'GET'
+  );
+}
+
+export async function getSmvImprovementTasks() {
+  return supabaseRestRequest<SmvImprovementTaskRow[]>('smv_improvement_tasks?select=*&status=neq.archived&order=priority.asc', 'GET');
+}
+
+export async function upsertImprovementTask(input: {
+  dimension_id: string;
+  title: string;
+  description?: string;
+  priority: number;
+  requirement?: Record<string, unknown>;
+}) {
+  const rows = await supabaseRestRequest<SmvImprovementTaskRow[]>('smv_improvement_tasks', 'POST', {
+    dimension_id: input.dimension_id,
+    title: input.title,
+    description: input.description ?? null,
+    priority: input.priority,
+    requirement: input.requirement ?? {},
+    status: 'todo',
+    task_source: 'system'
+  });
+
+  return rows[0];
 }

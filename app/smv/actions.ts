@@ -2,66 +2,60 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { createChecklistLogAndApplyScore, manuallyAdjustDimensionScore } from '@/lib/smv/service';
+import { createEvidenceAndRecalculate } from '@/lib/smv/service';
+import { getSmvMetrics } from '@/lib/smv/repository';
 
-export async function completeSmvChecklistItemAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+export async function logSmvEvidenceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
   const dimensionId = String(formData.get('dimension_id') ?? '').trim();
-  const checklistItemId = String(formData.get('checklist_item_id') ?? '').trim();
-  const notes = String(formData.get('notes') ?? '').trim();
-
-  if (!dimensionId || !checklistItemId) {
-    return { success: false, message: 'Dimension and checklist item are required.' };
-  }
-
-  try {
-    await createChecklistLogAndApplyScore({
-      dimensionId,
-      checklistItemId,
-      notes: notes || undefined
-    });
-
-    revalidatePath('/smv');
-    return { success: true, message: 'Checklist completed and score updated.' };
-  } catch (error) {
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : 'Unable to complete checklist item.'
-    };
-  }
-}
-
-export async function manuallyAdjustSmvScoreAction(formData: FormData): Promise<{ success: boolean; message: string }> {
-  const dimensionId = String(formData.get('dimension_id') ?? '').trim();
-  const newScoreRaw = String(formData.get('new_score') ?? '').trim();
-  const reason = String(formData.get('reason') ?? '').trim();
-
-  const newScore = Number(newScoreRaw);
+  const context = String(formData.get('context') ?? '').trim();
+  const note = String(formData.get('note') ?? '').trim();
 
   if (!dimensionId) {
     return { success: false, message: 'Dimension is required.' };
   }
 
-  if (!Number.isFinite(newScore)) {
-    return { success: false, message: 'Score must be a number from 0 to 100.' };
-  }
+  const metrics = await getSmvMetrics(dimensionId);
+  const metricValues = metrics
+    .map((metric) => {
+      const raw = formData.get(`metric_${metric.id}`);
+      if (raw === null || String(raw).trim() === '') {
+        return null;
+      }
 
-  if (!reason) {
-    return { success: false, message: 'Reason is required for manual score adjustment.' };
+      const numeric = Number(raw);
+      if (!Number.isFinite(numeric)) {
+        return null;
+      }
+
+      return {
+        metricId: metric.id,
+        key: metric.key,
+        valueType: metric.value_type,
+        numericValue: numeric
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  if (metricValues.length === 0) {
+    return { success: false, message: 'At least one metric value is required.' };
   }
 
   try {
-    await manuallyAdjustDimensionScore({
+    await createEvidenceAndRecalculate({
       dimensionId,
-      newScore,
-      reason
+      context,
+      note,
+      metricValues
     });
 
     revalidatePath('/smv');
-    return { success: true, message: 'Score adjusted successfully.' };
+    revalidatePath('/smv/log');
+    revalidatePath('/smv/plan');
+    return { success: true, message: 'Evidence saved and score recalculated.' };
   } catch (error) {
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Unable to adjust score.'
+      message: error instanceof Error ? error.message : 'Could not save evidence log.'
     };
   }
 }

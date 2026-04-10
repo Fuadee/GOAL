@@ -1,286 +1,206 @@
+import { SMV_DIMENSION_LABELS, SMV_FULLY_IMPLEMENTED_DIMENSIONS } from '@/lib/smv/definitions';
 import {
-  countSmvChecklistLogsByDimensionInRange,
-  countSmvChecklistLogsInRange,
-  createSmvChecklistLog,
-  createSmvScoreEvent,
-  getLatestSmvChecklistLogByItemId,
-  getSmvChecklistItemById,
-  getSmvChecklistItems,
-  getSmvChecklistItemsByDimensionId,
-  getSmvChecklistLogsByDimensionId,
-  getSmvChecklistLogsByItemId,
-  getSmvDimensionScoreByDimensionId,
+  createSmvEvidenceLog,
+  createSmvEvidenceMetricValues,
+  createSmvScoreHistory,
+  getLatestMetricValuesForDimension,
+  getSmvDimensionScore,
   getSmvDimensionScores,
   getSmvDimensions,
-  getSmvScoreEventsByDimensionId,
+  getSmvEvidenceLogs,
+  getSmvEvidenceLogsSince,
+  getSmvEvidenceMetricValuesByEvidenceIds,
+  getSmvImprovementTasks,
+  getSmvLevelDefinitions,
+  getSmvMetrics,
+  getSmvScoreHistory,
+  upsertImprovementTask,
   upsertSmvDimensionScore
 } from '@/lib/smv/repository';
-import {
-  applyScoreDelta,
-  buildFocusNowMessage,
-  clampSmvScore,
-  getStrongestDimension,
-  getTrendDirection,
-  getWeakestDimensions
-} from '@/lib/smv/scoring';
-import {
-  CreateChecklistLogInput,
-  ManualAdjustDimensionScoreInput,
-  SmvDashboardData,
-  SmvDimensionWithScore,
-  SmvHighlightData,
-  SmvScoreEventType
-} from '@/lib/smv/types';
+import { buildDefaultRecommendations, calculateSmvDimensionScore } from '@/lib/smv/scoring';
+import { SmvDimensionDetail, SmvDimensionKey, SmvDimensionOverview, SmvEvidenceInput, SmvMetricRow } from '@/lib/smv/types';
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-
-function getTodayRange() {
-  const now = new Date();
-  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
-  const end = new Date(start.getTime() + ONE_DAY_MS - 1);
-  return { startIso: start.toISOString(), endIso: end.toISOString() };
+function getThirtyDaysAgoIso() {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() - 30);
+  return date.toISOString();
 }
 
-function getWeekRange() {
-  const now = new Date();
-  const utcDay = now.getUTCDay();
-  const diffToMonday = utcDay === 0 ? 6 : utcDay - 1;
-  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
-  monday.setUTCDate(monday.getUTCDate() - diffToMonday);
-  return { startIso: monday.toISOString(), endIso: now.toISOString() };
+function pickLatestValueByMetric(metricRows: SmvMetricRow[], rawValues: Awaited<ReturnType<typeof getLatestMetricValuesForDimension>>) {
+  return metricRows
+    .map((metric) => ({
+      ...metric,
+      latestValue: rawValues.find((item) => item.metric_id === metric.id)?.numeric_value ?? null
+    }))
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
-function calculateStreakDays(logDates: string[]): number {
-  if (logDates.length === 0) {
-    return 0;
+export async function recalculateDimensionScore(dimensionId: string) {
+  const dimensions = await getSmvDimensions();
+  const dimension = dimensions.find((item) => item.id === dimensionId);
+
+  if (!dimension) {
+    throw new Error('Dimension not found.');
   }
 
-  const uniqueDays = new Set(logDates.map((d) => d.slice(0, 10)));
-  let streak = 0;
-  let cursor = new Date();
+  const metrics = await getSmvMetrics(dimensionId);
+  const logs30d = await getSmvEvidenceLogsSince(dimensionId, getThirtyDaysAgoIso());
+  const logIds = logs30d.map((item) => item.id);
+  const metricValues = await getSmvEvidenceMetricValuesByEvidenceIds(logIds);
 
-  while (true) {
-    const day = cursor.toISOString().slice(0, 10);
-    if (!uniqueDays.has(day)) {
-      break;
-    }
+  const result = calculateSmvDimensionScore({
+    dimensionKey: dimension.key,
+    metrics,
+    latestEvidenceValues: metricValues,
+    evidenceLogs30d: logs30d
+  });
 
-    streak += 1;
-    cursor = new Date(cursor.getTime() - ONE_DAY_MS);
+  await upsertSmvDimensionScore({
+    dimension_id: dimensionId,
+    score: result.score,
+    evidence_count_30d: result.evidenceCount30d,
+    guard_summary: result.guardSummary,
+    explanation: result.explanation
+  });
+
+  await createSmvScoreHistory({
+    dimension_id: dimensionId,
+    score: result.score,
+    evidence_count_30d: result.evidenceCount30d,
+    guard_summary: result.guardSummary,
+    explanation: result.explanation,
+    score_breakdown: result.breakdown
+  });
+
+  for (const suggestion of result.suggestions.slice(0, 2)) {
+    await upsertImprovementTask({
+      dimension_id: dimensionId,
+      title: suggestion,
+      priority: 2,
+      description: 'Auto-generated from score guard and evidence gaps.',
+      requirement: { generated_by: 'recalculateDimensionScore' }
+    });
   }
 
-  return streak;
+  return result;
 }
 
-export async function getSmvDimensionsWithScores(): Promise<SmvDimensionWithScore[]> {
-  const [dimensions, scores] = await Promise.all([getSmvDimensions(), getSmvDimensionScores()]);
-  const scoreMap = new Map(scores.map((score) => [score.dimension_id, score]));
-  const { startIso: todayStart, endIso: todayEnd } = getTodayRange();
-  const { startIso: weekStart, endIso: weekEnd } = getWeekRange();
+export async function createEvidenceAndRecalculate(input: SmvEvidenceInput) {
+  const evidence = await createSmvEvidenceLog({
+    dimension_id: input.dimensionId,
+    context: input.context,
+    note: input.note
+  });
 
-  const mapped = await Promise.all(
-    dimensions.map(async (dimension) => {
-      const scoreRow = scoreMap.get(dimension.id);
-      const currentScore = scoreRow?.current_score ?? 50;
-      const previousScore = scoreRow?.previous_score ?? 50;
-      const [todayCompletedCount, weeklyCompletedCount, logs] = await Promise.all([
-        countSmvChecklistLogsByDimensionInRange(dimension.id, todayStart, todayEnd),
-        countSmvChecklistLogsByDimensionInRange(dimension.id, weekStart, weekEnd),
-        getSmvChecklistLogsByDimensionId(dimension.id, 30)
-      ]);
-
-      return {
-        id: dimension.id,
-        key: dimension.key,
-        label: dimension.label,
-        description: dimension.description,
-        colorToken: dimension.color_token,
-        currentScore,
-        previousScore,
-        trend: getTrendDirection(currentScore, previousScore),
-        todayCompletedCount,
-        weeklyCompletedCount,
-        streakDays: calculateStreakDays(logs.map((log) => log.completed_at))
-      };
-    })
-  );
-
-  return mapped;
+  await createSmvEvidenceMetricValues(evidence.id, input.metricValues);
+  await recalculateDimensionScore(input.dimensionId);
 }
 
-export async function getSmvChecklistItemsByDimension(): Promise<Record<string, Awaited<ReturnType<typeof getSmvChecklistItems>>>> {
-  const items = await getSmvChecklistItems();
-  return items.reduce<Record<string, Awaited<ReturnType<typeof getSmvChecklistItems>>>>((acc, item) => {
-    const key = item.dimension_id;
-    acc[key] = [...(acc[key] ?? []), item];
-    return acc;
-  }, {});
-}
+export async function getSmvOverviewData() {
+  const [dimensions, scores, latestLogs] = await Promise.all([getSmvDimensions(), getSmvDimensionScores(), getSmvEvidenceLogs(undefined, 8)]);
+  const scoreMap = new Map(scores.map((item) => [item.dimension_id, item]));
 
-export async function getSmvScoreHistory(dimensionId: string, filter: 'all' | SmvScoreEventType = 'all') {
-  if (filter === 'all') {
-    return getSmvScoreEventsByDimensionId(dimensionId, 20);
-  }
+  const overview: SmvDimensionOverview[] = dimensions.map((dimension) => {
+    const score = scoreMap.get(dimension.id);
+    return {
+      dimension,
+      score: Number(score?.score ?? 0),
+      guardSummary: score?.guard_summary ?? 'ยังไม่มีหลักฐานเพียงพอ',
+      explanation: score?.explanation ?? 'เริ่มบันทึกหลักฐานเพื่อคำนวณคะแนน'
+    };
+  });
 
-  return getSmvScoreEventsByDimensionId(dimensionId, 20, filter);
-}
-
-export async function getSmvHighlights(): Promise<SmvHighlightData> {
-  const dimensions = await getSmvDimensionsWithScores();
-  const strongestDimension = getStrongestDimension(dimensions);
-  const weakestTwo = getWeakestDimensions(dimensions, 2);
-  const strongestTwo = [...dimensions].sort((a, b) => b.currentScore - a.currentScore).slice(0, 2);
-  const averageScore =
-    dimensions.length > 0
-      ? Math.round(dimensions.reduce((total, dimension) => total + dimension.currentScore, 0) / dimensions.length)
-      : 0;
+  const sorted = [...overview].sort((a, b) => b.score - a.score);
+  const strongest = sorted.slice(0, 3);
+  const weakest = [...sorted].reverse().slice(0, 3);
+  const recommendedActions = buildDefaultRecommendations(weakest.map((item) => ({ key: item.dimension.key, label: item.dimension.label })));
 
   return {
-    averageScore,
-    strongestDimension,
-    weakestDimension: weakestTwo[0] ?? null,
-    strongestTwo,
-    weakestTwo,
-    focusNowMessage: buildFocusNowMessage(weakestTwo),
-    aiRecommendationPlaceholder: 'AI coaching recommendation slot (future-ready).'
+    dimensions: overview,
+    strongest,
+    weakest,
+    latestLogs,
+    recommendedActions,
+    averageScore: overview.length ? Math.round(overview.reduce((sum, item) => sum + item.score, 0) / overview.length) : 0
   };
 }
 
-async function ensureDimensionScore(dimensionId: string) {
-  const existing = await getSmvDimensionScoreByDimensionId(dimensionId);
-  if (existing) {
-    return existing;
-  }
+export async function getSmvDimensionDetailByKey(key: SmvDimensionKey): Promise<SmvDimensionDetail | null> {
+  const dimensions = await getSmvDimensions();
+  const dimension = dimensions.find((item) => item.key === key);
+  if (!dimension) return null;
 
-  return upsertSmvDimensionScore({
-    dimension_id: dimensionId,
-    current_score: 50,
-    previous_score: 50
-  });
-}
-
-function isSameUtcDate(a: string, b: Date) {
-  const dayA = a.slice(0, 10);
-  const dayB = b.toISOString().slice(0, 10);
-  return dayA === dayB;
-}
-
-async function validateFrequency(checklistItemId: string, frequencyType: 'daily' | 'repeatable' | 'one_time') {
-  if (frequencyType === 'repeatable') {
-    return;
-  }
-
-  if (frequencyType === 'daily') {
-    const latest = await getLatestSmvChecklistLogByItemId(checklistItemId);
-    if (latest && isSameUtcDate(latest.completed_at, new Date())) {
-      throw new Error('This daily checklist item has already been completed today.');
-    }
-    return;
-  }
-
-  const oneTimeLogs = await getSmvChecklistLogsByItemId(checklistItemId);
-  if (oneTimeLogs.length > 0) {
-    throw new Error('This one-time checklist item has already been completed.');
-  }
-}
-
-export async function createChecklistLogAndApplyScore(input: CreateChecklistLogInput) {
-  const checklistItem = await getSmvChecklistItemById(input.checklistItemId);
-
-  if (!checklistItem || !checklistItem.is_active) {
-    throw new Error('Checklist item not found or inactive.');
-  }
-
-  if (checklistItem.dimension_id !== input.dimensionId) {
-    throw new Error('Checklist item does not belong to this dimension.');
-  }
-
-  await validateFrequency(checklistItem.id, checklistItem.frequency_type);
-
-  const currentScoreRow = await ensureDimensionScore(input.dimensionId);
-  const scoreBefore = currentScoreRow.current_score;
-  const scoreAfter = applyScoreDelta(scoreBefore, checklistItem.score_delta);
-
-  const checklistLog = await createSmvChecklistLog({
-    dimension_id: input.dimensionId,
-    checklist_item_id: checklistItem.id,
-    notes: input.notes
-  });
-
-  await createSmvScoreEvent({
-    dimension_id: input.dimensionId,
-    event_type: 'checklist',
-    score_before: scoreBefore,
-    score_delta: checklistItem.score_delta,
-    score_after: scoreAfter,
-    reason: checklistItem.title,
-    checklist_log_id: checklistLog.id
-  });
-
-  await upsertSmvDimensionScore({
-    dimension_id: input.dimensionId,
-    previous_score: scoreBefore,
-    current_score: scoreAfter
-  });
-
-  return { checklistLogId: checklistLog.id, scoreBefore, scoreAfter };
-}
-
-export async function manuallyAdjustDimensionScore(input: ManualAdjustDimensionScoreInput) {
-  const currentScoreRow = await ensureDimensionScore(input.dimensionId);
-  const scoreBefore = currentScoreRow.current_score;
-  const scoreAfter = clampSmvScore(input.newScore);
-  const scoreDelta = scoreAfter - scoreBefore;
-
-  await createSmvScoreEvent({
-    dimension_id: input.dimensionId,
-    event_type: 'manual_adjustment',
-    score_before: scoreBefore,
-    score_delta: scoreDelta,
-    score_after: scoreAfter,
-    reason: input.reason
-  });
-
-  await upsertSmvDimensionScore({
-    dimension_id: input.dimensionId,
-    previous_score: scoreBefore,
-    current_score: scoreAfter
-  });
-
-  return { scoreBefore, scoreAfter };
-}
-
-export async function getSmvDashboardData(selectedDimensionId?: string): Promise<SmvDashboardData> {
-  const dimensions = await getSmvDimensionsWithScores();
-  const selected = selectedDimensionId ?? dimensions[0]?.id ?? '';
-  const [checklistItemsByDimension, highlights, todayCompletedCount, weeklyCompletedCount] = await Promise.all([
-    getSmvChecklistItemsByDimension(),
-    getSmvHighlights(),
-    countSmvChecklistLogsInRange(getTodayRange().startIso, getTodayRange().endIso),
-    countSmvChecklistLogsInRange(getWeekRange().startIso, getWeekRange().endIso)
+  const [score, metrics, levelDefinitions, history, recentEvidence] = await Promise.all([
+    getSmvDimensionScore(dimension.id),
+    getSmvMetrics(dimension.id),
+    getSmvLevelDefinitions(dimension.id),
+    getSmvScoreHistory(dimension.id),
+    getSmvEvidenceLogs(dimension.id, 10)
   ]);
 
-  const recentLogsByDimension = Object.fromEntries(
-    await Promise.all(
-      dimensions.map(async (dimension) => [dimension.id, await getSmvChecklistLogsByDimensionId(dimension.id, 6)] as const)
-    )
-  );
+  const evidenceIds = recentEvidence.map((item) => item.id);
+  const evidenceValues = await getSmvEvidenceMetricValuesByEvidenceIds(evidenceIds);
+  const valuesByEvidence = evidenceIds.reduce<Record<string, typeof evidenceValues>>((acc, id) => {
+    acc[id] = evidenceValues.filter((item) => item.evidence_log_id === id);
+    return acc;
+  }, {});
 
-  const selectedDimensionHistory = selected ? await getSmvScoreHistory(selected) : [];
+  const latestValues = await getLatestMetricValuesForDimension(metrics.map((item) => item.id));
+  const metricRows = pickLatestValueByMetric(metrics, latestValues);
+
+  const latestBreakdown = history[0]?.score_breakdown ?? {};
+  const weakestKeys = Object.entries(latestBreakdown)
+    .sort((a, b) => a[1] - b[1])
+    .slice(0, 3)
+    .map((entry) => entry[0]);
+
+  const suggestions = weakestKeys.length
+    ? weakestKeys.map((metric) => `Increase ${metric} evidence quality over the next 14 days.`)
+    : ['Add more evidence logs to unlock metric-level coaching.'];
+
+  return {
+    overview: {
+      dimension,
+      score: Number(score?.score ?? 0),
+      guardSummary: score?.guard_summary ?? 'No guard data yet.',
+      explanation: score?.explanation ?? 'Score will appear after first evidence log.'
+    },
+    metrics: metricRows,
+    levelDefinitions,
+    history,
+    recentEvidence: recentEvidence.map((item) => ({
+      ...item,
+      values: valuesByEvidence[item.id] ?? []
+    })),
+    breakdown: latestBreakdown,
+    suggestions
+  };
+}
+
+export async function getSmvLogPageData() {
+  const dimensions = await getSmvDimensions();
+  const metrics = await getSmvMetrics();
 
   return {
     dimensions,
-    checklistItemsByDimension,
-    recentLogsByDimension,
-    selectedDimensionHistory,
-    highlights,
-    activity: {
-      todayCompletedCount,
-      weeklyCompletedCount
-    }
+    metricsByDimension: dimensions.reduce<Record<string, SmvMetricRow[]>>((acc, dimension) => {
+      acc[dimension.id] = metrics.filter((metric) => metric.dimension_id === dimension.id);
+      return acc;
+    }, {}),
+    implementedDimensionLabels: SMV_FULLY_IMPLEMENTED_DIMENSIONS.map((key) => SMV_DIMENSION_LABELS[key])
   };
 }
 
-export async function getSmvChecklistItemsByDimensionKey(dimensionId: string) {
-  return getSmvChecklistItemsByDimensionId(dimensionId);
+export async function getSmvPlanData() {
+  const [tasks, overview] = await Promise.all([getSmvImprovementTasks(), getSmvOverviewData()]);
+  const byDimension = overview.dimensions.reduce<Record<string, string>>((acc, item) => {
+    acc[item.dimension.id] = item.dimension.label;
+    return acc;
+  }, {});
+
+  return {
+    tasks,
+    fallbackRecommendations: overview.recommendedActions,
+    dimensionLabelById: byDimension
+  };
 }
