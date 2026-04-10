@@ -1,9 +1,22 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
-import { InnovationDashboardRow, InnovationLogRow, InnovationProcessStepRow, InnovationRow } from '@/lib/innovation/types';
+import {
+  DiscoveryCandidateRow,
+  InnovationDashboardRow,
+  InnovationLogRow,
+  InnovationProcessStepRow,
+  InnovationRow
+} from '@/lib/innovation/types';
 
 export async function getInnovationDashboardRows(): Promise<InnovationDashboardRow[]> {
   return supabaseRestRequest<InnovationDashboardRow[]>(
-    'innovations?select=*,innovation_process_steps(status)&order=updated_at.desc',
+    'innovations?select=*,innovation_process_steps(id,title,status,step_order,created_at)&order=updated_at.desc',
+    'GET'
+  );
+}
+
+export async function getDiscoveryCandidates(): Promise<DiscoveryCandidateRow[]> {
+  return supabaseRestRequest<DiscoveryCandidateRow[]>(
+    'discovery_candidates?status=neq.converted&order=created_at.desc',
     'GET'
   );
 }

@@ -1,20 +1,32 @@
 import {
+  createDiscoveryCandidate,
   createInnovation,
   createInnovationLog,
   createInnovationProcessStep,
   touchInnovationUpdatedAt,
+  updateDiscoveryCandidateStatus,
   updateInnovationProcessStep
 } from '@/lib/innovation/mutations';
 import {
+  getDiscoveryCandidates,
   getInnovationById,
   getInnovationDashboardRows,
   getInnovationLogsByInnovationId,
   getInnovationProcessStepsByInnovationId
 } from '@/lib/innovation/queries';
 import {
+  getCurrentInnovation,
+  getDiscoveryGap,
+  getNextDiscoveryAction,
+  getNextStep,
+  sortDiscoveryCandidatesByPipeline
+} from '@/lib/innovation/helpers';
+import {
+  CreateDiscoveryCandidatePayload,
   CreateInnovationLogPayload,
   CreateInnovationPayload,
   CreateInnovationProcessStepPayload,
+  DiscoveryCandidateRow,
   InnovationCardViewModel,
   InnovationDetailViewModel,
   InnovationProcessStepRow,
@@ -41,7 +53,7 @@ export async function getInnovationDashboardData(): Promise<InnovationCardViewMo
 
   return rows.map((row) => {
     const { completedStepCount, stepTotal, progressPercent } = calculateProgress(row.innovation_process_steps);
-    return {
+    const innovation: InnovationCardViewModel = {
       id: row.id,
       title: row.title,
       description: row.description,
@@ -51,9 +63,32 @@ export async function getInnovationDashboardData(): Promise<InnovationCardViewMo
       updated_at: row.updated_at,
       completedStepCount,
       stepTotal,
-      progressPercent
+      progressPercent,
+      steps: row.innovation_process_steps,
+      nextStep: null
     };
+
+    innovation.nextStep = getNextStep(innovation);
+    return innovation;
   });
+}
+
+export async function getInnovationDashboardPageData(goal = 10): Promise<{
+  innovations: InnovationCardViewModel[];
+  currentMission: InnovationCardViewModel | null;
+  discoveryCandidates: DiscoveryCandidateRow[];
+  discoveryGap: number;
+  nextDiscoveryAction: string;
+}> {
+  const [innovations, discoveryCandidates] = await Promise.all([getInnovationDashboardData(), getDiscoveryCandidates()]);
+
+  return {
+    innovations,
+    currentMission: getCurrentInnovation(innovations),
+    discoveryCandidates: discoveryCandidates.sort((a, b) => sortDiscoveryCandidatesByPipeline(a.status) - sortDiscoveryCandidatesByPipeline(b.status)),
+    discoveryGap: getDiscoveryGap(innovations, goal),
+    nextDiscoveryAction: getNextDiscoveryAction(getDiscoveryGap(innovations, goal))
+  };
 }
 
 export async function getInnovationDetailData(id: string): Promise<InnovationDetailViewModel | null> {
@@ -81,6 +116,21 @@ export async function getInnovationDetailData(id: string): Promise<InnovationDet
 
 export async function addInnovation(payload: CreateInnovationPayload) {
   return createInnovation(payload);
+}
+
+export async function addDiscoveryCandidate(payload: CreateDiscoveryCandidatePayload) {
+  return createDiscoveryCandidate(payload);
+}
+
+export async function convertDiscoveryCandidateToInnovation(candidate: DiscoveryCandidateRow) {
+  const innovation = await createInnovation({
+    title: candidate.title,
+    description: candidate.problem ?? undefined,
+    goal: candidate.notes ?? undefined
+  });
+
+  await updateDiscoveryCandidateStatus(candidate.id, 'converted');
+  return innovation;
 }
 
 export async function addInnovationProcessStep(payload: CreateInnovationProcessStepPayload) {
