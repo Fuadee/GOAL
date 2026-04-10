@@ -6,51 +6,34 @@ import { useRouter } from 'next/navigation';
 import { completeSmvChecklistItemAction, manuallyAdjustSmvScoreAction } from '@/app/smv/actions';
 import { SmvDashboardData, SmvDimensionWithScore, SmvScoreEventType } from '@/lib/smv/types';
 
+import { RadarCard } from './RadarCard';
+
 type SmvDashboardClientProps = {
   data: SmvDashboardData;
 };
 
-const RADAR_SIZE = 340;
-const CENTER = RADAR_SIZE / 2;
-const OUTER_RADIUS = 118;
-const RINGS = [20, 40, 60, 80, 100];
+function getDefaultDimensionId(dimensions: SmvDimensionWithScore[]) {
+  if (dimensions.length === 0) return '';
 
-function trendMark(trend: SmvDimensionWithScore['trend']) {
-  if (trend === 'up') return '↗';
-  if (trend === 'down') return '↘';
-  return '→';
-}
-
-function polar(angle: number, radius: number) {
-  return {
-    x: CENTER + radius * Math.cos(angle),
-    y: CENTER + radius * Math.sin(angle)
-  };
+  return dimensions.reduce((lowest, current) => {
+    if (current.currentScore < lowest.currentScore) return current;
+    return lowest;
+  }).id;
 }
 
 export function SmvDashboardClient({ data }: SmvDashboardClientProps) {
   const router = useRouter();
-  const [selectedDimensionId, setSelectedDimensionId] = useState<string>(data.dimensions[0]?.id ?? '');
+  const dimensions = data.dimensions;
+
+  const [selectedDimensionId, setSelectedDimensionId] = useState<string>(getDefaultDimensionId(dimensions));
   const [manualEditDimensionId, setManualEditDimensionId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [pending, startTransition] = useTransition();
   const [historyFilter, setHistoryFilter] = useState<'all' | SmvScoreEventType>('all');
 
-  const dimensions = data.dimensions;
   const selectedDimension = dimensions.find((dimension) => dimension.id === selectedDimensionId) ?? dimensions[0];
-  const strongestIds = new Set(data.highlights.strongestTwo.map((dimension) => dimension.id));
-  const weakestIds = new Set(data.highlights.weakestTwo.map((dimension) => dimension.id));
-
-  const radarPoints = useMemo(() => {
-    return dimensions
-      .map((dimension, index) => {
-        const angle = -Math.PI / 2 + (2 * Math.PI * index) / dimensions.length;
-        const radius = (dimension.currentScore / 100) * OUTER_RADIUS;
-        const point = polar(angle, radius);
-        return `${point.x},${point.y}`;
-      })
-      .join(' ');
-  }, [dimensions]);
+  const strongestIds = useMemo(() => new Set(data.highlights.strongestTwo.map((dimension) => dimension.id)), [data.highlights.strongestTwo]);
+  const weakestIds = useMemo(() => new Set(data.highlights.weakestTwo.map((dimension) => dimension.id)), [data.highlights.weakestTwo]);
 
   const checklistItems = selectedDimension ? data.checklistItemsByDimension[selectedDimension.id] ?? [] : [];
   const recentLogs = selectedDimension ? data.recentLogsByDimension[selectedDimension.id] ?? [] : [];
@@ -109,101 +92,25 @@ export function SmvDashboardClient({ data }: SmvDashboardClientProps) {
         <article className="rounded-3xl border border-white/10 bg-white/5 p-6">
           <h2 className="text-lg font-semibold text-white">Checklist Activity</h2>
           <div className="mt-4 space-y-3 text-sm text-slate-300">
-            <p>Today: <span className="font-semibold text-cyan-100">{data.activity.todayCompletedCount}</span></p>
-            <p>This week: <span className="font-semibold text-cyan-100">{data.activity.weeklyCompletedCount}</span></p>
+            <p>
+              Today: <span className="font-semibold text-cyan-100">{data.activity.todayCompletedCount}</span>
+            </p>
+            <p>
+              This week: <span className="font-semibold text-cyan-100">{data.activity.weeklyCompletedCount}</span>
+            </p>
           </div>
         </article>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <article className="rounded-3xl border border-white/10 bg-white/5 p-5">
-          <h2 className="mb-3 text-lg font-semibold text-white">Radar Chart</h2>
-          <div className="overflow-x-auto">
-            <svg viewBox={`0 0 ${RADAR_SIZE} ${RADAR_SIZE}`} className="mx-auto h-[340px] w-[340px]">
-              {RINGS.map((value) => {
-                const radius = (value / 100) * OUTER_RADIUS;
-                const ring = dimensions
-                  .map((_, index) => {
-                    const angle = -Math.PI / 2 + (2 * Math.PI * index) / dimensions.length;
-                    const p = polar(angle, radius);
-                    return `${p.x},${p.y}`;
-                  })
-                  .join(' ');
-                return <polygon key={value} points={ring} fill="none" stroke="rgba(148,163,184,0.35)" strokeWidth="1" />;
-              })}
-              {dimensions.map((dimension, index) => {
-                const angle = -Math.PI / 2 + (2 * Math.PI * index) / dimensions.length;
-                const p = polar(angle, OUTER_RADIUS);
-                const l = polar(angle, OUTER_RADIUS + 18);
-                return (
-                  <g key={dimension.id}>
-                    <line x1={CENTER} y1={CENTER} x2={p.x} y2={p.y} stroke="rgba(148,163,184,0.35)" strokeWidth="1" />
-                    <text x={l.x} y={l.y} textAnchor="middle" dominantBaseline="middle" fill="rgb(203 213 225)" fontSize="10">
-                      {dimension.label}
-                    </text>
-                  </g>
-                );
-              })}
-              <polygon points={radarPoints} fill="rgba(34,211,238,0.2)" stroke="rgba(103,232,249,0.95)" strokeWidth="2" />
-            </svg>
-          </div>
-        </article>
-
-        <article className="rounded-3xl border border-white/10 bg-white/5 p-5">
-          <h2 className="text-lg font-semibold text-white">Axis Breakdown</h2>
-          <div className="mt-4 space-y-3">
-            {dimensions.map((dimension) => {
-              const isStrong = strongestIds.has(dimension.id);
-              const isWeak = weakestIds.has(dimension.id);
-
-              return (
-                <div
-                  key={dimension.id}
-                  className={`rounded-2xl border p-3 ${
-                    isStrong
-                      ? 'border-emerald-300/40 bg-emerald-300/10'
-                      : isWeak
-                        ? 'border-amber-300/40 bg-amber-300/10'
-                        : 'border-white/10 bg-slate-950/40'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <button
-                      type="button"
-                      className="text-left"
-                      onClick={() => setSelectedDimensionId(dimension.id)}
-                    >
-                      <p className="text-sm font-medium text-white">{dimension.label}</p>
-                      <p className="text-xs text-slate-400">Trend {trendMark(dimension.trend)}</p>
-                    </button>
-                    <p className="text-lg font-semibold text-cyan-100">{dimension.currentScore}</p>
-                  </div>
-                  <div className="mt-2 h-2 rounded-full bg-slate-700">
-                    <div className="h-full rounded-full bg-cyan-300" style={{ width: `${dimension.currentScore}%` }} />
-                  </div>
-                  <p className="mt-2 text-xs text-slate-300">Today {dimension.todayCompletedCount} • Week {dimension.weeklyCompletedCount} • Streak {dimension.streakDays}d</p>
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      type="button"
-                      className="rounded-lg border border-white/20 px-2 py-1 text-xs text-white hover:bg-white/10"
-                      onClick={() => setSelectedDimensionId(dimension.id)}
-                    >
-                      View Checklist
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-lg border border-cyan-300/30 px-2 py-1 text-xs text-cyan-100 hover:bg-cyan-300/20"
-                      onClick={() => setManualEditDimensionId(dimension.id)}
-                    >
-                      Edit Score
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </article>
-      </section>
+      <RadarCard
+        dimensions={dimensions}
+        selectedDimension={selectedDimension}
+        selectedDimensionId={selectedDimensionId}
+        strongestIds={strongestIds}
+        weakestIds={weakestIds}
+        onSelectDimension={setSelectedDimensionId}
+        onEditScore={setManualEditDimensionId}
+      />
 
       <section className="grid gap-6 lg:grid-cols-2">
         <article className="rounded-3xl border border-white/10 bg-white/5 p-5">
