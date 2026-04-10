@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'GOAL Foundation',
-  description: 'Clean premium foundation with responsive navbar'
+  title: 'GOAL Mission Control',
+  description: 'Premium mission control dashboard for life system execution'
 };
 
 export default function RootLayout({
@@ -13,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th">
-      <body>{children}</body>
+    <html lang="th" className="dark">
+      <body className="mission-body">{children}</body>
     </html>
   );
 }
