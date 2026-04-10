@@ -4,9 +4,10 @@ type Props = {
   summary: ConstructionWaitingSummaryView;
   executionState: ConstructionExecutionState | null;
   riskLevel: ConstructionRiskLevel | null;
-  onAddUpdate: () => void;
-  onMarkResponseReceived: () => void;
-  onEditWaitingDetails: () => void;
+  showControls?: boolean;
+  onAddUpdate?: () => void;
+  onMarkResponseReceived?: () => void;
+  onEditWaitingDetails?: () => void;
 };
 
 const EXECUTION_STYLES: Record<ConstructionExecutionState, string> = {
@@ -39,6 +40,7 @@ export function ConstructionWaitingStatusCard({
   summary,
   executionState,
   riskLevel,
+  showControls = true,
   onAddUpdate,
   onMarkResponseReceived,
   onEditWaitingDetails
@@ -93,17 +95,19 @@ export function ConstructionWaitingStatusCard({
         Latest update: <span className="text-slate-50">{summary.latestUpdate}</span>
       </p>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" onClick={onAddUpdate} className="rounded-full border border-white/20 px-3 py-1 text-xs text-slate-200 transition hover:bg-white/10">
-          Add update
-        </button>
-        <button type="button" onClick={onMarkResponseReceived} className="rounded-full border border-emerald-400/40 px-3 py-1 text-xs text-emerald-200 transition hover:bg-emerald-500/15">
-          Mark response received
-        </button>
-        <button type="button" onClick={onEditWaitingDetails} className="rounded-full border border-cyan-300/40 px-3 py-1 text-xs text-cyan-100 transition hover:bg-cyan-500/15">
-          Edit waiting details
-        </button>
-      </div>
+      {showControls ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" onClick={onAddUpdate} className="rounded-full border border-white/20 px-3 py-1 text-xs text-slate-200 transition hover:bg-white/10">
+            Add update
+          </button>
+          <button type="button" onClick={onMarkResponseReceived} className="rounded-full border border-emerald-400/40 px-3 py-1 text-xs text-emerald-200 transition hover:bg-emerald-500/15">
+            Mark response received
+          </button>
+          <button type="button" onClick={onEditWaitingDetails} className="rounded-full border border-cyan-300/40 px-3 py-1 text-xs text-cyan-100 transition hover:bg-cyan-500/15">
+            Edit waiting details
+          </button>
+        </div>
+      ) : null}
     </aside>
   );
 }
