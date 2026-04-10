@@ -2,8 +2,11 @@ import { Navbar } from '@/components/navbar';
 import { SmvEvidenceForm } from '@/components/smv/SmvEvidenceForm';
 import { getSmvLogPageData } from '@/lib/smv/service';
 
-export default async function SmvLogPage() {
+export default async function SmvLogPage({ searchParams }: { searchParams?: { dimension?: string } }) {
   const data = await getSmvLogPageData();
+  const requestedDimensionKey = searchParams?.dimension;
+  const preselectedDimensionId =
+    data.dimensions.find((dimension) => dimension.key === requestedDimensionKey)?.id ?? data.dimensions[0]?.id ?? '';
 
   return (
     <main className="app-shell">
@@ -16,7 +19,11 @@ export default async function SmvLogPage() {
         </header>
 
         <article className="rounded-3xl border border-white/10 bg-white/5 p-6">
-          <SmvEvidenceForm dimensions={data.dimensions} metricsByDimension={data.metricsByDimension} />
+          <SmvEvidenceForm
+            dimensions={data.dimensions}
+            metricsByDimension={data.metricsByDimension}
+            initialDimensionId={preselectedDimensionId}
+          />
         </article>
       </section>
     </main>
