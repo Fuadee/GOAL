@@ -2,13 +2,17 @@ export const INCOME_SOURCE_TYPES = ['active', 'passive'] as const;
 export const EXPENSE_TYPES = ['fixed', 'variable'] as const;
 export const RENTAL_HOUSE_STATUSES = ['planning', 'building', 'active'] as const;
 export const MONEY_GOAL_PLAN_STATUSES = ['planned', 'in_progress', 'completed'] as const;
-export const CONSTRUCTION_STEP_STATUSES = ['not_started', 'in_progress', 'waiting', 'blocked', 'completed'] as const;
+export const CONSTRUCTION_STEP_STATUSES = ['not_started', 'in_progress', 'completed'] as const;
+export const CONSTRUCTION_EXECUTION_STATES = ['doing', 'waiting', 'blocked', 'follow_up_needed'] as const;
+export const CONSTRUCTION_RISK_LEVELS = ['on_track', 'delayed', 'urgent'] as const;
 
 export type IncomeSourceType = (typeof INCOME_SOURCE_TYPES)[number];
 export type ExpenseType = (typeof EXPENSE_TYPES)[number];
 export type RentalHouseStatus = (typeof RENTAL_HOUSE_STATUSES)[number];
 export type MoneyGoalPlanStatus = (typeof MONEY_GOAL_PLAN_STATUSES)[number];
 export type ConstructionStepStatus = (typeof CONSTRUCTION_STEP_STATUSES)[number];
+export type ConstructionExecutionState = (typeof CONSTRUCTION_EXECUTION_STATES)[number];
+export type ConstructionRiskLevel = (typeof CONSTRUCTION_RISK_LEVELS)[number];
 
 export type IncomeSourceRow = {
   id: string;
@@ -47,14 +51,21 @@ export type ConstructionStepRow = {
   step_name: string;
   step_order: number;
   status: ConstructionStepStatus;
+  execution_state: ConstructionExecutionState;
+  waiting_on: string | null;
+  waiting_since: string | null;
+  expected_response_date: string | null;
+  next_action_label: string | null;
+  risk_level: ConstructionRiskLevel | null;
+  is_current_focus: boolean;
+  latest_update_text: string | null;
   target_date: string | null;
   latest_update: string | null;
   is_completed: boolean;
   completed_at: string | null;
 };
 
-
-export type ConstructionMilestoneViewStatus = 'done' | 'current' | 'upcoming' | 'blocked';
+export type ConstructionMilestoneViewStatus = 'done' | 'current' | 'upcoming';
 
 export type ConstructionMilestoneView = {
   id: string;
@@ -70,6 +81,18 @@ export type ConstructionFocusView = {
   nextMilestone: string;
   targetDateLabel: string;
   latestUpdate: string;
+};
+
+export type ConstructionWaitingSummaryView = {
+  currentStep: string;
+  executionState: ConstructionExecutionState | null;
+  waitingOn: string;
+  waitingSince: string;
+  expectedBy: string;
+  nextAction: string;
+  latestUpdate: string;
+  riskLevel: ConstructionRiskLevel | null;
+  waitingReason: string;
 };
 
 export type ConstructionMetricView = {

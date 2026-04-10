@@ -7,14 +7,12 @@ type Props = {
 const STATUS_STYLES: Record<ConstructionMilestoneView['status'], string> = {
   done: 'border-emerald-400/40 bg-emerald-500/10 text-emerald-100',
   current: 'border-cyan-300/60 bg-cyan-500/10 text-cyan-50 shadow-[0_0_20px_rgba(34,211,238,0.2)] scale-[1.02]',
-  upcoming: 'border-white/10 bg-slate-900/70 text-slate-300',
-  blocked: 'border-amber-300/40 bg-amber-500/10 text-amber-100'
+  upcoming: 'border-white/10 bg-slate-900/70 text-slate-300'
 };
 
 function StepIcon({ status }: { status: ConstructionMilestoneView['status'] }) {
   if (status === 'done') return <span aria-hidden>✓</span>;
   if (status === 'current') return <span aria-hidden>◉</span>;
-  if (status === 'blocked') return <span aria-hidden>⚠</span>;
   return <span aria-hidden>○</span>;
 }
 

@@ -1,5 +1,7 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
 import {
+  ConstructionExecutionState,
+  ConstructionRiskLevel,
   ConstructionStepRow,
   ConstructionStepStatus,
   ExpenseRow,
@@ -123,7 +125,31 @@ export async function updateConstructionStepStatus(stepId: string, status: Const
   const rows = await supabaseRestRequest<ConstructionStepRow[]>(`construction_steps?id=eq.${stepId}`, 'PATCH', {
     status,
     is_completed: status === 'completed',
-    completed_at: status === 'completed' ? new Date().toISOString() : null
+    completed_at: status === 'completed' ? new Date().toISOString() : null,
+    execution_state: status === 'completed' ? 'doing' : undefined
   });
+  return rows[0];
+}
+
+export async function updateConstructionExecutionState(stepId: string, executionState: ConstructionExecutionState): Promise<ConstructionStepRow> {
+  const rows = await supabaseRestRequest<ConstructionStepRow[]>(`construction_steps?id=eq.${stepId}`, 'PATCH', {
+    execution_state: executionState
+  });
+  return rows[0];
+}
+
+export async function updateConstructionWaitingDetails(
+  stepId: string,
+  payload: {
+    waiting_on: string | null;
+    waiting_since: string | null;
+    expected_response_date: string | null;
+    next_action_label: string | null;
+    latest_update_text: string | null;
+    risk_level: ConstructionRiskLevel | null;
+    is_current_focus: boolean;
+  }
+): Promise<ConstructionStepRow> {
+  const rows = await supabaseRestRequest<ConstructionStepRow[]>(`construction_steps?id=eq.${stepId}`, 'PATCH', payload);
   return rows[0];
 }
