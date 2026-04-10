@@ -4,6 +4,7 @@ import { InnovationCardViewModel, InnovationStatus } from '@/lib/innovation/type
 
 type InnovationCardProps = {
   innovation: InnovationCardViewModel;
+  isCurrent?: boolean;
 };
 
 const statusStyles: Record<InnovationStatus, string> = {
@@ -21,15 +22,18 @@ function formatTimestamp(value: string): string {
   }).format(new Date(value));
 }
 
-export function InnovationCard({ innovation }: InnovationCardProps) {
+export function InnovationCard({ innovation, isCurrent = false }: InnovationCardProps) {
   return (
-    <article className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur transition duration-300 hover:scale-[1.01] hover:border-white/20">
+    <article className={`space-y-4 rounded-2xl border bg-white/5 p-5 backdrop-blur transition duration-300 hover:scale-[1.01] ${isCurrent ? 'border-amber-300/50 shadow-[0_0_25px_rgba(251,191,36,0.2)]' : 'border-white/10 hover:border-white/20'}`}>
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-3">
           <h3 className="text-lg font-bold text-white">{innovation.title}</h3>
-          <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${statusStyles[innovation.status]}`}>
-            {innovation.status}
-          </span>
+          <div className="flex items-center gap-2">
+            {isCurrent ? <span className="rounded-full bg-amber-400/30 px-2 py-1 text-[10px] font-bold text-amber-100">CURRENT 🔥</span> : null}
+            <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${statusStyles[innovation.status]}`}>
+              {innovation.status}
+            </span>
+          </div>
         </div>
         <p className="text-sm leading-relaxed text-slate-300">{innovation.description || 'No description yet.'}</p>
       </div>
@@ -48,6 +52,10 @@ export function InnovationCard({ innovation }: InnovationCardProps) {
           <p className="font-semibold text-white">{formatTimestamp(innovation.updated_at)}</p>
         </div>
       </div>
+
+      <p className="text-sm text-slate-200">
+        Next: <span className="font-semibold text-white">→ {innovation.nextStep?.title ?? 'No pending step'}</span>
+      </p>
 
       <Link
         href={`/innovation/${innovation.id}`}

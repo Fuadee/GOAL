@@ -1,13 +1,16 @@
 import { AddInnovationForm } from '@/components/innovation/AddInnovationForm';
+import { CurrentMissionSection } from '@/components/innovation/CurrentMissionSection';
+import { DiscoveryCandidatesSection } from '@/components/innovation/DiscoveryCandidatesSection';
+import { DiscoveryGapSection } from '@/components/innovation/DiscoveryGapSection';
 import { InnovationCard } from '@/components/innovation/InnovationCard';
 import { ProgressBar } from '@/components/innovation/ProgressBar';
 import { Navbar } from '@/components/navbar';
-import { getInnovationDashboardData } from '@/lib/innovation/service';
+import { getInnovationDashboardPageData } from '@/lib/innovation/service';
 
 const TARGET_INNOVATIONS = 10;
 
 export default async function InnovationPage() {
-  const innovations = await getInnovationDashboardData();
+  const { innovations, currentMission, discoveryCandidates, discoveryGap, nextDiscoveryAction } = await getInnovationDashboardPageData(TARGET_INNOVATIONS);
 
   return (
     <main className="app-shell">
@@ -20,9 +23,23 @@ export default async function InnovationPage() {
           <p className="text-base text-[color:var(--text-secondary)] md:text-lg">Build 10 innovations to unlock your potential</p>
         </header>
 
+        <CurrentMissionSection mission={currentMission} />
+
         <ProgressBar current={innovations.length} total={TARGET_INNOVATIONS} />
 
-        <AddInnovationForm currentCount={innovations.length} maxCount={TARGET_INNOVATIONS} />
+        <DiscoveryGapSection
+          currentCount={innovations.length}
+          goalCount={TARGET_INNOVATIONS}
+          gap={discoveryGap}
+          candidateCount={discoveryCandidates.length}
+          nextAction={nextDiscoveryAction}
+        />
+
+        <DiscoveryCandidatesSection candidates={discoveryCandidates} />
+
+        <section id="add-innovation">
+          <AddInnovationForm currentCount={innovations.length} maxCount={TARGET_INNOVATIONS} />
+        </section>
 
         {innovations.length === 0 ? (
           <section className="theme-card border-dashed p-10 text-center backdrop-blur">
@@ -31,7 +48,7 @@ export default async function InnovationPage() {
         ) : (
           <section className="grid gap-5 md:grid-cols-2">
             {innovations.map((innovation) => (
-              <InnovationCard key={innovation.id} innovation={innovation} />
+              <InnovationCard key={innovation.id} innovation={innovation} isCurrent={currentMission?.id === innovation.id} />
             ))}
           </section>
         )}
