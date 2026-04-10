@@ -10,12 +10,20 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { label: 'SMV', href: '/' },
+  { label: 'SMV', href: '/smv' },
   { label: 'Money Management', href: '/money-management' },
   { label: 'HealtH', href: '/health' },
   { label: 'Innovation', href: '/innovation' },
-  { label: 'Heal the WORLD', href: '/heal-world' }
+  { label: 'Heal the WORLD', href: '/heal-the-world' }
 ];
+
+const isPathActive = (pathname: string, href: string) => {
+  if (pathname === href) {
+    return true;
+  }
+
+  return pathname.startsWith(`${href}/`);
+};
 
 export function Navbar() {
   const pathname = usePathname();
@@ -25,14 +33,6 @@ export function Navbar() {
     'rounded-full px-4 py-2 text-sm font-medium tracking-wide text-slate-300 transition duration-200 hover:bg-white/10 hover:text-white';
 
   const activeItemClass = 'bg-white text-slate-900 shadow-lg shadow-white/20';
-
-  const isItemActive = (item: MenuItem) => {
-    if (item.href === '/') {
-      return pathname === '/' && item.label === 'SMV';
-    }
-
-    return pathname === item.href;
-  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl">
@@ -53,7 +53,7 @@ export function Navbar() {
 
         <nav className="hidden items-center gap-2 md:flex" aria-label="Main menu">
           {menuItems.map((item) => {
-            const isActive = isItemActive(item);
+            const isActive = isPathActive(pathname, item.href);
 
             return (
               <Link
@@ -72,7 +72,7 @@ export function Navbar() {
         <nav className="border-t border-white/10 px-6 py-4 md:hidden" aria-label="Mobile main menu">
           <div className="mx-auto flex max-w-6xl flex-col gap-2">
             {menuItems.map((item) => {
-              const isActive = isItemActive(item);
+              const isActive = isPathActive(pathname, item.href);
 
               return (
                 <Link
