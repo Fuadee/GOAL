@@ -40,6 +40,17 @@ export type MoneyGoalPlanRow = {
   updated_at: string;
 };
 
+export type IncomeSummary = {
+  count: number;
+  totalExpected: number;
+  totalActual: number;
+};
+
+export type ExpenseSummary = {
+  count: number;
+  totalAmount: number;
+};
+
 export type MoneyDashboardData = {
   targetIncome: number;
   grossIncome: number;
@@ -47,9 +58,16 @@ export type MoneyDashboardData = {
   netIncome: number;
   progressPercent: number;
   gap: number;
+  incomeSummary: IncomeSummary;
+  expenseSummary: ExpenseSummary;
+};
+
+export type IncomeManagementPageData = {
   incomeSources: IncomeSourceRow[];
+};
+
+export type ExpenseManagementPageData = {
   expenses: ExpenseRow[];
-  rentalHouses: RentalHouseRow[];
 };
 
 export type MoneyPlanPageData = {

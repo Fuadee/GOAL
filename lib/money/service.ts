@@ -1,11 +1,11 @@
-import { getExpenses, getIncomeSources, getMoneyGoalPlans, getRentalHouses } from '@/lib/money/queries';
-import { MoneyDashboardData, MoneyGoalPlanStatus, MoneyPlanPageData } from '@/lib/money/types';
+import { getExpenses, getIncomeSources, getMoneyGoalPlans } from '@/lib/money/queries';
+import { ExpenseManagementPageData, IncomeManagementPageData, MoneyDashboardData, MoneyGoalPlanStatus, MoneyPlanPageData } from '@/lib/money/types';
 
 const TARGET_INCOME = 100000;
 const ACTIVE_PLAN_STATUSES: MoneyGoalPlanStatus[] = ['planned', 'in_progress', 'completed'];
 
 export async function getMoneyDashboardData(): Promise<MoneyDashboardData> {
-  const [incomeSources, expenses, rentalHouses] = await Promise.all([getIncomeSources(), getExpenses(), getRentalHouses()]);
+  const [incomeSources, expenses] = await Promise.all([getIncomeSources(), getExpenses()]);
 
   const grossIncome = incomeSources.reduce((sum, source) => sum + Number(source.actual_income), 0);
   const totalExpense = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
@@ -20,10 +20,26 @@ export async function getMoneyDashboardData(): Promise<MoneyDashboardData> {
     netIncome,
     progressPercent,
     gap,
-    incomeSources,
-    expenses,
-    rentalHouses
+    incomeSummary: {
+      count: incomeSources.length,
+      totalExpected: incomeSources.reduce((sum, source) => sum + Number(source.expected_income), 0),
+      totalActual: grossIncome
+    },
+    expenseSummary: {
+      count: expenses.length,
+      totalAmount: totalExpense
+    }
   };
+}
+
+export async function getIncomeManagementData(): Promise<IncomeManagementPageData> {
+  const incomeSources = await getIncomeSources();
+  return { incomeSources };
+}
+
+export async function getExpenseManagementData(): Promise<ExpenseManagementPageData> {
+  const expenses = await getExpenses();
+  return { expenses };
 }
 
 export async function getMoneyPlanPageData(): Promise<MoneyPlanPageData> {

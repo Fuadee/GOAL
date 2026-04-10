@@ -46,6 +46,7 @@ export async function createIncomeSourceAction(formData: FormData): Promise<{ su
     await createIncomeSource({ name, type: typeRaw, expected_income: expectedRaw, actual_income: actualRaw });
   }
   revalidatePath('/money-management');
+  revalidatePath('/money-management/income');
   return { success: true, message: id ? 'Income source updated.' : 'Income source added.' };
 }
 
@@ -65,6 +66,7 @@ export async function createExpenseAction(formData: FormData): Promise<{ success
     await createExpense({ category, type: typeRaw, amount });
   }
   revalidatePath('/money-management');
+  revalidatePath('/money-management/expenses');
   return { success: true, message: id ? 'Expense updated.' : 'Expense added.' };
 }
 
@@ -87,6 +89,7 @@ export async function deleteIncomeSourceAction(id: string): Promise<{ success: b
 
   await deleteIncomeSource(id);
   revalidatePath('/money-management');
+  revalidatePath('/money-management/income');
   return { success: true, message: 'Income source deleted.' };
 }
 
@@ -95,6 +98,7 @@ export async function deleteExpenseAction(id: string): Promise<{ success: boolea
 
   await deleteExpense(id);
   revalidatePath('/money-management');
+  revalidatePath('/money-management/expenses');
   return { success: true, message: 'Expense deleted.' };
 }
 
