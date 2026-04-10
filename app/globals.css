@@ -1,3 +1,6 @@
+@import url('https://fonts.cdnfonts.com/css/line-seed-sans-th');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,34 +8,22 @@
 :root {
   color-scheme: dark;
 
-  --bg-base: #0b1220;
-  --bg-subtle: #0f1728;
-  --surface: #172235;
-  --surface-elevated: #1d2a3f;
-  --surface-action: #24344d;
-  --border: rgba(167, 184, 210, 0.18);
-  --border-strong: rgba(148, 195, 255, 0.42);
+  --bg-base: #0a0f1c;
+  --bg-subtle: #0f172a;
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-elevated: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.12);
 
-  --text-primary: #e8eefc;
-  --text-secondary: #a8b5cb;
-  --text-muted: #7e8ca7;
+  --text-primary: #e2e8f0;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
 
-  --accent: #5db7ff;
-  --accent-strong: #3ea5ff;
-  --success: #43c98d;
-  --warning: #e0af4d;
-  --danger: #e06d82;
+  --primary: #22d3ee;
+  --secondary: #8b5cf6;
+  --danger: #ef4444;
+  --success: #22c55e;
 
-  --radius-sm: 0.625rem;
-  --radius-md: 0.875rem;
-  --radius-lg: 1.125rem;
-  --radius-xl: 1.5rem;
-
-  --shadow-soft: 0 10px 32px rgba(5, 10, 20, 0.36);
-  --shadow-elevated: 0 14px 40px rgba(7, 15, 30, 0.5);
-
-  --font-heading: 'IBM Plex Sans Thai', 'Noto Sans Thai', 'Sarabun', 'Segoe UI', sans-serif;
-  --font-body: 'Noto Sans Thai', 'IBM Plex Sans Thai', 'Sarabun', 'Segoe UI', sans-serif;
+  --font-main: 'LINE Seed Sans TH', 'IBM Plex Sans Thai', 'Noto Sans Thai', sans-serif;
 }
 
 html,
@@ -42,14 +33,13 @@ body {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at top right, rgba(80, 159, 255, 0.12), transparent 40%),
-    radial-gradient(circle at 20% 10%, rgba(112, 92, 255, 0.07), transparent 35%),
-    linear-gradient(180deg, var(--bg-subtle), var(--bg-base));
+  font-family: var(--font-main);
   color: var(--text-primary);
-  font-family: var(--font-body), 'Noto Sans Thai', 'Sarabun', 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(circle at 15% 18%, rgba(34, 211, 238, 0.2), transparent 32%),
+    radial-gradient(circle at 85% 8%, rgba(139, 92, 246, 0.22), transparent 34%),
+    linear-gradient(140deg, var(--bg-base) 0%, var(--bg-subtle) 48%, #111827 100%);
   line-height: 1.6;
-  letter-spacing: 0.001em;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -62,8 +52,8 @@ h6,
 .page-title,
 .section-title,
 .card-title {
-  font-family: var(--font-heading), var(--font-body), 'Noto Sans Thai', sans-serif;
-  letter-spacing: 0.002em;
+  font-family: var(--font-main);
+  letter-spacing: 0.04em;
 }
 
 .numeric,
@@ -72,86 +62,74 @@ h6,
   font-feature-settings: 'tnum' 1, 'lnum' 1;
 }
 
+.mission-body {
+  background:
+    radial-gradient(circle at 30% 0%, rgba(34, 211, 238, 0.08), transparent 36%),
+    radial-gradient(circle at 70% 0%, rgba(139, 92, 246, 0.08), transparent 40%);
+}
+
 .app-shell {
   min-height: 100vh;
   background: transparent;
 }
 
 .page-container {
-  @apply mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-12;
+  @apply mx-auto w-full max-w-7xl px-4 py-10 md:px-8 md:py-14;
 }
 
-.page-header {
-  @apply mb-8 space-y-3;
-}
-
+.mission-label,
 .page-kicker {
-  color: var(--text-muted);
-  @apply text-xs font-semibold uppercase tracking-[0.24em];
+  @apply text-sm font-semibold uppercase tracking-[0.32em] text-slate-400;
 }
 
+.mission-title,
 .page-title {
-  color: var(--text-primary);
-  @apply text-3xl font-semibold leading-tight md:text-5xl;
+  @apply text-3xl font-bold tracking-wide text-slate-100 md:text-4xl;
 }
 
 .section-title {
-  color: var(--text-primary);
-  @apply text-xl font-semibold leading-tight;
+  @apply text-xl font-semibold text-slate-100 md:text-2xl;
 }
 
 .card-title {
-  color: var(--text-primary);
-  @apply text-lg font-semibold leading-snug;
+  @apply text-xl font-semibold text-slate-100;
 }
 
+.body-text,
 .label-text {
-  color: var(--text-secondary);
-  @apply text-sm font-medium leading-snug;
+  @apply text-base font-normal text-slate-200;
 }
 
+.caption-text,
 .helper-text {
-  color: var(--text-secondary);
-  @apply text-xs leading-relaxed;
+  @apply text-xs text-slate-500;
 }
 
-.theme-card {
-  background: color-mix(in srgb, var(--surface) 90%, black 10%);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-soft);
-}
-
-.surface-elevated {
-  background: color-mix(in srgb, var(--surface-elevated) 92%, black 8%);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-}
-
+.mission-card,
+.theme-card,
+.surface-elevated,
 .action-surface {
-  background: color-mix(in srgb, var(--surface-action) 90%, black 10%);
-  border: 1px solid color-mix(in srgb, var(--border-strong) 72%, transparent);
-  border-radius: var(--radius-lg);
+  @apply relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-lg backdrop-blur-lg transition duration-300;
+}
+
+.mission-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(130deg, rgba(34, 211, 238, 0.12), rgba(139, 92, 246, 0.08) 45%, transparent 90%);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.mission-card:hover {
+  @apply scale-[1.01] border-cyan-400/40 shadow-cyan-500/10;
 }
 
 .theme-input,
 .theme-select,
 .theme-textarea,
 .theme-date {
-  width: 100%;
-  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface-action) 92%, black 8%);
-  color: var(--text-primary);
-  padding: 0.62rem 0.86rem;
-  min-height: 2.75rem;
-  line-height: 1.5;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
-}
-
-.theme-input::placeholder,
-.theme-textarea::placeholder {
-  color: color-mix(in srgb, var(--text-muted) 80%, transparent);
+  @apply min-h-11 w-full rounded-xl border border-white/15 bg-slate-950/40 px-3.5 py-2.5 text-slate-100 transition;
 }
 
 .theme-input:focus,
@@ -160,33 +138,23 @@ h6,
 .theme-date:focus,
 .theme-focus:focus-visible {
   outline: none;
-  border-color: var(--accent-strong);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+  @apply border-cyan-400 shadow-[0_0_0_3px_rgba(34,211,238,0.2)];
 }
 
 .theme-button-primary {
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 28%, transparent), color-mix(in srgb, #7f7dff 22%, transparent));
-  color: #dff0ff;
-  @apply px-4 py-2 text-sm font-semibold transition;
+  @apply rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-sm font-semibold text-black shadow-lg shadow-cyan-500/20 transition;
 }
 
 .theme-button-primary:hover {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 40%, transparent), color-mix(in srgb, #7f7dff 30%, transparent));
+  @apply scale-[1.02] brightness-110 shadow-cyan-400/40;
 }
 
 .theme-button-secondary {
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
-  background: color-mix(in srgb, var(--surface) 88%, black 12%);
-  color: var(--text-secondary);
-  @apply px-4 py-2 text-sm font-medium transition;
+  @apply rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-slate-100 transition;
 }
 
 .theme-button-secondary:hover {
-  color: var(--text-primary);
-  background: color-mix(in srgb, var(--surface-elevated) 92%, black 8%);
+  @apply border-cyan-400 text-cyan-200;
 }
 
 .theme-table {
@@ -194,10 +162,9 @@ h6,
 }
 
 .theme-table thead {
-  color: var(--text-muted);
+  @apply text-slate-400;
 }
 
 .theme-table tbody tr {
-  border-top: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
-  color: var(--text-primary);
+  @apply border-t border-white/10 text-slate-100;
 }
