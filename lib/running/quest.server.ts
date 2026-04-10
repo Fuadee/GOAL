@@ -4,13 +4,15 @@ import {
   calculatePaceSecondsPerKm,
   evaluateRunAttempt,
   getBestAttemptByLevel,
-  getCurrentAvailableLevel
+  getCurrentAvailableLevel,
+  getTodayRunStatus
 } from '@/lib/running/quest';
 import {
   RunAttemptInput,
   RunnerDashboardData,
   RunnerLevel,
   RunnerLevelProgress,
+  RunnerRestDay,
   RunnerRunLog
 } from '@/lib/running/quest.types';
 
@@ -26,6 +28,7 @@ type RunnerRunLogRow = Omit<RunnerRunLog, 'distance_km' | 'level' | 'note' | 'ef
   effort: 'easy' | 'normal' | 'hard' | null;
   level?: { id: string; level_number: number; title: string };
 };
+type RunnerRestDayRow = RunnerRestDay;
 
 const toNumber = (value: string | number | null): number | null => {
   if (value === null) return null;
@@ -50,6 +53,8 @@ const mapLog = (row: RunnerRunLogRow): RunnerRunLog => ({
   level: row.level
 });
 
+const todayDate = () => new Date().toISOString().slice(0, 10);
+
 export async function getRunnerLevels(): Promise<RunnerLevel[]> {
   const rows = await supabaseRestRequest<RunnerLevelRow[]>('runner_levels?order=sort_order.asc', 'GET');
   return rows.map(mapLevel);
@@ -69,8 +74,18 @@ export async function getRunnerRunLogs(limit = 50): Promise<RunnerRunLog[]> {
   return rows.map(mapLog);
 }
 
+export async function getRunnerRestDays(limit = 30): Promise<RunnerRestDay[]> {
+  return supabaseRestRequest<RunnerRestDayRow[]>(`runner_rest_days?order=rest_date.desc,created_at.desc&limit=${limit}`, 'GET');
+}
+
 export async function getRunnerDashboardData(): Promise<RunnerDashboardData> {
-  const [levels, progress, logs] = await Promise.all([getRunnerLevels(), getRunnerProgress(), getRunnerRunLogs(100)]);
+  const [levels, progress, logs, restDays] = await Promise.all([
+    getRunnerLevels(),
+    getRunnerProgress(),
+    getRunnerRunLogs(100),
+    getRunnerRestDays(30)
+  ]);
+
   const dashboardLevels = buildDashboardLevels(levels, progress, logs);
   const currentLevel = dashboardLevels.find((level) => level.progress?.status === 'available') ?? null;
   const passedLevelsCount = dashboardLevels.filter((level) => level.progress?.status === 'passed').length;
@@ -81,17 +96,29 @@ export async function getRunnerDashboardData(): Promise<RunnerDashboardData> {
   const bestPaceEver = logs.length > 0 ? Math.min(...logs.map((log) => log.pace_seconds_per_km)) : null;
   const longestNoStopDistance = logs.length > 0 ? Math.max(...logs.filter((log) => log.no_stop).map((log) => log.distance_km), 0) : null;
 
+  const todayStatus = getTodayRunStatus(logs, restDays, todayDate());
+  const todayLog = logs.find((log) => log.run_date === todayDate()) ?? null;
+
   return {
     levels: dashboardLevels,
     logs,
     currentLevel,
     nextLevel,
+    todayStatus,
+    todayLog,
     passedLevelsCount,
     totalAttempts: logs.length,
     bestPaceEver,
     longestNoStopDistance: longestNoStopDistance && longestNoStopDistance > 0 ? longestNoStopDistance : null,
     completionPercent: Math.round((passedLevelsCount / Math.max(levels.length, 1)) * 100)
   };
+}
+
+export async function markRunnerRestDay(restDate: string): Promise<void> {
+  await supabaseRestRequest<RunnerRestDayRow[]>('runner_rest_days', 'POST', {
+    rest_date: restDate,
+    note: null
+  });
 }
 
 export async function upsertLevelProgressAfterAttempt(params: {

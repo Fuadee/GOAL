@@ -4,6 +4,8 @@ export type RunnerRunResult = 'passed' | 'failed_distance' | 'failed_pace' | 'fa
 
 export type RunnerEffort = 'easy' | 'normal' | 'hard';
 
+export type RunnerTodayStatus = 'not_run' | 'ran' | 'rest';
+
 export type RunnerLevel = {
   id: string;
   level_number: number;
@@ -27,6 +29,13 @@ export type RunnerRunLog = {
   result: RunnerRunResult;
   created_at: string;
   level?: Pick<RunnerLevel, 'id' | 'level_number' | 'title'>;
+};
+
+export type RunnerRestDay = {
+  id: string;
+  rest_date: string;
+  note: string | null;
+  created_at: string;
 };
 
 export type RunnerLevelProgress = {
@@ -68,6 +77,8 @@ export type RunnerDashboardData = {
   logs: RunnerRunLog[];
   currentLevel: RunnerDashboardLevel | null;
   nextLevel: RunnerDashboardLevel | null;
+  todayStatus: RunnerTodayStatus;
+  todayLog: RunnerRunLog | null;
   passedLevelsCount: number;
   totalAttempts: number;
   bestPaceEver: number | null;

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { createRunLog } from '@/lib/running/quest.server';
+import { createRunLog, markRunnerRestDay } from '@/lib/running/quest.server';
 import { parseMinuteSecondDuration } from '@/lib/running/quest';
 
 const isEffort = (value: string): value is 'easy' | 'normal' | 'hard' => {
@@ -47,4 +47,16 @@ export async function createRunnerRunLogAction(formData: FormData): Promise<{ su
 
   revalidatePath('/health');
   return result;
+}
+
+export async function markRunnerRestDayAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const restDate = String(formData.get('rest_date') ?? '').trim();
+
+  if (!restDate) {
+    return { success: false, message: 'Rest date is required.' };
+  }
+
+  await markRunnerRestDay(restDate);
+  revalidatePath('/health');
+  return { success: true, message: 'Marked today as rest day.' };
 }

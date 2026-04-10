@@ -4,8 +4,10 @@ import {
   RunnerDashboardLevel,
   RunnerLevel,
   RunnerLevelProgress,
+  RunnerRestDay,
   RunnerRunLog,
-  RunnerRunResult
+  RunnerRunResult,
+  RunnerTodayStatus
 } from '@/lib/running/quest.types';
 
 export function formatPace(secondsPerKm: number | null): string {
@@ -64,11 +66,30 @@ export function parseDurationToSeconds(input: string): number | null {
 export function parseMinuteSecondDuration(input: string): {
   durationSeconds: number | null;
   error: string | null;
+  displayValue: string | null;
 } {
-  const numericValue = input.replace(/\D/g, '');
+  const value = input.trim();
 
+  if (!value) {
+    return { durationSeconds: null, error: 'กรุณากรอกระยะเวลา', displayValue: null };
+  }
+
+  if (value.includes(':')) {
+    const parsed = parseDurationToSeconds(value);
+    if (!parsed || parsed <= 0) {
+      return { durationSeconds: null, error: 'รูปแบบเวลาไม่ถูกต้อง', displayValue: null };
+    }
+
+    return {
+      durationSeconds: parsed,
+      error: null,
+      displayValue: formatDuration(parsed)
+    };
+  }
+
+  const numericValue = value.replace(/\D/g, '');
   if (!numericValue) {
-    return { durationSeconds: null, error: 'Please enter your run duration.' };
+    return { durationSeconds: null, error: 'กรุณากรอกตัวเลขเวลา', displayValue: null };
   }
 
   const minutesPart = numericValue.length > 2 ? numericValue.slice(0, -2) : '0';
@@ -76,20 +97,20 @@ export function parseMinuteSecondDuration(input: string): {
   const minutes = Number(minutesPart);
   const seconds = Number(secondsPart);
 
-  if (!Number.isFinite(minutes) || !Number.isFinite(seconds) || minutes < 0 || seconds < 0) {
-    return { durationSeconds: null, error: 'Duration must be a valid positive time.' };
-  }
-
-  if (seconds > 59) {
-    return { durationSeconds: null, error: 'Seconds must be between 0 and 59.' };
+  if (!Number.isFinite(minutes) || !Number.isFinite(seconds) || minutes < 0 || seconds < 0 || seconds > 59) {
+    return { durationSeconds: null, error: 'วินาทีต้องอยู่ระหว่าง 00-59', displayValue: null };
   }
 
   const durationSeconds = minutes * 60 + seconds;
   if (durationSeconds <= 0) {
-    return { durationSeconds: null, error: 'Duration must be greater than 0 seconds.' };
+    return { durationSeconds: null, error: 'เวลาต้องมากกว่า 0 วินาที', displayValue: null };
   }
 
-  return { durationSeconds, error: null };
+  return {
+    durationSeconds,
+    error: null,
+    displayValue: `${minutes}:${String(seconds).padStart(2, '0')}`
+  };
 }
 
 export function calculatePaceSecondsPerKm(durationSeconds: number, distanceKm: number): number | null {
@@ -185,6 +206,42 @@ export function getBestAttemptByLevel(logs: RunnerRunLog[], levelId: string): Ru
     if (a.distance_km !== b.distance_km) return b.distance_km - a.distance_km;
     return a.pace_seconds_per_km - b.pace_seconds_per_km;
   })[0];
+}
+
+export function getTodayRunStatus(logs: RunnerRunLog[], restDays: RunnerRestDay[], todayDate: string): RunnerTodayStatus {
+  const hasRunToday = logs.some((log) => log.run_date === todayDate);
+  if (hasRunToday) return 'ran';
+
+  const isRestDay = restDays.some((day) => day.rest_date === todayDate);
+  if (isRestDay) return 'rest';
+
+  return 'not_run';
+}
+
+export function getPrimaryHealthAction(todayStatus: RunnerTodayStatus): string {
+  if (todayStatus === 'ran') return 'บันทึกผลการวิ่งวันนี้';
+  if (todayStatus === 'rest') return 'วันนี้เน้นฟื้นฟูร่างกาย';
+  return 'เริ่มภารกิจวันนี้';
+}
+
+export function getNextMissionText(currentLevel: RunnerDashboardLevel | null, latestAttempt: RunnerRunLog | null, todayStatus: RunnerTodayStatus): string {
+  if (todayStatus === 'ran') {
+    return 'ถ้าวิ่งแล้ว ให้บันทึกผลทันทีเพื่ออัปเดตด่าน';
+  }
+
+  if (todayStatus === 'rest') {
+    return 'วันนี้พักเพื่อฟื้นตัว แล้วกลับมาลุยด่านพรุ่งนี้';
+  }
+
+  if (!currentLevel) {
+    return 'รักษาความสม่ำเสมอ วิ่งเบา ๆ เพื่อคงฟอร์ม';
+  }
+
+  if (latestAttempt && latestAttempt.pace_seconds_per_km > currentLevel.pace_target_seconds_per_km) {
+    return `เป้าหมายของวันนี้คือทำ pace ให้ต่ำกว่า ${formatPace(currentLevel.pace_target_seconds_per_km).replace(' /km', '/km')}`;
+  }
+
+  return `วันนี้วิ่ง ${currentLevel.distance_target_km} km แบบไม่หยุดให้จบก่อน`;
 }
 
 export function buildDashboardLevels(

@@ -68,7 +68,8 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
 
   return (
     <section className="theme-card space-y-4 p-5">
-      <h3 className="card-title">Quick Run Log</h3>
+      <h3 className="card-title">Quick Log</h3>
+      <p className="text-sm text-slate-300">บันทึกทันทีหลังวิ่ง เพื่อให้ด่านอัปเดตทันที</p>
       <form
         action={(formData) => {
           setError(null);
@@ -93,7 +94,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
         <input type="hidden" name="no_stop" value={String(noStop)} />
         <div className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1 label-text">
-            <span>Run Date</span>
+            <span>วันที่</span>
             <input
               type="date"
               name="run_date"
@@ -103,7 +104,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
             />
           </label>
           <label className="space-y-1 label-text">
-            <span>Distance (km)</span>
+            <span>ระยะทาง (km)</span>
             <input
               type="number"
               name="distance_km"
@@ -119,13 +120,13 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
 
         <div className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1 label-text">
-            <span>Duration (mmss)</span>
+            <span>ระยะเวลา</span>
             <input
               type="text"
               name="duration_input"
               inputMode="numeric"
               required
-              placeholder="0900"
+              placeholder="เช่น 930 หรือ 9:30"
               value={durationInput}
               onBlur={() => setIsDurationTouched(true)}
               onChange={(event) => {
@@ -134,32 +135,33 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
               }}
               className="theme-input"
             />
-            <p className="helper-text">Examples: 0900 → 9:00, 1245 → 12:45, 45 → 0:45</p>
+            <p className="helper-text">พิมพ์ได้ทั้ง 930, 09:30 หรือ 0:09:30 ระบบอ่านให้เอง</p>
+            {durationValidation.displayValue ? <p className="text-xs text-cyan-200">เวลาที่อ่านได้: {durationValidation.displayValue}</p> : null}
             {isDurationTouched && durationValidation.error ? (
               <p className="text-xs text-amber-300">{durationValidation.error}</p>
             ) : null}
           </label>
           <label className="space-y-1 label-text">
-            <span>Effort</span>
+            <span>ความหนัก</span>
             <select
               name="effort"
               defaultValue="normal"
               className="theme-input"
             >
-              <option value="easy">Easy</option>
-              <option value="normal">Normal</option>
-              <option value="hard">Hard</option>
+              <option value="easy">เบา</option>
+              <option value="normal">ปกติ</option>
+              <option value="hard">หนัก</option>
             </select>
           </label>
         </div>
 
         <label className="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
           <input type="checkbox" checked={noStop} onChange={(event) => setNoStop(event.target.checked)} className="h-4 w-4 accent-sky-300" />
-          I finished this run without stopping
+          วิ่งจบแบบไม่หยุด
         </label>
 
         <label className="space-y-1 label-text">
-          <span>Note (optional)</span>
+          <span>โน้ต</span>
           <textarea
             name="note"
             rows={2}
@@ -170,7 +172,6 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
         {preview ? (
           <div className="action-surface p-3 text-sm text-[color:var(--text-primary)]">
             <p>Pace preview: <span className="font-medium text-white">{formatPace(preview.pace)}</span></p>
-            <p>Duration: <span className="font-medium text-white">{Math.floor(preview.durationSeconds / 60)}:{String(preview.durationSeconds % 60).padStart(2, '0')}</span></p>
             <p className={preview.evaluation.passed ? 'text-emerald-300' : 'text-amber-300'}>
               {preview.evaluation.passed ? 'This attempt will pass the level.' : getFailureReason(preview.evaluation)}
             </p>
@@ -185,7 +186,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
           disabled={isPending}
           className="theme-button-primary w-fit disabled:opacity-60"
         >
-          {isPending ? 'Saving...' : 'Log This Run'}
+          {isPending ? 'กำลังบันทึก...' : 'บันทึกผลการวิ่ง'}
         </button>
       </form>
     </section>
