@@ -1,17 +1,10 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+
 import { Navbar } from '@/components/navbar';
-import { SMV_AXIS_META, SMV_SAMPLE_PROFILE, type SmvAxisKey } from '@/lib/smv/constants';
-
-type AxisScore = {
-  key: SmvAxisKey;
-  label: string;
-  score: number;
-};
-
-const SMV_AXES: AxisScore[] = SMV_AXIS_META.map((axis) => ({
-  key: axis.key,
-  label: axis.label,
-  score: SMV_SAMPLE_PROFILE[axis.key]
-}));
+import { SmvEditScoresModal } from '@/components/smv/SmvEditScoresModal';
+import { SMV_AXIS_KEYS, SMV_SAMPLE_PROFILE, buildSmvDashboardData, type SmvScores } from '@/lib/smv/constants';
 
 const RADAR_SIZE = 360;
 const CENTER = RADAR_SIZE / 2;
@@ -25,7 +18,7 @@ function polarToCartesian(angle: number, radius: number) {
   };
 }
 
-function buildPolygonPoints(values: AxisScore[], valueScale = 100) {
+function buildPolygonPoints(values: ReturnType<typeof buildSmvDashboardData>['axes'], valueScale = 100) {
   return values
     .map((item, index) => {
       const angle = -Math.PI / 2 + (2 * Math.PI * index) / values.length;
@@ -38,23 +31,54 @@ function buildPolygonPoints(values: AxisScore[], valueScale = 100) {
 }
 
 export default function SmvPage() {
-  const totalScore = Math.round(SMV_AXES.reduce((sum, item) => sum + item.score, 0) / SMV_AXES.length);
+  const [scores, setScores] = useState<SmvScores>(SMV_SAMPLE_PROFILE);
+  const [reflection, setReflection] = useState('');
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const sortedByScore = [...SMV_AXES].sort((a, b) => a.score - b.score);
-  const weakestAxes = sortedByScore.slice(0, 2);
-  const strongestAxis = sortedByScore[sortedByScore.length - 1];
+  const dashboardData = useMemo(() => buildSmvDashboardData(scores), [scores]);
+
+  const handleSaveScores = async (nextScores: SmvScores, nextReflection: string) => {
+    setSaveError(null);
+    setIsSaving(true);
+
+    try {
+      // Local-first state update (ready to replace with backend service call later)
+      await Promise.resolve();
+      setScores(nextScores);
+      setReflection(nextReflection);
+      setIsEditOpen(false);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Unable to save SMV scores. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <Navbar />
 
       <section className="mx-auto w-full max-w-7xl space-y-8 px-4 py-10 md:px-8 md:py-14">
-        <header className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">SMV Analytics</p>
-          <h1 className="text-4xl font-semibold text-white md:text-5xl">SMV Dashboard</h1>
-          <p className="max-w-2xl text-base text-slate-300">
-            มุมมองพลังชีวิต 8 ด้านในเรดาร์เดียว เพื่อเห็นจุดแข็ง จุดอ่อน และโฟกัสการพัฒนาให้ชัดขึ้น
-          </p>
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">SMV Analytics</p>
+            <h1 className="text-4xl font-semibold text-white md:text-5xl">SMV Dashboard</h1>
+            <p className="max-w-2xl text-base text-slate-300">
+              มุมมองพลังชีวิต 8 ด้านในเรดาร์เดียว เพื่อเห็นจุดแข็ง จุดอ่อน และโฟกัสการพัฒนาให้ชัดขึ้น
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setSaveError(null);
+              setIsEditOpen(true);
+            }}
+            className="rounded-xl border border-cyan-300/40 bg-cyan-300/15 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/25"
+          >
+            Edit Score
+          </button>
         </header>
 
         <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
@@ -70,11 +94,13 @@ export default function SmvPage() {
               >
                 {RING_VALUES.map((value) => {
                   const radius = (value / 100) * OUTER_RADIUS;
-                  const points = SMV_AXES.map((_, index) => {
-                    const angle = -Math.PI / 2 + (2 * Math.PI * index) / SMV_AXES.length;
-                    const point = polarToCartesian(angle, radius);
-                    return `${point.x},${point.y}`;
-                  }).join(' ');
+                  const points = dashboardData.axes
+                    .map((_, index) => {
+                      const angle = -Math.PI / 2 + (2 * Math.PI * index) / SMV_AXIS_KEYS.length;
+                      const point = polarToCartesian(angle, radius);
+                      return `${point.x},${point.y}`;
+                    })
+                    .join(' ');
 
                   return (
                     <polygon
@@ -87,8 +113,8 @@ export default function SmvPage() {
                   );
                 })}
 
-                {SMV_AXES.map((item, index) => {
-                  const angle = -Math.PI / 2 + (2 * Math.PI * index) / SMV_AXES.length;
+                {dashboardData.axes.map((item, index) => {
+                  const angle = -Math.PI / 2 + (2 * Math.PI * index) / SMV_AXIS_KEYS.length;
                   const outerPoint = polarToCartesian(angle, OUTER_RADIUS);
                   const labelPoint = polarToCartesian(angle, OUTER_RADIUS + 20);
 
@@ -117,14 +143,14 @@ export default function SmvPage() {
                 })}
 
                 <polygon
-                  points={buildPolygonPoints(SMV_AXES)}
+                  points={buildPolygonPoints(dashboardData.axes)}
                   fill="rgba(56, 189, 248, 0.2)"
                   stroke="rgba(125, 211, 252, 0.95)"
                   strokeWidth="2"
                 />
 
-                {SMV_AXES.map((item, index) => {
-                  const angle = -Math.PI / 2 + (2 * Math.PI * index) / SMV_AXES.length;
+                {dashboardData.axes.map((item, index) => {
+                  const angle = -Math.PI / 2 + (2 * Math.PI * index) / SMV_AXIS_KEYS.length;
                   const radius = (item.score / 100) * OUTER_RADIUS;
                   const point = polarToCartesian(angle, radius);
 
@@ -141,7 +167,7 @@ export default function SmvPage() {
           <aside className="space-y-6">
             <article className="rounded-3xl border border-cyan-300/20 bg-cyan-300/10 p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-100/80">SMV Score</p>
-              <p className="mt-3 text-5xl font-semibold text-cyan-100">{totalScore}</p>
+              <p className="mt-3 text-5xl font-semibold text-cyan-100">{dashboardData.totalScore}</p>
               <p className="mt-2 text-sm text-cyan-100/80">Average score across 8 life-force dimensions</p>
             </article>
 
@@ -151,13 +177,13 @@ export default function SmvPage() {
                 <div>
                   <p className="text-slate-400">Strongest axis</p>
                   <p className="mt-1 font-medium text-emerald-300">
-                    {strongestAxis.label} ({strongestAxis.score})
+                    {dashboardData.strongestAxis.label} ({dashboardData.strongestAxis.score})
                   </p>
                 </div>
                 <div>
                   <p className="text-slate-400">Weakest 2 axes</p>
                   <ul className="mt-1 space-y-1">
-                    {weakestAxes.map((axis) => (
+                    {dashboardData.weakestAxes.map((axis) => (
                       <li key={axis.key} className="font-medium text-amber-300">
                         {axis.label} ({axis.score})
                       </li>
@@ -166,11 +192,18 @@ export default function SmvPage() {
                 </div>
               </div>
             </article>
+
+            {reflection ? (
+              <article className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Reflection</h3>
+                <p className="mt-2 text-sm text-slate-200">{reflection}</p>
+              </article>
+            ) : null}
           </aside>
         </section>
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {SMV_AXES.map((item) => (
+          {dashboardData.axes.map((item) => (
             <article key={item.key} className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
               <p className="mt-2 text-2xl font-semibold text-white">{item.score}</p>
@@ -181,6 +214,22 @@ export default function SmvPage() {
           ))}
         </section>
       </section>
+
+      <SmvEditScoresModal
+        isOpen={isEditOpen}
+        isSaving={isSaving}
+        initialScores={scores}
+        initialReflection={reflection}
+        errorMessage={saveError}
+        onClose={() => {
+          if (isSaving) {
+            return;
+          }
+          setSaveError(null);
+          setIsEditOpen(false);
+        }}
+        onSave={handleSaveScores}
+      />
     </main>
   );
 }
