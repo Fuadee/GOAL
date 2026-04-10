@@ -21,6 +21,11 @@ export async function getDiscoveryCandidates(): Promise<DiscoveryCandidateRow[]>
   );
 }
 
+export async function getDiscoveryCandidateById(id: string): Promise<DiscoveryCandidateRow | null> {
+  const rows = await supabaseRestRequest<DiscoveryCandidateRow[]>(`discovery_candidates?id=eq.${id}&limit=1`, 'GET');
+  return rows[0] ?? null;
+}
+
 export async function getInnovationById(id: string): Promise<InnovationRow | null> {
   const rows = await supabaseRestRequest<InnovationRow[]>(`innovations?id=eq.${id}&limit=1`, 'GET');
   return rows[0] ?? null;

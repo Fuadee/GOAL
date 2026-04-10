@@ -10,6 +10,7 @@ import {
   blockInnovation,
   convertDiscoveryCandidateToInnovation,
   defineCandidateProblem,
+  getDiscoveryCandidateDetailData,
   getInnovationDashboardData,
   getInnovationDashboardPageData,
   markCandidateValidated,
@@ -17,11 +18,13 @@ import {
   removeDiscoveryCandidate,
   resumeInnovation,
   updateCandidateConcept,
+  updateCandidateProblem,
   updateInnovationBlockedReason
 } from '@/lib/innovation/service';
 
 function revalidateInnovationPages(pathname?: string) {
   revalidatePath('/innovation');
+  revalidatePath('/innovation/discovery/new');
   if (pathname) {
     revalidatePath(pathname);
   }
@@ -51,9 +54,13 @@ export async function createInnovationAction(formData: FormData): Promise<{ succ
   return { success: true, message: 'Innovation created.' };
 }
 
-export async function createDiscoveryCandidateAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+export async function createDiscoveryCandidateAction(
+  formData: FormData
+): Promise<{ success: boolean; message: string; candidateId?: string }> {
   const title = String(formData.get('title') ?? '').trim();
   const source = String(formData.get('source') ?? '').trim();
+  const problem = String(formData.get('problem') ?? '').trim();
+  const concept = String(formData.get('concept') ?? '').trim();
   const notes = String(formData.get('notes') ?? '').trim();
   const impactScoreRaw = Number(String(formData.get('impact_score') ?? '0').trim());
   const feasibilityScoreRaw = Number(String(formData.get('feasibility_score') ?? '0').trim());
@@ -62,16 +69,18 @@ export async function createDiscoveryCandidateAction(formData: FormData): Promis
     return { success: false, message: 'Candidate title is required.' };
   }
 
-  await addDiscoveryCandidate({
+  const created = await addDiscoveryCandidate({
     title,
     source: source || undefined,
+    problem: problem || undefined,
+    concept: concept || undefined,
     notes: notes || undefined,
     impact_score: Number.isFinite(impactScoreRaw) ? impactScoreRaw : 0,
     feasibility_score: Number.isFinite(feasibilityScoreRaw) ? feasibilityScoreRaw : 0
   });
 
-  revalidateInnovationPages();
-  return { success: true, message: 'Discovery candidate added.' };
+  revalidateInnovationPages('/innovation/discovery/new');
+  return { success: true, message: 'Discovery candidate added.', candidateId: created.id };
 }
 
 export async function defineCandidateProblemAction(candidateId: string, problem: string): Promise<{ success: boolean; message: string }> {
@@ -82,13 +91,22 @@ export async function defineCandidateProblemAction(candidateId: string, problem:
   }
 
   await defineCandidateProblem(candidateId, problemText);
-  revalidateInnovationPages();
+  revalidateInnovationPages(`/innovation/discovery/${candidateId}`);
 
   return { success: true, message: 'Problem defined.' };
 }
 
 export async function updateCandidateProblemAction(candidateId: string, problem: string): Promise<{ success: boolean; message: string }> {
-  return defineCandidateProblemAction(candidateId, problem);
+  const problemText = problem.trim();
+
+  if (!problemText) {
+    return { success: false, message: 'Problem is required.' };
+  }
+
+  await updateCandidateProblem(candidateId, problemText);
+  revalidateInnovationPages(`/innovation/discovery/${candidateId}`);
+
+  return { success: true, message: 'Problem updated.' };
 }
 
 export async function addCandidateConceptAction(candidateId: string, concept: string): Promise<{ success: boolean; message: string }> {
@@ -99,7 +117,7 @@ export async function addCandidateConceptAction(candidateId: string, concept: st
   }
 
   await addCandidateConcept(candidateId, conceptText);
-  revalidateInnovationPages();
+  revalidateInnovationPages(`/innovation/discovery/${candidateId}`);
 
   return { success: true, message: 'Concept added.' };
 }
@@ -112,16 +130,27 @@ export async function updateCandidateConceptAction(candidateId: string, concept:
   }
 
   await updateCandidateConcept(candidateId, conceptText);
-  revalidateInnovationPages();
+  revalidateInnovationPages(`/innovation/discovery/${candidateId}`);
 
   return { success: true, message: 'Concept updated.' };
 }
 
 export async function markCandidateValidatedAction(candidateId: string, validationNotes?: string): Promise<{ success: boolean; message: string }> {
   await markCandidateValidated(candidateId, validationNotes?.trim());
-  revalidateInnovationPages();
+  revalidateInnovationPages(`/innovation/discovery/${candidateId}`);
 
   return { success: true, message: 'Candidate validated.' };
+}
+
+export async function updateCandidateValidationNotesAction(candidateId: string, validationNotes: string): Promise<{ success: boolean; message: string }> {
+  const candidate = await getDiscoveryCandidateDetailData(candidateId);
+
+  if (!candidate) {
+    return { success: false, message: 'Candidate not found.' };
+  }
+
+  await markCandidateValidatedAction(candidateId, validationNotes);
+  return { success: true, message: 'Validation notes updated.' };
 }
 
 export async function deleteDiscoveryCandidateAction(candidateId: string): Promise<{ success: boolean; message: string }> {
@@ -131,7 +160,7 @@ export async function deleteDiscoveryCandidateAction(candidateId: string): Promi
   return { success: true, message: 'Candidate deleted.' };
 }
 
-export async function convertDiscoveryCandidateAction(candidateId: string): Promise<{ success: boolean; message: string }> {
+export async function convertDiscoveryCandidateAction(candidateId: string): Promise<{ success: boolean; message: string; innovationId?: string }> {
   const pageData = await getInnovationDashboardPageData();
   const candidate = pageData.discoveryCandidates.find((item) => item.id === candidateId);
 
@@ -139,9 +168,9 @@ export async function convertDiscoveryCandidateAction(candidateId: string): Prom
     return { success: false, message: 'Candidate not found.' };
   }
 
-  await convertDiscoveryCandidateToInnovation(candidate);
-  revalidateInnovationPages();
-  return { success: true, message: 'Candidate promoted to innovation.' };
+  const innovation = await convertDiscoveryCandidateToInnovation(candidate);
+  revalidateInnovationPages(`/innovation/discovery/${candidateId}`);
+  return { success: true, message: 'Candidate promoted to innovation.', innovationId: innovation.id };
 }
 
 export async function addInnovationStepAction(

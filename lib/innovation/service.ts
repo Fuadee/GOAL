@@ -10,6 +10,7 @@ import {
   updateInnovationProcessStep
 } from '@/lib/innovation/mutations';
 import {
+  getDiscoveryCandidateById,
   getDiscoveryCandidates,
   getInnovationById,
   getInnovationDashboardRows,
@@ -105,6 +106,11 @@ export async function getInnovationDashboardPageData(goal = 10): Promise<{
     discoveryGap: getDiscoveryGap(innovations, goal),
     nextDiscoveryAction: getNextDiscoveryAction(getDiscoveryGap(innovations, goal))
   };
+}
+
+
+export async function getDiscoveryCandidateDetailData(id: string): Promise<DiscoveryCandidateRow | null> {
+  return getDiscoveryCandidateById(id);
 }
 
 export async function getInnovationDetailData(id: string): Promise<InnovationDetailViewModel | null> {

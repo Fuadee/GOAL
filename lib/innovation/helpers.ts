@@ -54,7 +54,7 @@ const DISCOVERY_STATE_META: Record<
   observed: {
     label: 'OBSERVED',
     description: 'ยังไม่ได้ระบุปัญหาให้ชัดเจน',
-    allowedActions: ['define_problem', 'delete_candidate']
+    allowedActions: ['define_problem', 'edit_basic_info']
   },
   pain_point: {
     label: 'PAIN POINT',
@@ -74,7 +74,7 @@ const DISCOVERY_STATE_META: Record<
   converted: {
     label: 'CONVERTED',
     description: 'แปลงเป็น innovation เรียบร้อยแล้ว',
-    allowedActions: ['open_innovation']
+    allowedActions: ['open_innovation', 'view_linked_innovation_info']
   }
 };
 
@@ -88,6 +88,18 @@ export function getDiscoveryCandidateStateMeta(candidate: DiscoveryCandidateRow)
     description: meta.description,
     allowedActions: meta.allowedActions
   };
+}
+
+const PRIMARY_DISCOVERY_ACTION_LABEL: Record<DiscoveryCandidateState, string> = {
+  observed: 'Define Problem',
+  pain_point: 'Add Concept',
+  concept: 'Mark Validated',
+  validated: 'Convert to Innovation',
+  converted: 'Open Innovation'
+};
+
+export function getPrimaryDiscoveryActionLabel(candidate: DiscoveryCandidateRow): string {
+  return PRIMARY_DISCOVERY_ACTION_LABEL[deriveDiscoveryCandidateState(candidate)];
 }
 
 export function deriveInnovationState(innovation: InnovationCardViewModel): InnovationDerivedState {
