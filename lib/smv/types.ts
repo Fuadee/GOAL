@@ -1,18 +1,7 @@
-export const SMV_DIMENSION_KEYS = [
-  'confidence_leadership',
-  'fun_playful',
-  'preselection',
-  'status_money',
-  'social_connection',
-  'life_goal',
-  'protective_capable',
-  'looks_style'
-] as const;
+export const SMV_DIMENSION_KEYS = ['confidence', 'fun', 'preselection', 'status', 'social', 'purpose', 'protection', 'look'] as const;
 
 export type SmvDimensionKey = (typeof SMV_DIMENSION_KEYS)[number];
-export type SmvFrequencyType = 'daily' | 'repeatable' | 'one_time';
-export type SmvScoreEventType = 'checklist' | 'manual_adjustment' | 'system_recalc';
-export type SmvTrendDirection = 'up' | 'down' | 'flat';
+export type SmvMetricValueType = 'score_0_100' | 'count' | 'boolean' | 'currency_monthly';
 
 export type SmvDimensionRow = {
   id: string;
@@ -21,92 +10,122 @@ export type SmvDimensionRow = {
   description: string | null;
   color_token: string | null;
   created_at: string;
+  updated_at: string;
 };
 
-export type SmvChecklistItemRow = {
+export type SmvMetricRow = {
   id: string;
   dimension_id: string;
-  title: string;
+  key: string;
+  label: string;
   description: string | null;
-  score_delta: number;
-  frequency_type: SmvFrequencyType;
+  value_type: SmvMetricValueType;
+  weight: number;
+  is_required: boolean;
+  config: Record<string, unknown>;
   is_active: boolean;
-  sort_order: number;
   created_at: string;
+  updated_at: string;
 };
 
-export type SmvChecklistLogRow = {
+export type SmvEvidenceLogRow = {
   id: string;
   dimension_id: string;
-  checklist_item_id: string;
-  completed_at: string;
-  notes: string | null;
+  logged_at: string;
+  context: string | null;
+  note: string | null;
+  source: string;
   created_at: string;
+  updated_at: string;
 };
 
-export type SmvScoreEventRow = {
+export type SmvEvidenceMetricValueRow = {
+  id: string;
+  evidence_log_id: string;
+  metric_id: string;
+  numeric_value: number | null;
+  boolean_value: boolean | null;
+  text_value: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SmvLevelDefinitionRow = {
   id: string;
   dimension_id: string;
-  event_type: SmvScoreEventType;
-  score_before: number;
-  score_delta: number;
-  score_after: number;
-  reason: string | null;
-  checklist_log_id: string | null;
+  level_score: number;
+  title: string;
+  requirement_text: string;
   created_at: string;
+  updated_at: string;
 };
 
 export type SmvDimensionScoreRow = {
   dimension_id: string;
-  current_score: number;
-  previous_score: number;
+  score: number;
+  evidence_count_30d: number;
+  guard_summary: string | null;
+  explanation: string | null;
+  calculated_at: string;
+  created_at: string;
   updated_at: string;
 };
 
-export type SmvDimensionWithScore = {
+export type SmvScoreHistoryRow = {
   id: string;
-  key: SmvDimensionKey;
-  label: string;
+  dimension_id: string;
+  score: number;
+  evidence_count_30d: number;
+  guard_summary: string | null;
+  explanation: string | null;
+  score_breakdown: Record<string, number>;
+  calculated_at: string;
+  created_at: string;
+};
+
+export type SmvImprovementTaskRow = {
+  id: string;
+  dimension_id: string;
+  title: string;
   description: string | null;
-  colorToken: string | null;
-  currentScore: number;
-  previousScore: number;
-  trend: SmvTrendDirection;
-  todayCompletedCount: number;
-  weeklyCompletedCount: number;
-  streakDays: number;
+  priority: number;
+  status: 'todo' | 'in_progress' | 'done' | 'archived';
+  task_source: string;
+  requirement: Record<string, unknown>;
+  due_date: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
-export type SmvHighlightData = {
-  averageScore: number;
-  strongestDimension: SmvDimensionWithScore | null;
-  weakestDimension: SmvDimensionWithScore | null;
-  strongestTwo: SmvDimensionWithScore[];
-  weakestTwo: SmvDimensionWithScore[];
-  focusNowMessage: string;
-  aiRecommendationPlaceholder: string;
+export type SmvMetricInputValue = {
+  metricId: string;
+  key: string;
+  valueType: SmvMetricValueType;
+  numericValue?: number;
+  booleanValue?: boolean;
+  textValue?: string;
 };
 
-export type SmvDashboardData = {
-  dimensions: SmvDimensionWithScore[];
-  checklistItemsByDimension: Record<string, SmvChecklistItemRow[]>;
-  recentLogsByDimension: Record<string, SmvChecklistLogRow[]>;
-  selectedDimensionHistory: SmvScoreEventRow[];
-  highlights: SmvHighlightData;
-  activity: {
-    todayCompletedCount: number;
-    weeklyCompletedCount: number;
-  };
-};
-
-export type CreateChecklistLogInput = {
+export type SmvEvidenceInput = {
   dimensionId: string;
-  checklistItemId: string;
-  notes?: string;
+  context?: string;
+  note?: string;
+  metricValues: SmvMetricInputValue[];
 };
 
-export type ManualAdjustDimensionScoreInput = {
-  dimensionId: string;
-  newScore: number;
-  reason: string;
+export type SmvDimensionOverview = {
+  dimension: SmvDimensionRow;
+  score: number;
+  guardSummary: string;
+  explanation: string;
+};
+
+export type SmvDimensionDetail = {
+  overview: SmvDimensionOverview;
+  metrics: Array<SmvMetricRow & { latestValue: number | boolean | string | null }>;
+  levelDefinitions: SmvLevelDefinitionRow[];
+  history: SmvScoreHistoryRow[];
+  recentEvidence: Array<SmvEvidenceLogRow & { values: SmvEvidenceMetricValueRow[] }>;
+  breakdown: Record<string, number>;
+  suggestions: string[];
 };
