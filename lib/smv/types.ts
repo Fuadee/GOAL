@@ -4,6 +4,36 @@ export type SmvDimensionKey = (typeof SMV_DIMENSION_KEYS)[number];
 export type SmvMetricValueType = 'score_0_100' | 'count' | 'boolean' | 'currency_monthly';
 export type SmvStageStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'PASSED';
 
+export const SMV_ACTION_TYPES = [
+  'smalltalk_any',
+  'smalltalk_female',
+  'approach_high_value',
+  'conversation_long',
+  'rejection',
+  'close_day',
+  'close_night',
+  'interaction_control',
+  'frame_control',
+  'perfect_game'
+] as const;
+
+export type SmvActionType = (typeof SMV_ACTION_TYPES)[number];
+
+export type SmvConfidenceLevelDefinition = {
+  level: number;
+  title: string;
+  description: string;
+  required_count: number;
+  action_type: SmvActionType;
+};
+
+export type SmvActionLogRow = {
+  id: string;
+  dimension: SmvDimensionKey;
+  action_type: string;
+  created_at: string;
+};
+
 export type SmvDimensionRow = {
   id: string;
   key: SmvDimensionKey;

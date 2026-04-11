@@ -1,7 +1,9 @@
 import { SMV_DIMENSION_LABELS, SMV_FULLY_IMPLEMENTED_DIMENSIONS } from '@/lib/smv/definitions';
+import { CONFIDENCE_LEVELS, MOCK_CONFIDENCE_LOGS } from '@/lib/smv/confidence-levels';
 import {
   createSmvEvidenceLog,
   createSmvEvidenceMetricValues,
+  getSmvActionLogs,
   createSmvScoreHistory,
   getSmvDimensionScore,
   getSmvDimensionScores,
@@ -13,45 +15,50 @@ import {
   getSmvLevelDefinitions,
   getSmvMetrics,
   getSmvStageDefinitions,
-  getSmvStageProgress,
   upsertImprovementTask,
   upsertSmvDimensionScore,
   upsertSmvStageProgress
 } from '@/lib/smv/repository';
 import { buildDefaultRecommendations, calculateSmvDimensionScore } from '@/lib/smv/scoring';
-import { SmvDimensionDetail, SmvDimensionKey, SmvDimensionOverview, SmvEvidenceInput } from '@/lib/smv/types';
+import { SmvActionLogRow, SmvConfidenceLevelDefinition, SmvDimensionDetail, SmvDimensionKey, SmvDimensionOverview, SmvEvidenceInput } from '@/lib/smv/types';
+
+export function getLevelProgress(level: SmvConfidenceLevelDefinition, logs: SmvActionLogRow[]) {
+  const count = logs.filter((log) => log.action_type === level.action_type).length;
+  const percent = Math.min(100, Math.round((count / level.required_count) * 100));
+
+  return {
+    current: count,
+    required: level.required_count,
+    percent
+  };
+}
+
+export function getCurrentLevel(levels: SmvConfidenceLevelDefinition[], logs: SmvActionLogRow[]) {
+  for (const level of levels) {
+    const progress = getLevelProgress(level, logs);
+    if (progress.current < progress.required) {
+      return level;
+    }
+  }
+
+  return levels[levels.length - 1];
+}
+
+async function getConfidenceLogs() {
+  try {
+    return await getSmvActionLogs('confidence');
+  } catch {
+    return MOCK_CONFIDENCE_LOGS.map((log, index) => ({
+      id: `mock-confidence-${index + 1}`,
+      dimension: 'confidence',
+      action_type: log.action_type,
+      created_at: new Date().toISOString()
+    }));
+  }
+}
 
 export async function getConfidenceStages() {
   return getSmvStageDefinitions('confidence');
-}
-
-export async function getConfidenceCurrentStage() {
-  const [stages, progressRows] = await Promise.all([getConfidenceStages(), getSmvStageProgress('confidence')]);
-  const progressMap = new Map(progressRows.map((row) => [row.stage_key, row]));
-  const withStatus = stages.map((stage) => {
-    const status = progressMap.get(stage.stage_key)?.status ?? 'NOT_STARTED';
-    return { ...stage, status };
-  });
-
-  const current = withStatus.find((stage) => stage.status !== 'PASSED') ?? withStatus[withStatus.length - 1] ?? null;
-  return { current, withStatus };
-}
-
-export function getConfidenceScore(passedCount: number) {
-  return Math.min(100, Math.max(0, passedCount * 20));
-}
-
-export function getConfidenceSummary(passedCount: number) {
-  if (passedCount <= 0) return 'คุณกำลังเริ่มต้น สร้างจังหวะการนำให้ชัดเจนทีละด่าน';
-  if (passedCount === 1) return 'เริ่มต้นได้แล้ว ต่อไปต้องคุมบทสนทนาให้ต่อเนื่อง';
-  if (passedCount === 2) return 'ตอนนี้คุณผ่านช่วงเริ่มต้นแล้ว เหลือการพิสูจน์ตัวเองในสถานการณ์กดดันจริง';
-  if (passedCount === 3) return 'ทำได้ดีมาก เหลือการนิ่งเมื่อโดนปฏิเสธและนำคนอื่นให้ได้';
-  if (passedCount === 4) return 'ใกล้ครบแล้ว เหลือด่านสุดท้ายคือการเป็นผู้นำที่คนอื่นตามได้';
-  return 'ยอดเยี่ยม คุณผ่านครบทุกด่านของแกนความเชื่อมั่นและภาวะผู้นำแล้ว';
-}
-
-export function getConfidenceNextAction(currentStage: { action_hint_th: string } | null) {
-  return currentStage?.action_hint_th ?? 'รักษามาตรฐานเดิมและช่วยนำผู้อื่นต่อเนื่อง';
 }
 
 export async function getConfidenceDetailData() {
@@ -59,29 +66,34 @@ export async function getConfidenceDetailData() {
   const dimension = dimensions.find((item) => item.key === 'confidence');
   if (!dimension) return null;
 
-  const { current, withStatus } = await getConfidenceCurrentStage();
-  const passedCount = withStatus.filter((stage) => stage.status === 'PASSED').length;
-  const score = getConfidenceScore(passedCount);
-  const stageLabel = current ? `ด่าน ${current.stage_number}: ${current.title_th}` : 'ผ่านครบทุกด่าน';
+  const levels = CONFIDENCE_LEVELS;
+  const logs = await getConfidenceLogs();
+  const levelsWithProgress = levels.map((level) => ({ ...level, progress: getLevelProgress(level, logs) }));
+  const currentLevel = getCurrentLevel(levels, logs);
+  const passedCount = levelsWithProgress.filter((item) => item.progress.current >= item.progress.required).length;
+  const currentStageProgress = getLevelProgress(currentLevel, logs);
+  const score = Math.round((passedCount / levels.length) * 100);
 
   await upsertSmvDimensionScore({
     dimension_id: dimension.id,
     score,
-    evidence_count_30d: 0,
-    guard_summary: `ผ่านแล้ว ${passedCount} จาก ${withStatus.length} ด่าน`,
-    explanation: current ? `ด่านปัจจุบัน: ${stageLabel}` : 'ผ่านครบทุกด่านแล้ว'
+    evidence_count_30d: logs.length,
+    guard_summary: `ผ่านแล้ว ${passedCount} จาก ${levels.length} ด่าน`,
+    explanation: `ด่านปัจจุบัน: ด่าน ${currentLevel.level} ${currentLevel.title}`
   });
 
   return {
     dimension,
     score,
     passedCount,
-    totalStages: withStatus.length,
-    currentStage: current,
-    currentStageLabel: stageLabel,
-    summary: getConfidenceSummary(passedCount),
-    nextAction: getConfidenceNextAction(current),
-    stages: withStatus
+    totalStages: levels.length,
+    currentStage: currentLevel,
+    currentStageLabel: `ด่าน ${currentLevel.level}: ${currentLevel.title}`,
+    summary: 'ระบบฝึกความมั่นใจแบบลงมือทำจริงทีละด่าน',
+    nextAction: `เก็บ action แบบ ${currentLevel.action_type} เพิ่ม`,
+    logs,
+    stages: levelsWithProgress,
+    currentStageProgress
   };
 }
 
@@ -177,7 +189,7 @@ export async function getSmvOverviewData() {
         dimension,
         score: confidenceDetail.score,
         guardSummary: `ผ่านแล้ว ${confidenceDetail.passedCount} จาก ${confidenceDetail.totalStages} ด่าน`,
-        explanation: `ด่านปัจจุบัน: ${confidenceDetail.currentStage?.title_th ?? 'ครบทุกด่าน'}`
+        explanation: `ด่านปัจจุบัน: ${confidenceDetail.currentStage?.title ?? 'ครบทุกด่าน'}`
       };
     }
 

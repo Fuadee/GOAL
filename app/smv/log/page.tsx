@@ -2,9 +2,10 @@ import { Navbar } from '@/components/navbar';
 import { SmvEvidenceForm } from '@/components/smv/SmvEvidenceForm';
 import { getSmvLogPageData } from '@/lib/smv/service';
 
-export default async function SmvLogPage({ searchParams }: { searchParams?: { dimension?: string } }) {
+export default async function SmvLogPage({ searchParams }: { searchParams?: { dimension?: string; action_type?: string } }) {
   const data = await getSmvLogPageData();
   const requestedDimensionKey = searchParams?.dimension;
+  const actionType = searchParams?.action_type;
   const preselectedDimensionId =
     data.dimensions.find((dimension) => dimension.key === requestedDimensionKey)?.id ?? data.dimensions[0]?.id ?? '';
 
@@ -16,6 +17,7 @@ export default async function SmvLogPage({ searchParams }: { searchParams?: { di
           <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">Evidence Logging</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">/smv/log</h1>
           <p className="mt-2 text-sm text-slate-300">This page logs evidence only. Core scores are recalculated automatically.</p>
+          {actionType ? <p className="mt-2 text-sm text-cyan-100">Action ที่เลือก: {actionType}</p> : null}
         </header>
 
         <article className="rounded-3xl border border-white/10 bg-white/5 p-6">

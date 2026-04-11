@@ -11,7 +11,8 @@ import {
   SmvScoreHistoryRow,
   SmvStageDefinitionRow,
   SmvStageProgressRow,
-  SmvStageStatus
+  SmvStageStatus,
+  SmvActionLogRow
 } from '@/lib/smv/types';
 
 export async function getSmvDimensions() {
@@ -190,4 +191,12 @@ export async function upsertSmvStageProgress(input: {
   );
 
   return rows[0];
+}
+
+
+export async function getSmvActionLogs(dimension: string) {
+  return supabaseRestRequest<SmvActionLogRow[]>(
+    `smv_logs?dimension=eq.${dimension}&select=id,dimension,action_type,created_at&order=created_at.desc`,
+    'GET'
+  );
 }
