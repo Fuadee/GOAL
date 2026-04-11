@@ -1,17 +1,23 @@
 import { CriticalAlertsSection } from '@/components/dashboard/CriticalAlertsSection';
-import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { FocusNowSection } from '@/components/dashboard/FocusNowSection';
 import { GoalModuleGrid } from '@/components/dashboard/GoalModuleGrid';
+import { GoalVisionBoard } from '@/components/dashboard/GoalVisionBoard';
 import { LifeBalanceCard } from '@/components/dashboard/LifeBalanceCard';
 import { LifeDirectionCard } from '@/components/dashboard/LifeDirectionCard';
 import { MomentumSection } from '@/components/dashboard/MomentumSection';
 import { MotionReveal } from '@/components/dashboard/MotionReveal';
 import { Navbar } from '@/components/navbar';
+import { getGoalVisionImages } from '@/lib/goal-vision/queries';
+import { getGoalVisionPublicUrl } from '@/lib/goal-vision/storage';
 import { getDashboardData } from '@/lib/dashboard/service';
 
 export default async function Home() {
   const dashboard = await getDashboardData();
-  const urgentAlerts = dashboard.alerts.filter((item) => item.severity === 'high').length;
+  const goalVisionImages = await getGoalVisionImages();
+  const initialVisionImages = goalVisionImages.map((row) => ({
+    ...row,
+    image_url: getGoalVisionPublicUrl(row.image_path)
+  }));
 
   return (
     <main className="app-shell">
@@ -19,11 +25,7 @@ export default async function Home() {
 
       <div className="page-container space-y-10">
         <MotionReveal>
-          <DashboardHero
-            lifeDirection={dashboard.lifeDirection}
-            activeGoals={dashboard.activeGoals}
-            urgentAlerts={urgentAlerts}
-          />
+          <GoalVisionBoard initialImages={initialVisionImages} />
         </MotionReveal>
 
         <MotionReveal delay={0.08}>
