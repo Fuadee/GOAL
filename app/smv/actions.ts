@@ -202,35 +202,31 @@ export async function updateAppearanceLevelAction(formData: FormData): Promise<{
   }
 }
 
-export async function markSocialLevelCompletedAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+export async function markSocialLevelCompletedAction(formData: FormData): Promise<void> {
   const levelIdRaw = String(formData.get('level_id') ?? '').trim();
   const levelId = Number(levelIdRaw);
 
   if (!Number.isInteger(levelId)) {
-    return { success: false, message: 'ระดับด่านไม่ถูกต้อง' };
+    throw new Error('ระดับด่านไม่ถูกต้อง');
   }
 
   try {
     await markSocialLevelCompleted(levelId);
     revalidatePath('/smv');
     revalidatePath('/smv/social');
-    return { success: true, message: 'อัปเดตผ่านด่านเรียบร้อย' };
   } catch (error) {
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : 'ไม่สามารถอัปเดตด่านได้'
-    };
+    throw new Error(error instanceof Error ? error.message : 'ไม่สามารถอัปเดตด่านได้');
   }
 }
 
-export async function addSocialEvidenceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+export async function addSocialEvidenceAction(formData: FormData): Promise<void> {
   const levelId = Number(String(formData.get('level_id') ?? '').trim());
   const type = String(formData.get('type') ?? 'other').trim() as 'chat' | 'meetup' | 'connection' | 'other';
   const note = String(formData.get('note') ?? '').trim();
   const imageUrl = String(formData.get('image_url') ?? '').trim();
 
   if (!Number.isInteger(levelId)) {
-    return { success: false, message: 'ระดับด่านไม่ถูกต้อง' };
+    throw new Error('ระดับด่านไม่ถูกต้อง');
   }
 
   try {
@@ -242,11 +238,7 @@ export async function addSocialEvidenceAction(formData: FormData): Promise<{ suc
     });
     revalidatePath('/smv');
     revalidatePath('/smv/social');
-    return { success: true, message: 'เพิ่มหลักฐาน Social เรียบร้อย' };
   } catch (error) {
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : 'ไม่สามารถเพิ่มหลักฐานได้'
-    };
+    throw new Error(error instanceof Error ? error.message : 'ไม่สามารถเพิ่มหลักฐานได้');
   }
 }
