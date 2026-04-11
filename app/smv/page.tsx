@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { Navbar } from '@/components/navbar';
 import { SMV_CHART_LABELS } from '@/lib/smv/definitions';
+import { SMV_DIMENSION_KEYS, type SmvDimensionKey } from '@/lib/smv/types';
 import { APPEARANCE_CATEGORY_KEYS } from '@/lib/smv/appearance-config';
 import { getAppearanceDetailData, getPowerLevelLabel, getSmvOverviewData } from '@/lib/smv/service';
 
@@ -74,6 +75,12 @@ export default async function SmvOverviewPage() {
   const weakest = data.weakest[0];
   const appearanceDetail = await getAppearanceDetailData();
 
+  const weakestDimensionKey = (weakest?.dimension.key && (SMV_DIMENSION_KEYS as readonly string[]).includes(weakest.dimension.key)
+    ? weakest.dimension.key
+    : null) as SmvDimensionKey | null;
+  const evidenceLogHref = weakestDimensionKey ? `/smv/log?dimension=${weakestDimensionKey}` : '/smv/log';
+  const upgradePlanHref = '/smv/plan';
+
   return (
     <main className="app-shell">
       <Navbar />
@@ -84,10 +91,16 @@ export default async function SmvOverviewPage() {
             {weakest ? `คุณควรโฟกัส: ${weakest.dimension.label}` : 'ยังไม่มีมิติที่ต้องโฟกัสตอนนี้'}
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link href={weakest ? `/smv/log?dimension=${weakest.dimension.key}` : '/smv/log'} className="rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-200">
+            <Link
+              href={evidenceLogHref}
+              className="cursor-pointer rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+            >
               เพิ่มหลักฐาน
             </Link>
-            <Link href="/smv/plan" className="rounded-full border border-amber-200/50 bg-amber-300/10 px-5 py-2 text-sm font-semibold text-amber-50 transition hover:bg-amber-300/20">
+            <Link
+              href={upgradePlanHref}
+              className="cursor-pointer rounded-full border border-amber-200/50 bg-amber-300/10 px-5 py-2 text-sm font-semibold text-amber-50 transition hover:bg-amber-300/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200/80 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+            >
               ดูแผนอัปเกรด
             </Link>
           </div>
