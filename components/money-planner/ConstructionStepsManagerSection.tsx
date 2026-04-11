@@ -281,7 +281,7 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">All milestones ({stepState.length})</p>
         <ol className="space-y-3">
           {stepState.map((step) => {
-            const isCurrent = Boolean(currentStep) && currentStep.id === step.id && step.status !== 'completed' && !step.is_completed;
+            const isCurrent = currentStep?.id === step.id && step.status !== 'completed' && !step.is_completed;
             const badge = STATUS_BADGES[step.status];
 
             return (
