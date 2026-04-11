@@ -77,42 +77,43 @@ export default async function SmvOverviewPage() {
   return (
     <main className="app-shell">
       <Navbar />
-      <section className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 md:px-8">
-        <header className="rounded-3xl border border-cyan-300/20 bg-gradient-to-r from-slate-950/80 via-slate-900/80 to-cyan-950/40 p-6 md:p-7">
-          <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">SMV Mission Control</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">SMV Power Overview</h1>
-          <p className="mt-2 text-sm text-slate-300">ภาพรวมพลังหลัก 4 ด้านที่กำหนดแรงดึงดูดและความหนักแน่นของคุณ</p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/smv/log" className="rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-200">
+      <section className="mx-auto w-full max-w-7xl space-y-4 px-4 py-5 md:space-y-5 md:px-8 md:py-6">
+        <article className="rounded-3xl border border-cyan-300/35 bg-gradient-to-r from-cyan-500/15 via-slate-900/90 to-amber-500/10 p-6 shadow-[0_0_30px_rgba(34,211,238,0.2)] animate-[pulse_3.8s_ease-in-out_infinite]">
+          <p className="text-sm font-semibold text-cyan-100">🔥 สิ่งที่ต้องทำตอนนี้</p>
+          <p className="mt-2 text-2xl font-semibold text-white">
+            {weakest ? `คุณควรโฟกัส: ${weakest.dimension.label}` : 'ยังไม่มีมิติที่ต้องโฟกัสตอนนี้'}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link href={weakest ? `/smv/log?dimension=${weakest.dimension.key}` : '/smv/log'} className="rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-200">
               เพิ่มหลักฐาน
             </Link>
-            <Link href="/smv/plan" className="rounded-full border border-white/20 bg-white/5 px-5 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/10">
-              แผนอัปเกรดพลัง
+            <Link href="/smv/plan" className="rounded-full border border-amber-200/50 bg-amber-300/10 px-5 py-2 text-sm font-semibold text-amber-50 transition hover:bg-amber-300/20">
+              ดูแผนอัปเกรด
             </Link>
           </div>
-        </header>
+        </article>
+
+        <section className="grid gap-4 md:grid-cols-3">
+          <article className="rounded-2xl border border-white/10 bg-slate-950/45 p-4">
+            <p className="text-xs text-slate-400">Current SMV Score</p>
+            <p className="mt-1 text-4xl font-semibold text-cyan-100">{data.averageScore}</p>
+            <p className="text-xs text-slate-400">คะแนนเฉลี่ยจาก 4 ด้าน</p>
+          </article>
+          <article className="rounded-2xl border border-emerald-300/30 bg-emerald-500/10 p-4">
+            <p className="text-xs text-emerald-100">Strongest Dimension</p>
+            <p className="mt-1 text-lg font-semibold text-white">{strongest?.dimension.label ?? '-'}</p>
+            <p className="text-sm text-emerald-100">{strongest?.score.toFixed(0) ?? 0} / 100</p>
+          </article>
+          <article className="rounded-2xl border border-amber-200/20 bg-amber-500/10 p-4">
+            <p className="text-xs text-amber-100">Weakest Dimension</p>
+            <p className="mt-1 text-lg font-semibold text-white">{weakest?.dimension.label ?? '-'}</p>
+            <p className="text-sm text-amber-100">{weakest?.score.toFixed(0) ?? 0} / 100</p>
+          </article>
+        </section>
 
         <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
           <article className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                <p className="text-xs text-slate-400">ระดับ SMV ปัจจุบัน</p>
-                <p className="mt-1 text-4xl font-semibold text-cyan-100">{data.averageScore}</p>
-                <p className="text-xs text-slate-400">คะแนนเฉลี่ยจาก 4 ด้าน</p>
-              </div>
-              <div className="rounded-2xl border border-emerald-300/30 bg-emerald-500/10 p-4">
-                <p className="text-xs text-emerald-100">พลังเด่นที่สุด</p>
-                <p className="mt-1 text-lg font-semibold text-white">{strongest?.dimension.label ?? '-'}</p>
-                <p className="text-sm text-emerald-100">{strongest?.score.toFixed(0) ?? 0} / 100</p>
-              </div>
-              <div className="rounded-2xl border border-amber-200/20 bg-amber-500/10 p-4">
-                <p className="text-xs text-amber-100">ด้านที่ต้องเร่งอัป</p>
-                <p className="mt-1 text-lg font-semibold text-white">{weakest?.dimension.label ?? '-'}</p>
-                <p className="text-sm text-amber-100">{weakest?.score.toFixed(0) ?? 0} / 100</p>
-              </div>
-            </div>
-
-            <div className="mt-4 flex justify-center">
+            <div className="flex justify-center">
               <Radar items={data.dimensions} />
             </div>
           </article>
