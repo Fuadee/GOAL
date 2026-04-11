@@ -2,7 +2,6 @@ import { CriticalAlertsSection } from '@/components/dashboard/CriticalAlertsSect
 import { FocusNowSection } from '@/components/dashboard/FocusNowSection';
 import { GoalModuleGrid } from '@/components/dashboard/GoalModuleGrid';
 import { GoalVisionBoard } from '@/components/dashboard/GoalVisionBoard';
-import { MomentumSection } from '@/components/dashboard/MomentumSection';
 import { MotionReveal } from '@/components/dashboard/MotionReveal';
 import { Navbar } from '@/components/navbar';
 import { getGoalVisionImages } from '@/lib/goal-vision/queries';
@@ -28,10 +27,6 @@ export default async function Home() {
 
         <MotionReveal delay={0.14}>
           <FocusNowSection items={dashboard.focusItems} />
-        </MotionReveal>
-
-        <MotionReveal delay={0.2}>
-          <MomentumSection items={dashboard.momentum} />
         </MotionReveal>
 
         <MotionReveal delay={0.24}>

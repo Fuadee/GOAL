@@ -2,9 +2,7 @@ import {
   DashboardAlert,
   GoalModuleKey,
   GoalModuleSummary,
-  LifeDirectionStatus,
-  MomentumItem,
-  TrendStatus
+  LifeDirectionStatus
 } from '@/lib/dashboard/types';
 
 const MODULE_WEIGHTS: Record<GoalModuleKey, number> = {
@@ -39,22 +37,9 @@ export const getLifeDirectionInterpretation = (score: number) => {
   return 'วิถีปัจจุบันเสี่ยงสูง ต้องรีเซ็ตแผนรายสัปดาห์และกำหนด action ที่ทำได้จริงทุกวัน';
 };
 
-export const getTrendStatus = (currentScore: number, previousScore: number): TrendStatus => {
+const isDeclining = (currentScore: number, previousScore: number) => {
   const diff = currentScore - previousScore;
-  if (diff >= 5) return 'improving';
-  if (diff <= -5) return 'declining';
-  return 'stable';
-};
-
-export const buildMomentum = (modules: GoalModuleSummary[]): MomentumItem[] => {
-  return modules.map((module) => ({
-    moduleKey: module.key,
-    moduleName: module.name,
-    currentScore: module.currentScore,
-    previousScore: module.previousScore,
-    change: module.currentScore - module.previousScore,
-    trend: getTrendStatus(module.currentScore, module.previousScore)
-  }));
+  return diff <= -5;
 };
 
 export const getStrongestModules = (modules: GoalModuleSummary[], take = 2) => {
@@ -102,13 +87,11 @@ export const generateAlerts = (modules: GoalModuleSummary[]) => {
   const alerts: DashboardAlert[] = [];
 
   modules.forEach((module) => {
-    const trend = getTrendStatus(module.currentScore, module.previousScore);
-
     if (module.currentScore < 50) {
       alerts.push(createLowScoreAlert(module));
     }
 
-    if (trend === 'declining') {
+    if (isDeclining(module.currentScore, module.previousScore)) {
       alerts.push(createDecliningAlert(module));
     }
 

@@ -1,7 +1,5 @@
 export type GoalModuleKey = 'smv' | 'money' | 'health' | 'innovation' | 'world';
 
-export type TrendStatus = 'improving' | 'stable' | 'declining';
-
 export type PriorityLevel = 'high' | 'medium' | 'low';
 
 export type SeverityLevel = 'high' | 'medium' | 'low';
@@ -51,15 +49,6 @@ export type DashboardAlert = {
   nextAction: string;
 };
 
-export type MomentumItem = {
-  moduleKey: GoalModuleKey;
-  moduleName: string;
-  currentScore: number;
-  previousScore: number;
-  change: number;
-  trend: TrendStatus;
-};
-
 export type BalancePoint = {
   axis: 'Money' | 'SMV' | 'Health' | 'Innovation' | 'World';
   value: number;
@@ -74,6 +63,5 @@ export type DashboardData = {
   strongestAreas: string[];
   weakestAreas: string[];
   focusItems: FocusItem[];
-  momentum: MomentumItem[];
   alerts: DashboardAlert[];
 };
