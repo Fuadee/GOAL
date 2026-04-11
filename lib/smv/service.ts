@@ -20,7 +20,63 @@ import {
   upsertSmvStageProgress
 } from '@/lib/smv/repository';
 import { buildDefaultRecommendations, calculateSmvDimensionScore } from '@/lib/smv/scoring';
-import { SmvActionLogRow, SmvConfidenceLevelDefinition, SmvDimensionDetail, SmvDimensionKey, SmvDimensionOverview, SmvEvidenceInput } from '@/lib/smv/types';
+import {
+  SmvActionLogRow,
+  SmvConfidenceLevelDefinition,
+  SmvDimensionDetail,
+  SmvDimensionKey,
+  SmvDimensionOverview,
+  SmvDimensionRow,
+  SmvEvidenceInput,
+  SmvMetricRow,
+  SMV_DIMENSION_KEYS
+} from '@/lib/smv/types';
+
+const LEGACY_DIMENSION_KEY_MAP: Record<string, SmvDimensionKey> = {
+  fun: 'social',
+  preselection: 'social',
+  purpose: 'status',
+  protection: 'status'
+};
+
+const POWER_SUMMARY_BY_KEY: Record<SmvDimensionKey, string> = {
+  confidence: 'ยังไม่มั่นคงเวลาคุยกับคนแปลกหน้า',
+  look: 'ภาพลักษณ์โดยรวมเริ่มดีขึ้น',
+  status: 'มีฐานะบางส่วน แต่ยังไม่เด่นพอ',
+  social: 'เริ่มมีคนรู้จัก แต่เครือข่ายยังไม่แน่น'
+};
+
+function toCoreDimensionKey(rawKey: string): SmvDimensionKey | null {
+  if ((SMV_DIMENSION_KEYS as readonly string[]).includes(rawKey)) return rawKey as SmvDimensionKey;
+  return LEGACY_DIMENSION_KEY_MAP[rawKey] ?? null;
+}
+
+function mergeLegacyDimensions(rows: SmvDimensionRow[]): SmvDimensionRow[] {
+  const selectedByCore = new Map<SmvDimensionKey, SmvDimensionRow>();
+
+  for (const row of rows) {
+    const mapped = toCoreDimensionKey(row.key);
+    if (!mapped) continue;
+    if (!selectedByCore.has(mapped)) {
+      selectedByCore.set(mapped, { ...row, key: mapped, label: SMV_DIMENSION_LABELS[mapped] });
+      continue;
+    }
+
+    const existing = selectedByCore.get(mapped)!;
+    if (row.key === mapped && existing.key !== mapped) {
+      selectedByCore.set(mapped, { ...row, key: mapped, label: SMV_DIMENSION_LABELS[mapped] });
+    }
+  }
+
+  return SMV_DIMENSION_KEYS.map((key) => selectedByCore.get(key)).filter((item): item is SmvDimensionRow => Boolean(item));
+}
+
+export function getPowerLevelLabel(score: number) {
+  if (score <= 24) return 'อ่อน';
+  if (score <= 49) return 'กำลังก่อตัว';
+  if (score <= 74) return 'แข็งแรง';
+  return 'โดดเด่น';
+}
 
 export function getLevelProgress(level: SmvConfidenceLevelDefinition, logs: SmvActionLogRow[]) {
   const count = logs.filter((log) => log.action_type === level.action_type).length;
@@ -62,7 +118,7 @@ export async function getConfidenceStages() {
 }
 
 export async function getConfidenceDetailData() {
-  const dimensions = await getSmvDimensions();
+  const dimensions = mergeLegacyDimensions(await getSmvDimensions());
   const dimension = dimensions.find((item) => item.key === 'confidence');
   if (!dimension) return null;
 
@@ -78,7 +134,7 @@ export async function getConfidenceDetailData() {
     dimension_id: dimension.id,
     score,
     evidence_count_30d: logs.length,
-    guard_summary: `ผ่านแล้ว ${passedCount} จาก ${levels.length} ด่าน`,
+    guard_summary: `Progress ${passedCount}/${levels.length}`,
     explanation: `ด่านปัจจุบัน: ด่าน ${currentLevel.level} ${currentLevel.title}`
   });
 
@@ -118,7 +174,7 @@ function getThirtyDaysAgoIso() {
 }
 
 export async function recalculateDimensionScore(dimensionId: string) {
-  const dimensions = await getSmvDimensions();
+  const dimensions = mergeLegacyDimensions(await getSmvDimensions());
   const dimension = dimensions.find((item) => item.id === dimensionId);
 
   if (!dimension) {
@@ -130,8 +186,13 @@ export async function recalculateDimensionScore(dimensionId: string) {
   const logIds = logs30d.map((item) => item.id);
   const metricValues = await getSmvEvidenceMetricValuesByEvidenceIds(logIds);
 
+  const dimensionKey = toCoreDimensionKey(dimension.key);
+  if (!dimensionKey) {
+    throw new Error('Unsupported dimension key.');
+  }
+
   const result = calculateSmvDimensionScore({
-    dimensionKey: dimension.key,
+    dimensionKey,
     metrics,
     latestEvidenceValues: metricValues,
     evidenceLogs30d: logs30d
@@ -178,8 +239,33 @@ export async function createEvidenceAndRecalculate(input: SmvEvidenceInput) {
   await recalculateDimensionScore(input.dimensionId);
 }
 
+function combineScoresByDimension(input: { dimensions: SmvDimensionRow[]; overview: SmvDimensionOverview[] }) {
+  const bestByKey = new Map<SmvDimensionKey, SmvDimensionOverview>();
+
+  for (const item of input.overview) {
+    const mapped = toCoreDimensionKey(item.dimension.key);
+    if (!mapped) continue;
+
+    const current = bestByKey.get(mapped);
+    if (!current || item.score > current.score || item.dimension.key === mapped) {
+      bestByKey.set(mapped, {
+        ...item,
+        dimension: {
+          ...item.dimension,
+          key: mapped,
+          label: SMV_DIMENSION_LABELS[mapped]
+        },
+        explanation: POWER_SUMMARY_BY_KEY[mapped]
+      });
+    }
+  }
+
+  return SMV_DIMENSION_KEYS.map((key) => bestByKey.get(key)).filter((item): item is SmvDimensionOverview => Boolean(item));
+}
+
 export async function getSmvOverviewData() {
-  const [dimensions, scores, latestLogs] = await Promise.all([getSmvDimensions(), getSmvDimensionScores(), getSmvEvidenceLogs(undefined, 8)]);
+  const [rawDimensions, scores, latestLogs] = await Promise.all([getSmvDimensions(), getSmvDimensionScores(), getSmvEvidenceLogs(undefined, 8)]);
+  const dimensions = mergeLegacyDimensions(rawDimensions);
   const scoreMap = new Map(scores.map((item) => [item.dimension_id, item]));
   const confidenceDetail = await getConfidenceDetailData();
 
@@ -188,32 +274,34 @@ export async function getSmvOverviewData() {
       return {
         dimension,
         score: confidenceDetail.score,
-        guardSummary: `ผ่านแล้ว ${confidenceDetail.passedCount} จาก ${confidenceDetail.totalStages} ด่าน`,
-        explanation: `ด่านปัจจุบัน: ${confidenceDetail.currentStage?.title ?? 'ครบทุกด่าน'}`
+        guardSummary: 'ระบบกำลังติดตามพัฒนาการตามด่าน',
+        explanation: POWER_SUMMARY_BY_KEY.confidence
       };
     }
 
     const score = scoreMap.get(dimension.id);
+    const mappedKey = toCoreDimensionKey(dimension.key as string);
     return {
       dimension,
       score: Number(score?.score ?? 0),
       guardSummary: score?.guard_summary ?? 'ยังไม่มีหลักฐานเพียงพอ',
-      explanation: score?.explanation ?? 'เริ่มบันทึกหลักฐานเพื่อคำนวณคะแนน'
+      explanation: mappedKey ? POWER_SUMMARY_BY_KEY[mappedKey] : 'เริ่มบันทึกหลักฐานเพื่อคำนวณคะแนน'
     };
   });
 
-  const sorted = [...overview].sort((a, b) => b.score - a.score);
-  const strongest = sorted.slice(0, 3);
-  const weakest = [...sorted].reverse().slice(0, 3);
-  const recommendedActions = buildDefaultRecommendations(weakest.map((item) => ({ key: item.dimension.key, label: item.dimension.label })));
+  const mergedOverview = combineScoresByDimension({ dimensions, overview });
+  const sorted = [...mergedOverview].sort((a, b) => b.score - a.score);
+  const strongest = sorted.slice(0, 1);
+  const weakest = [...sorted].reverse().slice(0, 1);
+  const recommendedActions = buildDefaultRecommendations(weakest.map((item) => ({ key: item.dimension.key as SmvDimensionKey, label: item.dimension.label })));
 
   return {
-    dimensions: overview,
+    dimensions: mergedOverview,
     strongest,
     weakest,
     latestLogs,
     recommendedActions,
-    averageScore: overview.length ? Math.round(overview.reduce((sum, item) => sum + item.score, 0) / overview.length) : 0
+    averageScore: mergedOverview.length ? Math.round(mergedOverview.reduce((sum, item) => sum + item.score, 0) / mergedOverview.length) : 0
   };
 }
 
@@ -221,34 +309,34 @@ export async function getSmvDimensionDetailByKey(key: SmvDimensionKey): Promise<
   if (key === 'confidence') {
     return null;
   }
-  const dimensions = await getSmvDimensions();
+
+  const dimensions = mergeLegacyDimensions(await getSmvDimensions());
   const dimension = dimensions.find((item) => item.key === key);
   if (!dimension) return null;
 
-  const [score, levelDefinitions] = await Promise.all([
-    getSmvDimensionScore(dimension.id),
-    getSmvLevelDefinitions(dimension.id)
-  ]);
+  const [score, levelDefinitions] = await Promise.all([getSmvDimensionScore(dimension.id), getSmvLevelDefinitions(dimension.id)]);
 
   return {
     overview: {
       dimension,
       score: Number(score?.score ?? 0),
       guardSummary: score?.guard_summary ?? 'No guard data yet.',
-      explanation: score?.explanation ?? 'Score will appear after first evidence log.'
+      explanation: POWER_SUMMARY_BY_KEY[key]
     },
     levelDefinitions
   };
 }
 
 export async function getSmvLogPageData() {
-  const dimensions = await getSmvDimensions();
+  const dimensions = mergeLegacyDimensions(await getSmvDimensions());
   const metrics = await getSmvMetrics();
+
+  const allowedDimensionIds = new Set(dimensions.map((item) => item.id));
 
   return {
     dimensions,
     metricsByDimension: dimensions.reduce<Record<string, SmvMetricRow[]>>((acc, dimension) => {
-      acc[dimension.id] = metrics.filter((metric) => metric.dimension_id === dimension.id);
+      acc[dimension.id] = metrics.filter((metric) => metric.dimension_id === dimension.id && allowedDimensionIds.has(metric.dimension_id));
       return acc;
     }, {}),
     implementedDimensionLabels: SMV_FULLY_IMPLEMENTED_DIMENSIONS.map((key) => SMV_DIMENSION_LABELS[key])
@@ -263,7 +351,7 @@ export async function getSmvPlanData() {
   }, {});
 
   return {
-    tasks,
+    tasks: tasks.filter((task) => Boolean(byDimension[task.dimension_id])),
     fallbackRecommendations: overview.recommendedActions,
     dimensionLabelById: byDimension
   };
