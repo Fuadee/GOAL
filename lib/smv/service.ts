@@ -191,7 +191,7 @@ export function getConfidenceProgress(level: SmvConfidenceLevelDefinition, logs:
   };
 }
 
-export function getCurrentConfidenceLevel(levels: SmvConfidenceLevelDefinition[], logs: SmvActionLogRow[]) {
+export function getCurrentConfidenceLevel(levels: readonly SmvConfidenceLevelDefinition[], logs: SmvActionLogRow[]) {
   for (const level of levels) {
     const progress = getConfidenceProgress(level, logs);
     if (progress.current < progress.required) {
