@@ -1,10 +1,13 @@
 import { SMV_DIMENSION_LABELS, SMV_FULLY_IMPLEMENTED_DIMENSIONS } from '@/lib/smv/definitions';
 import { getConfidenceLevels, validateConfidenceLevelsInDev } from '@/lib/smv/confidence-levels';
+import { STATUS_LEVELS } from '@/src/config/smv-status-levels';
+import { getIncomeLevel, getNextStatusLevel, getStatusLevelByLevel, validateStatusLevelResult, validateStatusLevelsInDev } from '@/lib/smv/status-levels';
 import { getSmvOverviewDimensions } from '@/lib/smv/progression-config';
 import {
   createSmvEvidenceLog,
   createSmvEvidenceMetricValues,
   getSmvActionLogs,
+  getLatestMetricValuesForDimension,
   createSmvScoreHistory,
   getSmvDimensionScore,
   getSmvDimensionScores,
@@ -147,6 +150,42 @@ export async function getConfidenceDetailData() {
     stages: levelsWithProgress,
     currentStageProgress,
     allCompleted
+  };
+}
+
+
+export async function getStatusDetailData() {
+  const dimensions = mergeLegacyDimensions(await getSmvDimensions());
+  const dimension = dimensions.find((item) => item.key === 'status');
+  if (!dimension) return null;
+
+  validateStatusLevelsInDev();
+
+  const metrics = await getSmvMetrics(dimension.id);
+  const incomeMetric = metrics.find((metric) => metric.key === 'income_level');
+
+  let monthlyIncome = 0;
+  if (incomeMetric) {
+    const latestValues = await getLatestMetricValuesForDimension([incomeMetric.id]);
+    monthlyIncome = Number(latestValues.find((value) => value.metric_id === incomeMetric.id)?.numeric_value ?? 0);
+  }
+
+  const currentLevelNumber = getIncomeLevel(monthlyIncome);
+  validateStatusLevelResult(monthlyIncome, currentLevelNumber);
+
+  const progression = getNextStatusLevel(monthlyIncome);
+
+  return {
+    dimension,
+    monthlyIncome,
+    currentLevelNumber,
+    currentLevel: getStatusLevelByLevel(currentLevelNumber),
+    nextLevel: progression.nextLevel,
+    progressPercent: progression.progressPercent,
+    remainingIncome: progression.remainingIncome,
+    currentThreshold: progression.currentThreshold,
+    nextThreshold: progression.nextThreshold,
+    levels: STATUS_LEVELS
   };
 }
 
