@@ -59,10 +59,10 @@ function Radar({ items }: { items: OverviewDimension[] }) {
         );
       })}
 
-      <polygon points={areaPoints} fill="rgba(34,211,238,0.25)" stroke="rgba(103,232,249,0.95)" strokeWidth={3} />
+      <polygon points={areaPoints} fill="rgba(34,211,238,0.16)" stroke="rgba(103,232,249,0.85)" strokeWidth={2.5} />
       {items.map((item, index) => {
         const [x, y] = getPoint(item.score, index);
-        return <circle key={`${item.dimension.id}-dot`} cx={x} cy={y} r={5} fill="rgba(165,243,252,1)" stroke="rgba(8,47,73,1)" strokeWidth={2} />;
+        return <circle key={`${item.dimension.id}-dot`} cx={x} cy={y} r={4.5} fill="rgba(165,243,252,0.95)" stroke="rgba(8,47,73,0.9)" strokeWidth={2} />;
       })}
     </svg>
   );
@@ -75,10 +75,10 @@ export default async function SmvOverviewPage() {
   const appearanceDetail = await getAppearanceDetailData();
 
   return (
-    <main className="app-shell">
+    <main className="app-shell smv-static bg-slate-950/40">
       <Navbar />
       <section className="mx-auto w-full max-w-7xl space-y-4 px-4 py-5 md:space-y-5 md:px-8 md:py-6">
-        <article className="rounded-3xl border border-cyan-300/35 bg-gradient-to-r from-cyan-500/15 via-slate-900/90 to-amber-500/10 p-6 shadow-[0_0_30px_rgba(34,211,238,0.2)] animate-[pulse_3.8s_ease-in-out_infinite]">
+        <article className="rounded-3xl border border-cyan-300/30 bg-slate-900/90 p-6 shadow-[0_0_20px_rgba(34,211,238,0.14)]">
           <p className="text-sm font-semibold text-cyan-100">🔥 สิ่งที่ต้องทำตอนนี้</p>
           <p className="mt-2 text-2xl font-semibold text-white">
             {weakest ? `คุณควรโฟกัส: ${weakest.dimension.label}` : 'ยังไม่มีมิติที่ต้องโฟกัสตอนนี้'}
@@ -86,17 +86,17 @@ export default async function SmvOverviewPage() {
         </article>
 
         <section className="grid gap-4 md:grid-cols-3">
-          <article className="rounded-2xl border border-white/10 bg-slate-950/45 p-4">
+          <article className="rounded-2xl border border-cyan-200/25 bg-slate-900/88 p-4 shadow-[0_0_16px_rgba(34,211,238,0.1)]">
             <p className="text-xs text-slate-400">Current SMV Score</p>
             <p className="mt-1 text-4xl font-semibold text-cyan-100">{data.averageScore}</p>
             <p className="text-xs text-slate-400">คะแนนเฉลี่ยจาก 4 ด้าน</p>
           </article>
-          <article className="rounded-2xl border border-emerald-300/30 bg-emerald-500/10 p-4">
+          <article className="rounded-2xl border border-emerald-300/25 bg-slate-900/88 p-4 shadow-[0_0_14px_rgba(52,211,153,0.08)]">
             <p className="text-xs text-emerald-100">Strongest Dimension</p>
             <p className="mt-1 text-lg font-semibold text-white">{strongest?.dimension.label ?? '-'}</p>
             <p className="text-sm text-emerald-100">{strongest?.score.toFixed(0) ?? 0} / 100</p>
           </article>
-          <article className="rounded-2xl border border-amber-200/20 bg-amber-500/10 p-4">
+          <article className="rounded-2xl border border-amber-200/20 bg-slate-900/88 p-4 shadow-[0_0_14px_rgba(251,191,36,0.08)]">
             <p className="text-xs text-amber-100">Weakest Dimension</p>
             <p className="mt-1 text-lg font-semibold text-white">{weakest?.dimension.label ?? '-'}</p>
             <p className="text-sm text-amber-100">{weakest?.score.toFixed(0) ?? 0} / 100</p>
@@ -104,13 +104,13 @@ export default async function SmvOverviewPage() {
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-          <article className="rounded-3xl border border-white/10 bg-white/5 p-6">
+          <article className="rounded-3xl border border-white/10 bg-slate-900/78 p-6 shadow-[0_0_14px_rgba(15,23,42,0.5)]">
             <div className="flex justify-center">
               <Radar items={data.dimensions} />
             </div>
           </article>
 
-          <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
+          <article className="rounded-3xl border border-white/10 bg-slate-900/78 p-5 shadow-[0_0_14px_rgba(15,23,42,0.5)] md:p-6">
             <h2 className="text-xl font-semibold text-white">พลังหลัก 4 ด้าน</h2>
             <p className="mt-1 text-sm text-slate-300">เห็นทันทีว่าอะไรคือจุดแข็งหลัก และอะไรที่ต้องเร่งยกระดับ</p>
 
@@ -123,18 +123,18 @@ export default async function SmvOverviewPage() {
                 return (
                   <div
                     key={item.dimension.id}
-                    className={`rounded-2xl border p-4 transition ${
+                    className={`rounded-2xl border p-4 ${
                       isBest
-                        ? 'border-emerald-300/60 bg-emerald-500/12 shadow-[0_0_24px_rgba(52,211,153,0.2)]'
+                        ? 'border-emerald-300/45 bg-emerald-500/10 shadow-[0_0_16px_rgba(52,211,153,0.1)]'
                         : isWeak
-                          ? 'border-amber-200/40 bg-amber-500/10'
-                          : 'border-white/10 bg-slate-950/35'
+                          ? 'border-amber-200/35 bg-amber-500/8'
+                          : 'border-white/10 bg-slate-950/45'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <p className="text-sm font-medium text-white">{item.dimension.label}</p>
-                      {isBest ? <span className="rounded-full border border-emerald-200/50 bg-emerald-400/20 px-2 py-1 text-[11px] text-emerald-100">จุดแข็งหลัก</span> : null}
-                      {isWeak ? <span className="rounded-full border border-amber-200/40 bg-amber-300/15 px-2 py-1 text-[11px] text-amber-100">ต้องเร่งพัฒนา</span> : null}
+                      {isBest ? <span className="rounded-full border border-emerald-200/45 bg-emerald-400/15 px-2 py-1 text-[11px] text-emerald-100">จุดแข็งหลัก</span> : null}
+                      {isWeak ? <span className="rounded-full border border-amber-200/35 bg-amber-300/12 px-2 py-1 text-[11px] text-amber-100">ต้องเร่งพัฒนา</span> : null}
                     </div>
 
                     <div className="mt-2 flex items-end justify-between">
@@ -163,7 +163,7 @@ export default async function SmvOverviewPage() {
                     )}
 
                     <div className="mt-3 flex gap-2">
-                      <Link href={item.dimension.key === 'look' ? '/smv/appearance' : `/smv/${item.dimension.key}`} className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/15">
+                      <Link href={item.dimension.key === 'look' ? '/smv/appearance' : `/smv/${item.dimension.key}`} className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white">
                         ดูรายละเอียด
                       </Link>
                     </div>
