@@ -2,10 +2,11 @@ import { Navbar } from '@/components/navbar';
 import { SmvEvidenceForm } from '@/components/smv/SmvEvidenceForm';
 import { getSmvLogPageData } from '@/lib/smv/service';
 
-export default async function SmvLogPage({ searchParams }: { searchParams?: { dimension?: string; action_type?: string } }) {
+export default async function SmvLogPage({ searchParams }: { searchParams?: { dimension?: string; action_type?: string; appearance_category?: string } }) {
   const data = await getSmvLogPageData();
   const requestedDimensionKey = searchParams?.dimension;
   const actionType = searchParams?.action_type;
+  const appearanceCategory = searchParams?.appearance_category;
   const preselectedDimensionId =
     data.dimensions.find((dimension) => dimension.key === requestedDimensionKey)?.id ?? data.dimensions[0]?.id ?? '';
 
@@ -25,6 +26,7 @@ export default async function SmvLogPage({ searchParams }: { searchParams?: { di
             dimensions={data.dimensions}
             metricsByDimension={data.metricsByDimension}
             initialDimensionId={preselectedDimensionId}
+            initialAppearanceCategory={appearanceCategory}
           />
         </article>
       </section>
