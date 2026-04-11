@@ -2,10 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { Navbar } from '@/components/navbar';
-import { ConfidenceStageConfirmButton } from '@/components/smv/ConfidenceStageConfirmButton';
 import { SMV_DIMENSION_LABELS } from '@/lib/smv/definitions';
 import { getConfidenceDetailData, getSmvDimensionDetailByKey } from '@/lib/smv/service';
-import { SMV_DIMENSION_KEYS, SmvDimensionKey, SmvLevelDefinitionRow, SmvStageStatus } from '@/lib/smv/types';
+import { SMV_DIMENSION_KEYS, SmvDimensionKey, SmvLevelDefinitionRow } from '@/lib/smv/types';
 
 type StageCardStatus = 'PASSED' | 'CURRENT' | 'LOCKED';
 
@@ -39,12 +38,6 @@ function getLevelProgress(score: number, levelDefinitions: SmvLevelDefinitionRow
   return { sortedLevels, passedCount, currentIndex, currentLevel, nextLevel };
 }
 
-function getConfidenceCardStatus(status: SmvStageStatus): StageCardStatus {
-  if (status === 'PASSED') return 'PASSED';
-  if (status === 'IN_PROGRESS') return 'CURRENT';
-  return 'LOCKED';
-}
-
 export default async function SmvDimensionPage({ params }: { params: { dimension: string } }) {
   const key = params.dimension as SmvDimensionKey;
   if (!SMV_DIMENSION_KEYS.includes(key)) notFound();
@@ -53,8 +46,7 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
     const confidence = await getConfidenceDetailData();
     if (!confidence) notFound();
 
-    const nextStage = confidence.stages.find((stage) => stage.status !== 'PASSED') ?? null;
-    const currentStageNumber = confidence.currentStage?.stage_number ?? confidence.totalStages;
+    const currentLevel = confidence.currentStage;
 
     return (
       <main className="app-shell">
@@ -64,31 +56,54 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
             ← กลับไปหน้า /smv
           </Link>
 
-          <header className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-7">
-            <p className="text-sm text-slate-300">ด่านปัจจุบัน</p>
+          <header className="rounded-3xl border border-cyan-300/40 bg-cyan-500/10 p-6 md:p-7">
+            <p className="text-sm text-slate-200">Confidence Training System</p>
             <h1 className="mt-1 text-3xl font-semibold text-white">เชื่อมั่นในตัวเอง / เป็นผู้นำ</h1>
             <p className="mt-4 text-5xl font-semibold text-cyan-100">{confidence.score} / 100</p>
             <p className="mt-2 text-lg text-white">{confidence.currentStageLabel}</p>
-            <p className="mt-1 text-sm text-slate-300">ผ่านแล้ว {confidence.passedCount} จาก {confidence.totalStages} ด่าน</p>
-            <p className="mt-4 text-sm leading-relaxed text-slate-200">{confidence.summary}</p>
+            <p className="mt-1 text-sm text-slate-200">ผ่านแล้ว {confidence.passedCount} จาก {confidence.totalStages} ด่าน</p>
+            <p className="mt-4 text-base font-medium text-cyan-100">
+              เป้าหมายถัดไป: {currentLevel.title} ({confidence.currentStageProgress.current}/{confidence.currentStageProgress.required})
+            </p>
           </header>
 
           <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
             <h2 className="text-lg font-semibold text-white">ด่านทั้งหมด</h2>
             <div className="mt-4 space-y-3">
               {confidence.stages.map((stage) => {
-                const cardStatus = getConfidenceCardStatus(stage.status);
+                const isPassed = stage.progress.current >= stage.progress.required;
+                const isCurrent = !isPassed && stage.level === currentLevel.level;
+                const cardStatus: StageCardStatus = isPassed ? 'PASSED' : isCurrent ? 'CURRENT' : 'LOCKED';
                 const badge = getStageStatusBadge(cardStatus);
 
                 return (
-                  <div key={stage.id} className={`rounded-2xl border p-4 ${getStageCardClass(cardStatus)}`}>
+                  <div
+                    key={stage.level}
+                    className={`rounded-2xl border p-4 transition ${getStageCardClass(cardStatus)} ${isCurrent ? 'scale-[1.01] shadow-[0_0_24px_rgba(34,211,238,0.25)]' : ''}`}
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="font-semibold text-white">
-                        ด่าน {stage.stage_number}: {stage.title_th}
+                        ด่าน {stage.level}: {stage.title}
                       </p>
                       <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${badge.className}`}>{badge.label}</span>
                     </div>
-                    <p className="mt-2 text-sm text-slate-200">{stage.description_th}</p>
+                    <p className="mt-2 text-sm text-slate-200">{stage.description}</p>
+                    <div className="mt-3">
+                      <p className="text-sm font-medium text-cyan-100">
+                        {Math.min(stage.progress.current, stage.progress.required)} / {stage.progress.required}
+                      </p>
+                      <div className="mt-1 h-2 w-full rounded-full bg-slate-800">
+                        <div className="h-2 rounded-full bg-cyan-300 transition-all" style={{ width: `${stage.progress.percent}%` }} />
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <Link
+                        href={`/smv/log?dimension=confidence&action_type=${stage.action_type}`}
+                        className="inline-flex rounded-full bg-cyan-300 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:bg-cyan-200"
+                      >
+                        เพิ่ม action
+                      </Link>
+                    </div>
                   </div>
                 );
               })}
@@ -96,23 +111,13 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
           </article>
 
           <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
-            <h2 className="text-lg font-semibold text-white">เป้าหมายถัดไป</h2>
-            <div className="mt-4 space-y-2 text-sm leading-relaxed text-slate-200">
-              <p>ตอนนี้คุณอยู่ด่าน {currentStageNumber}</p>
-              <p>เป้าหมายถัดไป: {nextStage ? `ผ่านด่าน ${nextStage.stage_number}` : 'รักษามาตรฐานด่านสูงสุด'}</p>
-              <p>เงื่อนไข: {nextStage?.description_th ?? 'คุณผ่านครบทุกด่านแล้ว ให้รักษาความสม่ำเสมอในสถานการณ์จริง'}</p>
-              <p>คำแนะนำ: {confidence.nextAction}</p>
-            </div>
-          </article>
-
-          <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
             <h2 className="text-lg font-semibold text-white">ลงมือทำต่อทันที</h2>
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
-                href={`/smv/log?dimension=${key}`}
+                href={`/smv/log?dimension=${key}&action_type=${currentLevel.action_type}`}
                 className="inline-flex rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-200"
               >
-                เพิ่มหลักฐาน
+                เพิ่ม action ด่านปัจจุบัน
               </Link>
               <Link
                 href={`/smv/plan?dimension=${key}`}
@@ -120,7 +125,6 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
               >
                 ดูแผนพัฒนา
               </Link>
-              <ConfidenceStageConfirmButton stageKey={confidence.currentStage?.stage_key ?? ''} disabled={!confidence.currentStage} />
             </div>
           </article>
         </section>
