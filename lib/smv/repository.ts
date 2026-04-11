@@ -12,7 +12,8 @@ import {
   SmvStageDefinitionRow,
   SmvStageProgressRow,
   SmvStageStatus,
-  SmvActionLogRow
+  SmvActionLogRow,
+  SmvAppearanceProgressRow
 } from '@/lib/smv/types';
 
 export async function getSmvDimensions() {
@@ -91,11 +92,21 @@ export async function getSmvEvidenceLogsSince(dimensionId: string, fromIso: stri
   );
 }
 
-export async function createSmvEvidenceLog(input: { dimension_id: string; context?: string; note?: string }) {
+export async function createSmvEvidenceLog(input: {
+  dimension_id: string;
+  context?: string;
+  note?: string;
+  appearance_category?: string;
+  target_level?: number;
+  evidence_type?: string;
+}) {
   const rows = await supabaseRestRequest<SmvEvidenceLogRow[]>('smv_evidence_logs', 'POST', {
     dimension_id: input.dimension_id,
     context: input.context?.trim() ? input.context.trim() : null,
     note: input.note?.trim() ? input.note.trim() : null,
+    appearance_category: input.appearance_category ?? null,
+    target_level: input.target_level ?? null,
+    evidence_type: input.evidence_type ?? null,
     logged_at: new Date().toISOString()
   });
 
@@ -215,4 +226,33 @@ export async function createSmvActionLog(input: {
     note: input.note?.trim() ? input.note.trim() : null,
     created_at: input.created_at ?? new Date().toISOString()
   });
+}
+
+
+export async function getSmvAppearanceProgress(dimensionId: string) {
+  return supabaseRestRequest<SmvAppearanceProgressRow[]>(
+    `smv_appearance_progress?dimension_id=eq.${dimensionId}&order=category_key.asc`,
+    'GET'
+  );
+}
+
+export async function upsertSmvAppearanceProgress(input: {
+  dimension_id: string;
+  category_key: string;
+  unlocked_level: number;
+  note?: string;
+  evidence_count?: number;
+}) {
+  const rows = await supabaseRestRequest<SmvAppearanceProgressRow[]>(
+    'smv_appearance_progress?on_conflict=dimension_id,category_key',
+    'POST',
+    {
+      ...input,
+      note: input.note ?? null,
+      evidence_count: input.evidence_count,
+      updated_at: new Date().toISOString()
+    }
+  );
+
+  return rows[0];
 }

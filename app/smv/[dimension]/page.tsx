@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 import { Navbar } from '@/components/navbar';
 import { StatusIncomeActions } from '@/components/smv/StatusIncomeActions';
@@ -46,6 +46,10 @@ function getLevelProgress(score: number, levelDefinitions: SmvLevelDefinitionRow
 export default async function SmvDimensionPage({ params }: { params: { dimension: string } }) {
   const key = params.dimension as SmvDimensionKey;
   if (!SMV_DIMENSION_KEYS.includes(key)) notFound();
+
+  if (key === 'look') {
+    redirect('/smv/appearance');
+  }
 
   if (key === 'confidence') {
     const confidence = await getConfidenceDetailData();

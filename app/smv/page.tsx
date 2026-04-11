@@ -2,7 +2,8 @@ import Link from 'next/link';
 
 import { Navbar } from '@/components/navbar';
 import { SMV_CHART_LABELS } from '@/lib/smv/definitions';
-import { getPowerLevelLabel, getSmvOverviewData } from '@/lib/smv/service';
+import { APPEARANCE_CATEGORY_KEYS } from '@/lib/smv/appearance-config';
+import { getAppearanceDetailData, getPowerLevelLabel, getSmvOverviewData } from '@/lib/smv/service';
 
 type OverviewDimension = Awaited<ReturnType<typeof getSmvOverviewData>>['dimensions'][number];
 
@@ -71,6 +72,7 @@ export default async function SmvOverviewPage() {
   const data = await getSmvOverviewData();
   const strongest = data.strongest[0];
   const weakest = data.weakest[0];
+  const appearanceDetail = await getAppearanceDetailData();
 
   return (
     <main className="app-shell">
@@ -123,6 +125,8 @@ export default async function SmvOverviewPage() {
               {data.dimensions.map((item) => {
                 const isBest = strongest?.dimension.id === item.dimension.id;
                 const isWeak = weakest?.dimension.id === item.dimension.id;
+                const isAppearance = item.dimension.key === 'look' && appearanceDetail;
+
                 return (
                   <div
                     key={item.dimension.id}
@@ -149,12 +153,27 @@ export default async function SmvOverviewPage() {
                       <div className={`h-2 rounded-full ${isBest ? 'bg-emerald-300' : isWeak ? 'bg-amber-200' : 'bg-cyan-300'}`} style={{ width: `${item.score}%` }} />
                     </div>
 
-                    <p className="mt-3 text-xs text-slate-300">{item.explanation}</p>
+                    {isAppearance ? (
+                      <>
+                        <p className="mt-3 text-xs text-cyan-100">คะแนนนี้มาจากระบบอัปเกรดตัวเอง 3 ด้าน (ด่านเท่านั้น)</p>
+                        <div className="mt-2 grid gap-2 text-xs text-slate-300">
+                          {APPEARANCE_CATEGORY_KEYS.map((key) => {
+                            const cat = appearanceDetail.categorySummary.find((entry) => entry.category.key === key);
+                            if (!cat) return null;
+                            return <p key={key}>{cat.category.titleTh}: {cat.score}/{cat.maxScore} • ด่าน {cat.currentLevel}</p>;
+                          })}
+                        </div>
+                        <p className="mt-2 text-xs text-emerald-100">เด่นสุด: {appearanceDetail.strongest?.category.titleTh ?? '-'} • อ่อนสุด: {appearanceDetail.weakest?.category.titleTh ?? '-'}</p>
+                      </>
+                    ) : (
+                      <p className="mt-3 text-xs text-slate-300">{item.explanation}</p>
+                    )}
+
                     <div className="mt-3 flex gap-2">
-                      <Link href={`/smv/${item.dimension.key}`} className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/15">
+                      <Link href={item.dimension.key === 'look' ? '/smv/appearance' : `/smv/${item.dimension.key}`} className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/15">
                         ดูรายละเอียด
                       </Link>
-                      <Link href={`/smv/log?dimension=${item.dimension.key}`} className="rounded-full border border-cyan-200/40 px-3 py-1.5 text-xs font-semibold text-cyan-100 hover:bg-cyan-400/10">
+                      <Link href={item.dimension.key === 'look' ? '/smv/log?dimension=look&appearance_category=style' : `/smv/log?dimension=${item.dimension.key}`} className="rounded-full border border-cyan-200/40 px-3 py-1.5 text-xs font-semibold text-cyan-100 hover:bg-cyan-400/10">
                         เพิ่มหลักฐาน
                       </Link>
                     </div>

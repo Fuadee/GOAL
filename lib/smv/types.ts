@@ -55,6 +55,9 @@ export type SmvEvidenceLogRow = {
   context: string | null;
   note: string | null;
   source: string;
+  appearance_category: string | null;
+  target_level: number | null;
+  evidence_type: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -143,6 +146,19 @@ export type SmvStageProgressRow = {
   updated_at: string;
 };
 
+export type SmvAppearanceCategoryKey = 'style' | 'body' | 'grooming';
+
+export type SmvAppearanceProgressRow = {
+  id: string;
+  dimension_id: string;
+  category_key: SmvAppearanceCategoryKey;
+  unlocked_level: number;
+  note: string | null;
+  evidence_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type SmvMetricInputValue = {
   metricId: string;
   key: string;
@@ -156,6 +172,9 @@ export type SmvEvidenceInput = {
   dimensionId: string;
   context?: string;
   note?: string;
+  appearanceCategory?: SmvAppearanceCategoryKey;
+  targetLevel?: number;
+  evidenceType?: string;
   metricValues: SmvMetricInputValue[];
 };
 

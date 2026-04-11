@@ -2,8 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { createEvidenceAndRecalculate, markConfidenceStagePassed } from '@/lib/smv/service';
+import { createEvidenceAndRecalculate, markConfidenceStagePassed, updateAppearanceLevel } from '@/lib/smv/service';
 import { createSmvActionLog, getSmvDimensions, getSmvMetrics } from '@/lib/smv/repository';
+import { APPEARANCE_CATEGORY_KEYS } from '@/lib/smv/appearance-config';
 
 export async function logSmvEvidenceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
   const dimensionId = String(formData.get('dimension_id') ?? '').trim();
@@ -36,8 +37,25 @@ export async function logSmvEvidenceAction(formData: FormData): Promise<{ succes
     })
     .filter((item): item is NonNullable<typeof item> => item !== null);
 
-  if (metricValues.length === 0) {
+  const dimensions = await getSmvDimensions();
+  const selectedDimension = dimensions.find((dimension) => dimension.id === dimensionId);
+  const isLookDimension = selectedDimension?.key === 'look';
+
+  const appearanceCategoryRaw = String(formData.get('appearance_category') ?? '').trim();
+  const targetLevelRaw = String(formData.get('target_level') ?? '').trim();
+  const evidenceType = String(formData.get('evidence_type') ?? '').trim();
+
+  if (!isLookDimension && metricValues.length === 0) {
     return { success: false, message: 'At least one metric value is required.' };
+  }
+
+  const appearanceCategory = APPEARANCE_CATEGORY_KEYS.includes(appearanceCategoryRaw as (typeof APPEARANCE_CATEGORY_KEYS)[number])
+    ? (appearanceCategoryRaw as (typeof APPEARANCE_CATEGORY_KEYS)[number])
+    : undefined;
+  const targetLevel = targetLevelRaw ? Number(targetLevelRaw) : undefined;
+
+  if (isLookDimension && !appearanceCategory) {
+    return { success: false, message: 'กรุณาเลือกหมวด Appearance ก่อนบันทึกหลักฐาน' };
   }
 
   try {
@@ -45,12 +63,19 @@ export async function logSmvEvidenceAction(formData: FormData): Promise<{ succes
       dimensionId,
       context,
       note,
+      appearanceCategory,
+      targetLevel,
+      evidenceType: evidenceType || undefined,
       metricValues
     });
 
     revalidatePath('/smv');
     revalidatePath('/smv/log');
     revalidatePath('/smv/plan');
+    revalidatePath('/smv/appearance');
+    revalidatePath('/smv/appearance/style');
+    revalidatePath('/smv/appearance/body');
+    revalidatePath('/smv/appearance/grooming');
     return { success: true, message: 'Evidence saved and score recalculated.' };
   } catch (error) {
     return {
@@ -137,6 +162,42 @@ export async function saveStatusIncomeAction(formData: FormData): Promise<{ succ
     return {
       success: false,
       message: error instanceof Error ? error.message : 'ไม่สามารถบันทึกรายได้ได้'
+    };
+  }
+}
+
+
+export async function updateAppearanceLevelAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const categoryKey = String(formData.get('category_key') ?? '').trim();
+  const unlockedLevelRaw = String(formData.get('unlocked_level') ?? '').trim();
+  const note = String(formData.get('note') ?? '').trim();
+
+  if (!APPEARANCE_CATEGORY_KEYS.includes(categoryKey as (typeof APPEARANCE_CATEGORY_KEYS)[number])) {
+    return { success: false, message: 'หมวดด่านไม่ถูกต้อง' };
+  }
+
+  const unlockedLevel = Number(unlockedLevelRaw);
+  if (!Number.isFinite(unlockedLevel) || unlockedLevel < 0) {
+    return { success: false, message: 'ระดับด่านไม่ถูกต้อง' };
+  }
+
+  try {
+    await updateAppearanceLevel({
+      categoryKey: categoryKey as (typeof APPEARANCE_CATEGORY_KEYS)[number],
+      unlockedLevel,
+      note: note || undefined
+    });
+
+    revalidatePath('/smv');
+    revalidatePath('/smv/look');
+    revalidatePath('/smv/appearance');
+    revalidatePath(`/smv/appearance/${categoryKey}`);
+
+    return { success: true, message: 'อัปเดตด่านเรียบร้อยแล้ว' };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'ไม่สามารถอัปเดตด่านได้'
     };
   }
 }

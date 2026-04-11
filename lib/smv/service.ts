@@ -10,6 +10,8 @@ import {
   validateStatusLevelsInDev
 } from '@/lib/smv/status-levels';
 import { getSmvOverviewDimensions } from '@/lib/smv/progression-config';
+import { APPEARANCE_CATEGORIES, APPEARANCE_TOTAL_SCORE, AppearanceCategoryKey } from '@/lib/smv/appearance-config';
+import { buildAppearanceProgressSummary, getAppearanceTotalScore } from '@/lib/smv/appearance-scoring';
 import {
   createSmvEvidenceLog,
   createSmvEvidenceMetricValues,
@@ -28,7 +30,9 @@ import {
   getSmvStageDefinitions,
   upsertImprovementTask,
   upsertSmvDimensionScore,
-  upsertSmvStageProgress
+  upsertSmvStageProgress,
+  getSmvAppearanceProgress,
+  upsertSmvAppearanceProgress
 } from '@/lib/smv/repository';
 import { buildDefaultRecommendations, calculateSmvDimensionScore } from '@/lib/smv/scoring';
 import {
@@ -60,6 +64,82 @@ const POWER_SUMMARY_BY_KEY: Record<SmvDimensionKey, string> = {
 function toCoreDimensionKey(rawKey: string): SmvDimensionKey | null {
   if ((SMV_DIMENSION_KEYS as readonly string[]).includes(rawKey)) return rawKey as SmvDimensionKey;
   return LEGACY_DIMENSION_KEY_MAP[rawKey] ?? null;
+}
+
+
+function findDimensionByKey(dimensions: SmvDimensionRow[], key: SmvDimensionKey) {
+  return dimensions.find((item) => item.key === key);
+}
+
+async function syncAppearanceDimensionScore(dimensionId: string) {
+  const progressRows = await getSmvAppearanceProgress(dimensionId);
+  const categorySummary = buildAppearanceProgressSummary(progressRows);
+  const score = getAppearanceTotalScore(
+    categorySummary.map((item) => ({
+      category_key: item.category.key,
+      unlocked_level: item.unlockedLevel,
+      note: item.note,
+      evidence_count: item.evidenceCount,
+      updated_at: new Date().toISOString()
+    }))
+  );
+  const explanation = `คะแนนรวมมาจากระบบด่าน 3 ด้าน (แต่งตัว/หุ่น/ผิว) โดยคำนวณจากด่านที่ปลดล็อกแล้วเท่านั้น`;
+
+  await upsertSmvDimensionScore({
+    dimension_id: dimensionId,
+    score,
+    evidence_count_30d: progressRows.reduce((sum, row) => sum + row.evidence_count, 0),
+    guard_summary: `Level-based progression: ${categorySummary.map((item) => `${item.category.titleTh} L${item.unlockedLevel}`).join(' | ')}`,
+    explanation
+  });
+
+  return { score, categorySummary, totalEvidence: progressRows.reduce((sum, row) => sum + row.evidence_count, 0), explanation };
+}
+
+export async function getAppearanceDetailData() {
+  const dimensions = mergeLegacyDimensions(await getSmvDimensions());
+  const dimension = findDimensionByKey(dimensions, 'look');
+  if (!dimension) return null;
+
+  const scoreRow = await syncAppearanceDimensionScore(dimension.id);
+  const categorySummary = scoreRow.categorySummary;
+  const strongest = [...categorySummary].sort((a, b) => b.score - a.score)[0] ?? null;
+  const weakest = [...categorySummary].sort((a, b) => a.score - b.score)[0] ?? null;
+  const nextClosest = [...categorySummary]
+    .filter((item) => item.nextLevel !== null)
+    .sort((a, b) => (a.nextLevel ?? 999) - (b.nextLevel ?? 999))[0] ?? null;
+
+  return {
+    dimension,
+    totalScore: scoreRow.score,
+    categorySummary,
+    strongest,
+    weakest,
+    nextClosest,
+    scoreRemaining: Math.max(0, APPEARANCE_TOTAL_SCORE - scoreRow.score),
+    totalEvidence: scoreRow.totalEvidence,
+    explanation: scoreRow.explanation
+  };
+}
+
+export async function updateAppearanceLevel(input: { categoryKey: AppearanceCategoryKey; unlockedLevel: number; note?: string }) {
+  const dimensions = mergeLegacyDimensions(await getSmvDimensions());
+  const lookDimension = findDimensionByKey(dimensions, 'look');
+  if (!lookDimension) {
+    throw new Error('ไม่พบมิติรูปร่างหน้าตา / บุคลิกที่ดี');
+  }
+
+  const maxLevel = APPEARANCE_CATEGORIES[input.categoryKey].levels.length;
+  const safeLevel = Math.max(0, Math.min(maxLevel, Math.floor(input.unlockedLevel)));
+
+  await upsertSmvAppearanceProgress({
+    dimension_id: lookDimension.id,
+    category_key: input.categoryKey,
+    unlocked_level: safeLevel,
+    note: input.note
+  });
+
+  await syncAppearanceDimensionScore(lookDimension.id);
 }
 
 function mergeLegacyDimensions(rows: SmvDimensionRow[]): SmvDimensionRow[] {
@@ -224,15 +304,36 @@ export async function recalculateDimensionScore(dimensionId: string) {
     throw new Error('Dimension not found.');
   }
 
-  const metrics = await getSmvMetrics(dimensionId);
-  const logs30d = await getSmvEvidenceLogsSince(dimensionId, getThirtyDaysAgoIso());
-  const logIds = logs30d.map((item) => item.id);
-  const metricValues = await getSmvEvidenceMetricValuesByEvidenceIds(logIds);
-
   const dimensionKey = toCoreDimensionKey(dimension.key);
   if (!dimensionKey) {
     throw new Error('Unsupported dimension key.');
   }
+
+  if (dimensionKey === 'look') {
+    const appearanceResult = await syncAppearanceDimensionScore(dimensionId);
+    await createSmvScoreHistory({
+      dimension_id: dimensionId,
+      score: appearanceResult.score,
+      evidence_count_30d: appearanceResult.totalEvidence,
+      guard_summary: 'Level-based progression score',
+      explanation: appearanceResult.explanation,
+      score_breakdown: Object.fromEntries(appearanceResult.categorySummary.map((item) => [item.category.key, item.score]))
+    });
+
+    return {
+      score: appearanceResult.score,
+      breakdown: Object.fromEntries(appearanceResult.categorySummary.map((item) => [item.category.key, item.score])),
+      guardSummary: 'Level-based progression score',
+      explanation: appearanceResult.explanation,
+      suggestions: ['ปลดล็อกด่านถัดไปในหมวดที่อ่อนที่สุด'],
+      evidenceCount30d: appearanceResult.totalEvidence
+    };
+  }
+
+  const metrics = await getSmvMetrics(dimensionId);
+  const logs30d = await getSmvEvidenceLogsSince(dimensionId, getThirtyDaysAgoIso());
+  const logIds = logs30d.map((item) => item.id);
+  const metricValues = await getSmvEvidenceMetricValuesByEvidenceIds(logIds);
 
   const result = calculateSmvDimensionScore({
     dimensionKey,
@@ -275,10 +376,27 @@ export async function createEvidenceAndRecalculate(input: SmvEvidenceInput) {
   const evidence = await createSmvEvidenceLog({
     dimension_id: input.dimensionId,
     context: input.context,
-    note: input.note
+    note: input.note,
+    appearance_category: input.appearanceCategory,
+    target_level: input.targetLevel,
+    evidence_type: input.evidenceType
   });
 
-  await createSmvEvidenceMetricValues(evidence.id, input.metricValues);
+  if (input.metricValues.length > 0) {
+    await createSmvEvidenceMetricValues(evidence.id, input.metricValues);
+  }
+
+  if (input.appearanceCategory) {
+    const existing = (await getSmvAppearanceProgress(input.dimensionId)).find((item) => item.category_key === input.appearanceCategory);
+    await upsertSmvAppearanceProgress({
+      dimension_id: input.dimensionId,
+      category_key: input.appearanceCategory,
+      unlocked_level: existing?.unlocked_level ?? 0,
+      note: existing?.note ?? undefined,
+      evidence_count: (existing?.evidence_count ?? 0) + 1
+    });
+  }
+
   await recalculateDimensionScore(input.dimensionId);
 }
 
@@ -312,6 +430,7 @@ export async function getSmvOverviewData() {
   const scoreMap = new Map(scores.map((item) => [item.dimension_id, item]));
   const confidenceDetail = await getConfidenceDetailData();
   const statusDetail = await getStatusDetailData();
+  const appearanceDetail = await getAppearanceDetailData();
 
   const overview: SmvDimensionOverview[] = dimensions.map((dimension) => {
     if (dimension.key === 'confidence' && confidenceDetail) {
@@ -328,6 +447,14 @@ export async function getSmvOverviewData() {
         score: getIncomeOverviewScore(statusDetail.monthlyIncome),
         guardSummary: `Level ${statusDetail.currentLevelNumber}`,
         explanation: POWER_SUMMARY_BY_KEY.status
+      };
+    }
+    if (dimension.key === 'look' && appearanceDetail) {
+      return {
+        dimension,
+        score: appearanceDetail.totalScore,
+        guardSummary: 'ระบบด่าน 3 แกน',
+        explanation: 'คะแนนนี้มาจากด่านที่ปลดล็อกใน 3 หมวดเท่านั้น'
       };
     }
 
