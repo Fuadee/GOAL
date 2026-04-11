@@ -19,41 +19,47 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   return (
-    <article className="group relative isolate overflow-hidden rounded-3xl border border-white/12 bg-slate-950/60 shadow-[0_16px_60px_rgba(2,6,23,0.65)] transition duration-300 hover:-translate-y-1.5 hover:border-cyan-300/50 hover:shadow-[0_20px_70px_rgba(56,189,248,0.18)]">
+    <article className="group relative isolate min-h-[280px] overflow-hidden rounded-3xl border border-white/12 bg-slate-950/60 shadow-[0_16px_60px_rgba(2,6,23,0.65)] transition duration-300 hover:-translate-y-1.5 hover:border-cyan-300/45 hover:shadow-[0_20px_70px_rgba(56,189,248,0.18)]">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onClick={(event) => {
+          event.currentTarget.value = '';
+        }}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          onUpload(file);
+        }}
+      />
+
       {imageUrl ? (
-        <>
-          <Image
-            src={imageUrl}
-            alt={`${item.label} vision`}
-            fill
-            sizes="(max-width: 768px) 100vw, 20vw"
-            className="pointer-events-none object-cover"
-          />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/42 to-slate-950/10" />
-        </>
+        <Image
+          src={imageUrl}
+          alt={`${item.label} vision`}
+          fill
+          sizes="(max-width: 768px) 100vw, 20vw"
+          className="absolute inset-0 object-cover"
+        />
       ) : (
-        <div className={`pointer-events-none absolute inset-0 ${item.placeholderGlow}`}>
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.2),transparent_42%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.18),transparent_35%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-slate-950/60" />
-        </div>
+        <button
+          type="button"
+          disabled={isUploading || isRemoving}
+          onClick={() => inputRef.current?.click()}
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-slate-900/40 text-slate-100 transition hover:bg-slate-900/55 disabled:opacity-60"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-8 w-8 text-slate-200/90">
+            <path fill="currentColor" d="M19 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2m0 14H5V6h14zm-4-7-2.5 3.01L11 12l-3 4h8z" />
+          </svg>
+          <span className="text-sm font-medium tracking-wide">Upload</span>
+        </button>
       )}
 
-      <div className="pointer-events-auto absolute right-4 top-4 z-30 flex items-center justify-end gap-2">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          className="hidden"
-          onClick={(event) => {
-            event.currentTarget.value = '';
-          }}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (!file) return;
-            onUpload(file);
-          }}
-        />
+      <div className="pointer-events-none absolute inset-0 z-20 bg-slate-950/0 transition duration-300 group-hover:bg-slate-950/15" />
+
+      <div className="pointer-events-none absolute right-3 top-3 z-30 flex items-center gap-2 opacity-0 transition duration-300 group-hover:opacity-100">
         <button
           type="button"
           disabled={isUploading || isRemoving}
@@ -62,10 +68,11 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
             event.stopPropagation();
             inputRef.current?.click();
           }}
-          className="rounded-full border border-white/30 bg-slate-950/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-100 transition hover:border-cyan-300/70 hover:text-cyan-100 disabled:opacity-60"
+          className="pointer-events-auto rounded-full border border-white/40 bg-slate-950/65 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-100 backdrop-blur-sm transition hover:border-cyan-300/75 hover:text-cyan-100 disabled:opacity-60"
         >
           {imageUrl ? 'Change' : 'Upload'}
         </button>
+
         {imageUrl ? (
           <button
             type="button"
@@ -75,32 +82,14 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
               event.stopPropagation();
               onRemove();
             }}
-            className="rounded-full border border-rose-300/45 bg-rose-950/55 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-rose-100 transition hover:border-rose-200/85 hover:bg-rose-900/70 disabled:opacity-60"
+            className="pointer-events-auto rounded-full border border-rose-300/45 bg-rose-950/65 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-rose-100 backdrop-blur-sm transition hover:border-rose-200/85 hover:bg-rose-900/80 disabled:opacity-60"
           >
             Remove
           </button>
         ) : null}
       </div>
 
-      <Link
-        href={item.href}
-        aria-label={`Open ${item.label} goal page`}
-        className="relative z-20 flex h-full min-h-[280px] flex-col justify-between px-6 pb-6 pt-20"
-      >
-        <div className="max-w-[85%] space-y-2">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-slate-300/80">Goal Domain</p>
-          <h3 className="text-xl font-semibold leading-tight text-white drop-shadow-[0_0_24px_rgba(56,189,248,0.25)]">{item.label}</h3>
-        </div>
-
-        <div className="max-w-[90%]">
-          <p className={`text-xs ${imageUrl ? 'text-slate-300/80' : item.placeholderAccent}`}>
-            {imageUrl ? 'ตั้งเป้าหมายและเริ่มลงมือทำวันนี้' : '+ Upload ภาพเป้าหมายของหมวดนี้'}
-          </p>
-          <span className="mt-3 inline-flex rounded-full border border-white/20 bg-slate-950/55 px-3 py-1.5 text-xs font-semibold text-white transition group-hover:border-cyan-300/70 group-hover:text-cyan-100">
-            Open {item.label}
-          </span>
-        </div>
-      </Link>
+      {imageUrl ? <Link href={item.href} aria-label={`Open ${item.label} goal page`} className="absolute inset-0 z-10" /> : null}
     </article>
   );
 }
