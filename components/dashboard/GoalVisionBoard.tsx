@@ -98,12 +98,12 @@ export function GoalVisionBoard({ initialImages, userId = DEFAULT_GOAL_VISION_US
   };
 
   return (
-    <section className="mission-card overflow-visible rounded-[2rem] border-white/15 p-6 md:p-8">
+    <section className="mission-card overflow-visible p-5 md:p-7">
       <div className="relative z-10 space-y-6">
         <div className="space-y-2">
           <p className="mission-label text-cyan-200/90">GOAL VISION BOARD</p>
-          <h1 className="mission-title text-4xl md:text-5xl">GOAL VISION BOARD</h1>
-          <p className="text-base text-slate-200">ภาพแทนเป้าหมายสูงสุดของคุณในแต่ละด้าน</p>
+          <h1 className="page-title text-3xl md:text-4xl">GOAL VISION BOARD</h1>
+          <p className="text-base text-[color:var(--text-secondary)]">ภาพแทนเป้าหมายสูงสุดของคุณในแต่ละด้าน</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">

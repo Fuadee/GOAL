@@ -59,11 +59,11 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
       <HealthExecutionStrip todayStatus={data.todayStatus} />
 
       <section className="grid gap-3 sm:grid-cols-2">
-        <article className="rounded-xl border border-white/10 bg-slate-900/70 p-4">
+        <article className="premium-card">
           <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Current Level</p>
           <p className="mt-2 text-xl font-semibold text-white">{currentLevel ? `Level ${currentLevel.level_number} · ${currentLevel.title}` : 'All levels passed'}</p>
         </article>
-        <article className="rounded-xl border border-white/10 bg-slate-900/70 p-4">
+        <article className="premium-card">
           <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Best Recent Attempt</p>
           <p className="mt-2 text-xl font-semibold text-white">
             {data.logs[0] ? `${data.logs[0].distance_km.toFixed(2)} km · ${formatPace(data.logs[0].pace_seconds_per_km)}` : 'No attempt yet'}
@@ -71,7 +71,7 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
         </article>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+      <section className="premium-card">
         <h3 className="text-lg font-semibold text-white">Current Level Focus</h3>
         {currentLevel ? (
           <>
@@ -138,7 +138,7 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
         </section>
       </section>
 
-      <article id="attempt-history" className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+      <article id="attempt-history" className="premium-card">
         <h3 className="text-lg font-semibold text-white">Attempt History</h3>
         {data.logs.length === 0 ? (
           <p className="mt-2 text-sm text-slate-400">No run logs yet. Start with Level 1 and record your first attempt.</p>
@@ -187,7 +187,7 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
           ['Best Pace Ever', formatPace(data.bestPaceEver)],
           ['Longest No-Stop Distance', data.longestNoStopDistance ? `${data.longestNoStopDistance.toFixed(2)} km` : '--']
         ].map(([label, value]) => (
-          <article key={label} className="rounded-xl border border-white/10 bg-slate-900/70 p-4">
+          <article key={label} className="premium-card">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
             <p className="mt-2 text-xl font-semibold text-white">{value}</p>
           </article>

@@ -13,7 +13,7 @@ export function UnifiedMissionCard({ card }: { card: UnifiedMissionCardData }) {
   const toneClass = toneClassMap[card.tone ?? 'info'];
 
   return (
-    <article className="rounded-2xl border border-white/10 bg-slate-900/75 p-4 shadow-[0_0_18px_rgba(15,23,42,0.45)]">
+    <article className="premium-card h-full">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-300">{card.eyebrow}</p>
         <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${toneClass}`}>{card.tone ?? 'info'}</span>
@@ -27,7 +27,7 @@ export function UnifiedMissionCard({ card }: { card: UnifiedMissionCardData }) {
 
       <Link
         href={card.href}
-        className="mt-4 inline-flex rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10"
+        className="theme-button-secondary mt-4 text-xs"
       >
         {card.ctaLabel}
       </Link>
