@@ -1,7 +1,14 @@
 import { SMV_DIMENSION_LABELS, SMV_FULLY_IMPLEMENTED_DIMENSIONS } from '@/lib/smv/definitions';
 import { getConfidenceLevels, validateConfidenceLevelsInDev } from '@/lib/smv/confidence-levels';
 import { STATUS_LEVELS } from '@/src/config/smv-status-levels';
-import { getIncomeLevel, getNextStatusLevel, getStatusLevelByLevel, validateStatusLevelResult, validateStatusLevelsInDev } from '@/lib/smv/status-levels';
+import {
+  getIncomeLevel,
+  getIncomeOverviewScore,
+  getIncomeProgressToNextLevel,
+  getStatusLevelByLevel,
+  validateStatusLevelResult,
+  validateStatusLevelsInDev
+} from '@/lib/smv/status-levels';
 import { getSmvOverviewDimensions } from '@/lib/smv/progression-config';
 import {
   createSmvEvidenceLog,
@@ -173,7 +180,7 @@ export async function getStatusDetailData() {
   const currentLevelNumber = getIncomeLevel(monthlyIncome);
   validateStatusLevelResult(monthlyIncome, currentLevelNumber);
 
-  const progression = getNextStatusLevel(monthlyIncome);
+  const progression = getIncomeProgressToNextLevel(monthlyIncome);
 
   return {
     dimension,
@@ -304,6 +311,7 @@ export async function getSmvOverviewData() {
   const dimensions = mergeLegacyDimensions(rawDimensions);
   const scoreMap = new Map(scores.map((item) => [item.dimension_id, item]));
   const confidenceDetail = await getConfidenceDetailData();
+  const statusDetail = await getStatusDetailData();
 
   const overview: SmvDimensionOverview[] = dimensions.map((dimension) => {
     if (dimension.key === 'confidence' && confidenceDetail) {
@@ -312,6 +320,14 @@ export async function getSmvOverviewData() {
         score: confidenceDetail.score,
         guardSummary: 'ระบบกำลังติดตามพัฒนาการตามด่าน',
         explanation: POWER_SUMMARY_BY_KEY.confidence
+      };
+    }
+    if (dimension.key === 'status' && statusDetail) {
+      return {
+        dimension,
+        score: getIncomeOverviewScore(statusDetail.monthlyIncome),
+        guardSummary: `Level ${statusDetail.currentLevelNumber}`,
+        explanation: POWER_SUMMARY_BY_KEY.status
       };
     }
 
