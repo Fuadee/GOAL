@@ -168,3 +168,29 @@ h6,
 .theme-table tbody tr {
   @apply border-t border-white/10 text-slate-100;
 }
+
+.smv-static {
+  background:
+    radial-gradient(circle at 16% 14%, rgba(34, 211, 238, 0.06), transparent 38%),
+    linear-gradient(150deg, rgba(2, 6, 23, 0.9) 0%, rgba(2, 6, 23, 0.78) 55%, rgba(15, 23, 42, 0.82) 100%);
+}
+
+.smv-static,
+.smv-static * {
+  animation: none !important;
+}
+
+.smv-static a,
+.smv-static button,
+.smv-static [role='button'] {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smv-static,
+  .smv-static * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
