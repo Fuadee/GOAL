@@ -3,8 +3,96 @@
 import { revalidatePath } from 'next/cache';
 
 import { addSocialEvidence, createEvidenceAndRecalculate, markConfidenceStagePassed, markSocialLevelCompleted, updateAppearanceLevel } from '@/lib/smv/service';
-import { createSmvActionLog, getSmvDimensions, getSmvMetrics } from '@/lib/smv/repository';
+import {
+  createSmvActionLog,
+  createSmvScoreHistory,
+  getSmvDimensionScore,
+  getSmvDimensions,
+  getSmvMetrics,
+  upsertSmvDimensionScore
+} from '@/lib/smv/repository';
 import { APPEARANCE_CATEGORY_KEYS } from '@/lib/smv/appearance-config';
+
+export async function completeSmvChecklistItemAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const dimensionId = String(formData.get('dimension_id') ?? '').trim();
+  const checklistItemId = String(formData.get('checklist_item_id') ?? '').trim();
+  const notes = String(formData.get('notes') ?? '').trim();
+
+  if (!dimensionId || !checklistItemId) {
+    return { success: false, message: 'Missing checklist payload.' };
+  }
+
+  try {
+    await createEvidenceAndRecalculate({
+      dimensionId,
+      context: `Checklist completion (${checklistItemId})`,
+      note: notes || undefined,
+      evidenceType: 'checklist_completion',
+      metricValues: []
+    });
+
+    revalidatePath('/smv');
+    return { success: true, message: 'Checklist item completed.' };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Could not complete checklist item.'
+    };
+  }
+}
+
+export async function manuallyAdjustSmvScoreAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const dimensionId = String(formData.get('dimension_id') ?? '').trim();
+  const reason = String(formData.get('reason') ?? '').trim();
+  const newScoreRaw = String(formData.get('new_score') ?? '').trim();
+  const newScore = Number(newScoreRaw);
+
+  if (!dimensionId) {
+    return { success: false, message: 'Dimension is required.' };
+  }
+  if (!reason) {
+    return { success: false, message: 'Reason is required.' };
+  }
+  if (!Number.isFinite(newScore) || newScore < 0 || newScore > 100) {
+    return { success: false, message: 'New score must be between 0 and 100.' };
+  }
+
+  try {
+    const current = await getSmvDimensionScore(dimensionId);
+    const scoreBefore = Number(current?.score ?? 0);
+    const scoreAfter = Math.round(newScore * 100) / 100;
+    const scoreDelta = scoreAfter - scoreBefore;
+
+    await upsertSmvDimensionScore({
+      dimension_id: dimensionId,
+      score: scoreAfter,
+      evidence_count_30d: current?.evidence_count_30d ?? 0,
+      guard_summary: current?.guard_summary ?? 'Manual adjustment',
+      explanation: `Manual adjustment: ${reason}`
+    });
+
+    await createSmvScoreHistory({
+      dimension_id: dimensionId,
+      score: scoreAfter,
+      evidence_count_30d: current?.evidence_count_30d ?? 0,
+      guard_summary: current?.guard_summary ?? 'Manual adjustment',
+      explanation: `manual_adjustment (${scoreBefore} -> ${scoreAfter})`,
+      score_breakdown: {
+        score_before: scoreBefore,
+        score_delta: scoreDelta,
+        score_after: scoreAfter
+      }
+    });
+
+    revalidatePath('/smv');
+    return { success: true, message: 'Score adjusted successfully.' };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Could not adjust score.'
+    };
+  }
+}
 
 export async function logSmvEvidenceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
   const dimensionId = String(formData.get('dimension_id') ?? '').trim();
