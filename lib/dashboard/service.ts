@@ -1,4 +1,4 @@
-import { mockFocusItems, mockGoalModules } from '@/lib/dashboard/mock-data';
+import { mockGoalModules } from '@/lib/dashboard/mock-data';
 import {
   calculateLifeDirectionScore,
   generateAlerts,
@@ -34,7 +34,6 @@ export const getDashboardData = async (): Promise<DashboardData> => {
     ],
     strongestAreas: getStrongestModules(modules),
     weakestAreas: getWeakestModules(modules),
-    focusItems: mockFocusItems,
     alerts
   };
 };
