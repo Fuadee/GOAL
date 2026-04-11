@@ -47,6 +47,7 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
     if (!confidence) notFound();
 
     const currentLevel = confidence.currentStage;
+    const remainCount = Math.max(0, confidence.currentStageProgress.required - confidence.currentStageProgress.current);
 
     return (
       <main className="app-shell">
@@ -57,22 +58,30 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
           </Link>
 
           <header className="rounded-3xl border border-cyan-300/40 bg-cyan-500/10 p-6 md:p-7">
-            <p className="text-sm text-slate-200">Confidence Training System</p>
-            <h1 className="mt-1 text-3xl font-semibold text-white">เชื่อมั่นในตัวเอง / เป็นผู้นำ</h1>
-            <p className="mt-4 text-5xl font-semibold text-cyan-100">{confidence.score} / 100</p>
-            <p className="mt-2 text-lg text-white">{confidence.currentStageLabel}</p>
-            <p className="mt-1 text-sm text-slate-200">ผ่านแล้ว {confidence.passedCount} จาก {confidence.totalStages} ด่าน</p>
-            <p className="mt-4 text-base font-medium text-cyan-100">
-              เป้าหมายถัดไป: {currentLevel.title} ({confidence.currentStageProgress.current}/{confidence.currentStageProgress.required})
-            </p>
+            <h1 className="text-3xl font-semibold text-white">ด่านทั้งหมด</h1>
+            <p className="mt-2 text-sm text-slate-200">เส้นทางฝึกความมั่นใจของหัวข้อ เชื่อมั่นในตัวเอง / เป็นผู้นำ</p>
           </header>
 
+          <article className="rounded-3xl border border-cyan-300/40 bg-cyan-500/10 p-5 md:p-6">
+            <h2 className="text-sm text-cyan-100">เป้าหมายถัดไป</h2>
+            {confidence.allCompleted ? (
+              <p className="mt-2 text-lg font-semibold text-white">คุณผ่านเส้นทาง Confidence ครบทั้งหมดแล้ว</p>
+            ) : (
+              <>
+                <p className="mt-2 text-lg font-semibold text-white">
+                  {currentLevel.title} ({confidence.currentStageProgress.current}/{confidence.currentStageProgress.required})
+                </p>
+                <p className="mt-2 text-sm text-slate-200">{currentLevel.description}</p>
+                <p className="mt-2 text-sm text-cyan-100">เหลืออีก {remainCount} ครั้ง เพื่อผ่านด่านนี้</p>
+              </>
+            )}
+          </article>
+
           <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
-            <h2 className="text-lg font-semibold text-white">ด่านทั้งหมด</h2>
-            <div className="mt-4 space-y-3">
+            <div className="space-y-3">
               {confidence.stages.map((stage) => {
-                const isPassed = stage.progress.current >= stage.progress.required;
-                const isCurrent = !isPassed && stage.level === currentLevel.level;
+                const isCurrent = stage.level === currentLevel.level;
+                const isPassed = stage.progress.current >= stage.progress.required && !isCurrent;
                 const cardStatus: StageCardStatus = isPassed ? 'PASSED' : isCurrent ? 'CURRENT' : 'LOCKED';
                 const badge = getStageStatusBadge(cardStatus);
 
@@ -107,24 +116,6 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
                   </div>
                 );
               })}
-            </div>
-          </article>
-
-          <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
-            <h2 className="text-lg font-semibold text-white">ลงมือทำต่อทันที</h2>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link
-                href={`/smv/log?dimension=${key}&action_type=${currentLevel.action_type}`}
-                className="inline-flex rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-200"
-              >
-                เพิ่ม action ด่านปัจจุบัน
-              </Link>
-              <Link
-                href={`/smv/plan?dimension=${key}`}
-                className="inline-flex rounded-full border border-white/20 bg-white/5 px-5 py-2 text-sm font-semibold text-white transition hover:border-cyan-200 hover:text-cyan-100"
-              >
-                ดูแผนพัฒนา
-              </Link>
             </div>
           </article>
         </section>

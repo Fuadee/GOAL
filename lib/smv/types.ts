@@ -6,16 +6,14 @@ export type SmvOverviewDimensionKey = (typeof SMV_OVERVIEW_DIMENSION_KEYS)[numbe
 export type SmvMetricValueType = 'score_0_100' | 'count' | 'boolean' | 'currency_monthly';
 export type SmvStageStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'PASSED';
 
-export const SMV_ACTION_TYPES = ['confidence_rep', 'leadership_rep', 'social_rep', 'status_rep'] as const;
-
-export type SmvActionType = (typeof SMV_ACTION_TYPES)[number];
+export type SmvActionType = string;
 
 export type SmvConfidenceLevelDefinition = {
   level: number;
   title: string;
   description: string;
   required_count: number;
-  action_type: SmvActionType;
+  action_type: string;
 };
 
 export type SmvActionLogRow = {

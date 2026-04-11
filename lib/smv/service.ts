@@ -1,6 +1,6 @@
 import { SMV_DIMENSION_LABELS, SMV_FULLY_IMPLEMENTED_DIMENSIONS } from '@/lib/smv/definitions';
-import { MOCK_CONFIDENCE_LOGS } from '@/lib/smv/confidence-levels';
-import { getConfidenceStagesConfig, getSmvOverviewDimensions } from '@/lib/smv/progression-config';
+import { getConfidenceLevels, validateConfidenceLevelsInDev } from '@/lib/smv/confidence-levels';
+import { getSmvOverviewDimensions } from '@/lib/smv/progression-config';
 import {
   createSmvEvidenceLog,
   createSmvEvidenceMetricValues,
@@ -79,38 +79,32 @@ export function getPowerLevelLabel(score: number) {
   return 'โดดเด่น';
 }
 
-export function getLevelProgress(level: SmvConfidenceLevelDefinition, logs: SmvActionLogRow[]) {
-  const count = logs.filter((log) => log.action_type === level.action_type).length;
-  const percent = Math.min(100, Math.round((count / level.required_count) * 100));
+export function getConfidenceProgress(level: SmvConfidenceLevelDefinition, logs: SmvActionLogRow[]) {
+  const count = logs.filter((log) => log.dimension === 'confidence' && log.action_type === level.action_type).length;
 
   return {
     current: count,
     required: level.required_count,
-    percent
+    percent: Math.min((count / level.required_count) * 100, 100)
   };
 }
 
-export function getCurrentLevel(levels: SmvConfidenceLevelDefinition[], logs: SmvActionLogRow[]) {
+export function getCurrentConfidenceLevel(levels: SmvConfidenceLevelDefinition[], logs: SmvActionLogRow[]) {
   for (const level of levels) {
-    const progress = getLevelProgress(level, logs);
+    const progress = getConfidenceProgress(level, logs);
     if (progress.current < progress.required) {
-      return level;
+      return { level, allCompleted: false };
     }
   }
 
-  return levels[levels.length - 1];
+  return { level: levels[levels.length - 1], allCompleted: true };
 }
 
 async function getConfidenceLogs() {
   try {
     return await getSmvActionLogs('confidence');
   } catch {
-    return MOCK_CONFIDENCE_LOGS.map((log, index) => ({
-      id: `mock-confidence-${index + 1}`,
-      dimension: 'confidence',
-      action_type: log.action_type,
-      created_at: new Date().toISOString()
-    }));
+    return [];
   }
 }
 
@@ -123,12 +117,13 @@ export async function getConfidenceDetailData() {
   const dimension = dimensions.find((item) => item.key === 'confidence');
   if (!dimension) return null;
 
-  const levels = getConfidenceStagesConfig();
+  validateConfidenceLevelsInDev();
+  const levels = getConfidenceLevels();
   const logs = await getConfidenceLogs();
-  const levelsWithProgress = levels.map((level) => ({ ...level, progress: getLevelProgress(level, logs) }));
-  const currentLevel = getCurrentLevel(levels, logs);
+  const levelsWithProgress = levels.map((level) => ({ ...level, progress: getConfidenceProgress(level, logs) }));
+  const { level: currentLevel, allCompleted } = getCurrentConfidenceLevel(levels, logs);
   const passedCount = levelsWithProgress.filter((item) => item.progress.current >= item.progress.required).length;
-  const currentStageProgress = getLevelProgress(currentLevel, logs);
+  const currentStageProgress = getConfidenceProgress(currentLevel, logs);
   const score = Math.round((passedCount / levels.length) * 100);
 
   await upsertSmvDimensionScore({
@@ -150,7 +145,8 @@ export async function getConfidenceDetailData() {
     nextAction: `เก็บ action แบบ ${currentLevel.action_type} เพิ่ม`,
     logs,
     stages: levelsWithProgress,
-    currentStageProgress
+    currentStageProgress,
+    allCompleted
   };
 }
 
