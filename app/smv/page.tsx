@@ -2,7 +2,6 @@ import Link from 'next/link';
 
 import { Navbar } from '@/components/navbar';
 import { SMV_CHART_LABELS } from '@/lib/smv/definitions';
-import { SMV_DIMENSION_KEYS, type SmvDimensionKey } from '@/lib/smv/types';
 import { APPEARANCE_CATEGORY_KEYS } from '@/lib/smv/appearance-config';
 import { getAppearanceDetailData, getPowerLevelLabel, getSmvOverviewData } from '@/lib/smv/service';
 
@@ -75,12 +74,6 @@ export default async function SmvOverviewPage() {
   const weakest = data.weakest[0];
   const appearanceDetail = await getAppearanceDetailData();
 
-  const weakestDimensionKey = (weakest?.dimension.key && (SMV_DIMENSION_KEYS as readonly string[]).includes(weakest.dimension.key)
-    ? weakest.dimension.key
-    : null) as SmvDimensionKey | null;
-  const evidenceLogHref = weakestDimensionKey ? `/smv/log?dimension=${weakestDimensionKey}` : '/smv/log';
-  const upgradePlanHref = '/smv/plan';
-
   return (
     <main className="app-shell">
       <Navbar />
@@ -90,20 +83,6 @@ export default async function SmvOverviewPage() {
           <p className="mt-2 text-2xl font-semibold text-white">
             {weakest ? `คุณควรโฟกัส: ${weakest.dimension.label}` : 'ยังไม่มีมิติที่ต้องโฟกัสตอนนี้'}
           </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href={evidenceLogHref}
-              className="cursor-pointer rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
-            >
-              เพิ่มหลักฐาน
-            </Link>
-            <Link
-              href={upgradePlanHref}
-              className="cursor-pointer rounded-full border border-amber-200/50 bg-amber-300/10 px-5 py-2 text-sm font-semibold text-amber-50 transition hover:bg-amber-300/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200/80 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
-            >
-              ดูแผนอัปเกรด
-            </Link>
-          </div>
         </article>
 
         <section className="grid gap-4 md:grid-cols-3">
@@ -186,9 +165,6 @@ export default async function SmvOverviewPage() {
                     <div className="mt-3 flex gap-2">
                       <Link href={item.dimension.key === 'look' ? '/smv/appearance' : `/smv/${item.dimension.key}`} className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/15">
                         ดูรายละเอียด
-                      </Link>
-                      <Link href={item.dimension.key === 'look' ? '/smv/log?dimension=look&appearance_category=style' : `/smv/log?dimension=${item.dimension.key}`} className="rounded-full border border-cyan-200/40 px-3 py-1.5 text-xs font-semibold text-cyan-100 hover:bg-cyan-400/10">
-                        เพิ่มหลักฐาน
                       </Link>
                     </div>
                   </div>
