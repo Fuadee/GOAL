@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { Navbar } from '@/components/navbar';
+import { StatusIncomeActions } from '@/components/smv/StatusIncomeActions';
 import { SMV_DIMENSION_LABELS } from '@/lib/smv/definitions';
 import { getConfidenceDetailData, getSmvDimensionDetailByKey, getStatusDetailData } from '@/lib/smv/service';
 import { SMV_DIMENSION_KEYS, SmvDimensionKey, SmvLevelDefinitionRow } from '@/lib/smv/types';
@@ -163,6 +164,14 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
 
             <p className="mt-4 text-2xl font-semibold text-white">{formatCurrency(monthlyIncome)} บาท / เดือน</p>
             <p className="mt-2 text-sm text-slate-200">{currentLevel?.identity_text ?? 'เริ่มต้นสร้างรายได้หลักของคุณให้ถึง 10,000 บาทต่อเดือน'}</p>
+            <StatusIncomeActions showSecondaryLink />
+
+            {currentLevelNumber === 0 ? (
+              <div className="mt-4 rounded-2xl border border-cyan-300/30 bg-cyan-500/10 p-4">
+                <p className="text-sm text-cyan-100">เริ่มต้นด้วยการกรอกรายได้ปัจจุบันของคุณ เพื่อให้ระบบคำนวณด่านแรกทันที</p>
+                <StatusIncomeActions triggerLabel="เริ่มกรอกรายได้" triggerStyle="inline" compact />
+              </div>
+            ) : null}
 
             <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
               <div className="flex items-center justify-between text-sm">
@@ -225,13 +234,25 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
                         <p className="mt-2 text-xs text-cyan-100">
                           {nextLevel ? `อีก ${formatCurrency(remainingIncome)} บาท ถึงด่านถัดไป` : 'คุณอยู่ระดับสูงสุดแล้ว'}
                         </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <StatusIncomeActions triggerLabel="อัปเดตรายได้" triggerStyle="inline" compact />
+                          <Link
+                            href="/smv/log?dimension=status"
+                            className="inline-flex rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:border-cyan-200 hover:text-cyan-100"
+                          >
+                            เพิ่มหลักฐานรายได้
+                          </Link>
+                        </div>
                       </div>
                     )}
 
                     {isPassed && <p className="mt-4 text-sm font-semibold text-emerald-200">ผ่านแล้ว</p>}
 
                     {!isPassed && !isCurrent && (
-                      <p className="mt-4 text-sm text-slate-300">ปลดล็อกเมื่อรายได้ถึง {formatCurrency(level.income_threshold)} บาท / เดือน</p>
+                      <div className="mt-4 space-y-1">
+                        <p className="text-sm text-slate-300">ต้องมีรายได้ขั้นต่ำ {formatCurrency(level.income_threshold)} / เดือน</p>
+                        <p className="text-xs text-cyan-200/90">อัปเดตรายได้เพื่อปลดล็อก</p>
+                      </div>
                     )}
                   </div>
                 );

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { createEvidenceAndRecalculate, markConfidenceStagePassed } from '@/lib/smv/service';
-import { getSmvMetrics } from '@/lib/smv/repository';
+import { createSmvActionLog, getSmvDimensions, getSmvMetrics } from '@/lib/smv/repository';
 
 export async function logSmvEvidenceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
   const dimensionId = String(formData.get('dimension_id') ?? '').trim();
@@ -75,6 +75,68 @@ export async function markConfidenceStagePassedAction(formData: FormData): Promi
     return {
       success: false,
       message: error instanceof Error ? error.message : 'ไม่สามารถอัปเดตด่านได้'
+    };
+  }
+}
+
+export async function saveStatusIncomeAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const monthlyIncomeRaw = String(formData.get('monthly_income') ?? '').trim();
+  const referenceMonth = String(formData.get('reference_month') ?? '').trim();
+  const note = String(formData.get('note') ?? '').trim();
+
+  const monthlyIncome = Number(monthlyIncomeRaw);
+  if (!Number.isFinite(monthlyIncome) || monthlyIncome < 0) {
+    return { success: false, message: 'กรุณากรอกรายได้ต่อเดือนเป็นตัวเลขที่ถูกต้อง' };
+  }
+
+  try {
+    const dimensions = await getSmvDimensions();
+    const statusDimension = dimensions.find((dimension) => dimension.key === 'status');
+    if (!statusDimension) {
+      return { success: false, message: 'ไม่พบมิติ status ในระบบ' };
+    }
+
+    const metrics = await getSmvMetrics(statusDimension.id);
+    const incomeMetric = metrics.find((metric) => metric.key === 'income_level');
+    if (!incomeMetric) {
+      return { success: false, message: 'ไม่พบ metric รายได้ (income_level)' };
+    }
+
+    const context = referenceMonth ? `อ้างอิงเดือน ${referenceMonth}` : 'อัปเดตรายได้ปัจจุบัน';
+
+    await createEvidenceAndRecalculate({
+      dimensionId: statusDimension.id,
+      context,
+      note,
+      metricValues: [
+        {
+          metricId: incomeMetric.id,
+          key: incomeMetric.key,
+          valueType: incomeMetric.value_type,
+          numericValue: monthlyIncome
+        }
+      ]
+    });
+
+    try {
+      await createSmvActionLog({
+        dimension: 'status',
+        action_type: 'income_update',
+        value_numeric: monthlyIncome,
+        note: note || context
+      });
+    } catch {
+      // If smv_logs schema differs or is not available, we still keep evidence logs as source of truth.
+    }
+
+    revalidatePath('/smv');
+    revalidatePath('/smv/status');
+    revalidatePath('/smv/log');
+    return { success: true, message: 'บันทึกรายได้แล้ว ระบบคำนวณด่านใหม่เรียบร้อย' };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'ไม่สามารถบันทึกรายได้ได้'
     };
   }
 }

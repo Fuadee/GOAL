@@ -200,3 +200,19 @@ export async function getSmvActionLogs(dimension: string) {
     'GET'
   );
 }
+
+export async function createSmvActionLog(input: {
+  dimension: string;
+  action_type: string;
+  value_numeric?: number;
+  note?: string;
+  created_at?: string;
+}) {
+  return supabaseRestRequest<Record<string, unknown>[]>('smv_logs', 'POST', {
+    dimension: input.dimension,
+    action_type: input.action_type,
+    value_numeric: input.value_numeric ?? null,
+    note: input.note?.trim() ? input.note.trim() : null,
+    created_at: input.created_at ?? new Date().toISOString()
+  });
+}
