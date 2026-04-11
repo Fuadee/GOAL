@@ -231,3 +231,65 @@ export type SmvDimensionDetail = {
   overview: SmvDimensionOverview;
   levelDefinitions: SmvLevelDefinitionRow[];
 };
+
+export type SmvDimensionTrend = 'up' | 'down' | 'steady';
+
+export type SmvDimensionWithScore = {
+  id: string;
+  key: string;
+  label: string;
+  currentScore: number;
+  trend: SmvDimensionTrend;
+  todayCompletedCount: number;
+  weeklyCompletedCount: number;
+  streakDays: number;
+};
+
+export type SmvScoreEventType = 'checklist' | 'manual_adjustment' | 'system_recalc';
+
+export type SmvScoreHistoryEvent = {
+  id: string;
+  event_type: SmvScoreEventType;
+  score_before: number;
+  score_delta: number;
+  score_after: number;
+  reason: string | null;
+  created_at: string;
+};
+
+export type SmvChecklistItem = {
+  id: string;
+  title: string;
+  description: string | null;
+  score_delta: number;
+};
+
+export type SmvChecklistLog = {
+  id: string;
+  completed_at: string;
+  notes: string | null;
+};
+
+export type SmvDashboardHighlights = {
+  averageScore: number;
+  strongestDimension: SmvDimensionWithScore | null;
+  weakestDimension: SmvDimensionWithScore | null;
+  strongestTwo: SmvDimensionWithScore[];
+  weakestTwo: SmvDimensionWithScore[];
+  focusNowMessage: string;
+  aiRecommendationPlaceholder: string;
+};
+
+export type SmvDashboardActivity = {
+  todayCompletedCount: number;
+  weeklyCompletedCount: number;
+};
+
+export type SmvDashboardData = {
+  dimensions: SmvDimensionWithScore[];
+  highlights: SmvDashboardHighlights;
+  activity: SmvDashboardActivity;
+  checklistItemsByDimension: Record<string, SmvChecklistItem[]>;
+  recentLogsByDimension: Record<string, SmvChecklistLog[]>;
+  selectedDimensionHistory: SmvScoreHistoryEvent[];
+};
