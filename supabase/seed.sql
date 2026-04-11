@@ -47,7 +47,7 @@ with dimensions as (
       ('confidence', 'เชื่อมั่นในตัวเอง / เป็นผู้นำ', 'ภาวะผู้นำ ความมั่นใจ และความนิ่งภายใต้แรงกดดัน', 'cyan'),
       ('look', 'รูปร่างหน้าตา / บุคลิกที่ดี', 'รูปร่าง บุคลิก สุขอนามัย และภาพรวมการนำเสนอ', 'fuchsia'),
       ('status', 'สถานะสังคม / อำนาจ / เงิน', 'ภาพรวมความมั่นคง อำนาจ และผลลัพธ์ทางการเงิน', 'amber'),
-      ('social', 'Social Connection', 'คุณภาพเครือข่ายและความสัมพันธ์', 'sky')
+    ('social', 'เครือข่ายสังคม', 'ระบบด่านเครือข่ายและความสัมพันธ์แบบ mission progression', 'sky')
   ) as t(key, label, description, color_token)
 )
 insert into public.smv_dimensions (key, label, description, color_token)
@@ -101,11 +101,6 @@ with metric_seed as (
     ('status', 'authority', 'Authority', 'อิทธิพลในการตัดสินใจและภาวะนำเชิงสังคม', 'score_0_100', 0.15, true),
     ('status', 'asset_leverage', 'Asset Leverage', 'การใช้ทรัพย์สินเพื่อสร้างความได้เปรียบ', 'score_0_100', 0.15, true),
 
-    ('social', 'network_health', 'Network Health', 'ความหนาแน่นและคุณภาพของเครือข่าย', 'score_0_100', 0.35, true),
-    ('social', 'social_depth', 'Social Depth', 'ความลึกของความสัมพันธ์สำคัญ', 'score_0_100', 0.25, true),
-    ('social', 'introductions', 'Introductions', 'จำนวนคนใหม่ที่เชื่อมต่อจริงต่อเดือน', 'count', 0.20, true),
-    ('social', 'reliability', 'Reliability', 'ระดับความน่าเชื่อถือเมื่ออยู่ในวงสังคม', 'score_0_100', 0.20, true),
-
     ('confidence', 'situation_coverage', 'Situation Coverage', 'จำนวนสถานการณ์จริงที่ลงมือ', 'count', 0.35, true),
     ('confidence', 'frame_control', 'Frame Control', 'ความนิ่งและการคุมเฟรม', 'score_0_100', 0.25, true),
     ('confidence', 'leadership_signal', 'Leadership Signal', 'สัญญาณภาวะผู้นำในสถานการณ์จริง', 'score_0_100', 0.25, true),
@@ -131,8 +126,59 @@ where dimension_id in (
 and key not in (
   'body','grooming','style','cleanliness','presence','overall_impact',
   'income_level','income_stability','status_perception','authority','asset_leverage',
-  'network_health','social_depth','introductions','reliability',
   'situation_coverage','frame_control','leadership_signal','consistency'
+);
+
+delete from public.smv_metrics
+where dimension_id in (
+  select id from public.smv_dimensions where key = 'social'
+);
+
+delete from public.smv_level_definitions
+where dimension_id in (
+  select id from public.smv_dimensions where key = 'social'
+);
+
+insert into public.social_levels (id, title, description, phase, score)
+values
+  (1, 'เปิดวงสนทนา', 'เริ่มต้นคุยกับคนใหม่อย่างเป็นธรรมชาติ', 'Survival', 10),
+  (2, 'สร้างความคุ้นเคย', 'มีการ follow-up ภายใน 48 ชั่วโมง', 'Survival', 10),
+  (3, 'นัดเจอครั้งแรก', 'เปลี่ยนจากแชทเป็นการเจอจริงอย่างน้อย 1 ครั้ง', 'Survival', 10),
+  (4, 'มีตัวตนในวง', 'มีบทบาทเชิงบวกในกลุ่ม/คอมมูนิตี้', 'Presence', 10),
+  (5, 'ความน่าเชื่อถือ', 'คนในวงเริ่มนึกถึงคุณเมื่อมีโอกาสหรือปัญหา', 'Presence', 10),
+  (6, 'เชื่อมคนกับคน', 'แนะนำคนที่เหมาะสมให้กันและเกิดผลจริง', 'Influence', 10),
+  (7, 'สร้างโอกาสร่วม', 'ร่วมโปรเจกต์ กิจกรรม หรือดีลร่วมกับเครือข่าย', 'Influence', 10),
+  (8, 'มีอิทธิพลเชิงบวก', 'สามารถขับเคลื่อนบทสนทนา/การตัดสินใจในวง', 'Influence', 10),
+  (9, 'ขยายแรงส่ง', 'เครือข่ายของคุณเริ่มชวนคนใหม่เข้ามาโดยไม่ต้องร้องขอ', 'Leverage', 10),
+  (10, 'Mission Network Elite', 'เครือข่ายแข็งแรง สร้างผลลัพธ์ต่อเนื่อง และยั่งยืน', 'Leverage', 10)
+on conflict (id) do update
+set
+  title = excluded.title,
+  description = excluded.description,
+  phase = excluded.phase,
+  score = excluded.score;
+
+with social_requirement_seed as (
+  select * from (values
+    (1, 'เริ่มแชทใหม่อย่างน้อย 3 คนในสัปดาห์นี้', 'metric', '3'),
+    (2, 'ส่ง follow-up ให้ครบอย่างน้อย 2 คน', 'metric', '2'),
+    (3, 'มี meetup อย่างน้อย 1 ครั้ง', 'evidence', '1'),
+    (4, 'เข้าร่วมกิจกรรมกลุ่มและมีส่วนร่วมชัดเจน 1 ครั้ง', 'manual', null),
+    (5, 'ได้รับ feedback เชิงบวกเรื่องความน่าเชื่อถืออย่างน้อย 1 เคส', 'evidence', '1'),
+    (6, 'แนะนำ connection ที่มีประโยชน์และเกิดการคุยต่อ', 'evidence', '1'),
+    (7, 'เริ่ม collaboration กับคนในเครือข่ายอย่างน้อย 1 งาน', 'manual', null),
+    (8, 'มีหลักฐานการนำวงคุย/ผลักดันการตัดสินใจอย่างน้อย 1 ครั้ง', 'evidence', '1'),
+    (9, 'มีคนแนะนำ connection ใหม่ให้คุณโดยตรงอย่างน้อย 2 คน', 'metric', '2'),
+    (10, 'รักษาวงคุณภาพสูงต่อเนื่อง 30 วัน พร้อมหลักฐานประกอบ', 'manual', '30_days')
+  ) as t(level_id, requirement_text, requirement_type, required_value)
+)
+insert into public.social_requirements (level_id, requirement_text, requirement_type, required_value)
+select level_id, requirement_text, requirement_type, required_value
+from social_requirement_seed
+where not exists (
+  select 1 from public.social_requirements sr
+  where sr.level_id = social_requirement_seed.level_id
+    and sr.requirement_text = social_requirement_seed.requirement_text
 );
 
 insert into public.smv_stage_definitions (

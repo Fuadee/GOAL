@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
+import { addSocialEvidenceAction, markSocialLevelCompletedAction } from '@/app/smv/actions';
 import { Navbar } from '@/components/navbar';
 import { StatusIncomeActions } from '@/components/smv/StatusIncomeActions';
 import { SMV_DIMENSION_LABELS } from '@/lib/smv/definitions';
-import { getConfidenceDetailData, getSmvDimensionDetailByKey, getStatusDetailData } from '@/lib/smv/service';
+import { getConfidenceDetailData, getSmvDimensionDetailByKey, getSocialDetailData, getStatusDetailData } from '@/lib/smv/service';
 import { SMV_DIMENSION_KEYS, SmvDimensionKey, SmvLevelDefinitionRow } from '@/lib/smv/types';
 
 type StageCardStatus = 'PASSED' | 'CURRENT' | 'LOCKED';
@@ -258,6 +259,123 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
                         <p className="text-xs text-cyan-200/90">อัปเดตรายได้เพื่อปลดล็อก</p>
                       </div>
                     )}
+                  </div>
+                );
+              })}
+            </div>
+          </article>
+        </section>
+      </main>
+    );
+  }
+
+  if (key === 'social') {
+    const social = await getSocialDetailData();
+    if (!social) notFound();
+
+    return (
+      <main className="app-shell">
+        <Navbar />
+        <section className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
+          <Link href="/smv" className="text-sm text-cyan-200 hover:text-cyan-100">
+            ← กลับไปหน้า /smv
+          </Link>
+
+          <article className="rounded-3xl border border-cyan-300/40 bg-gradient-to-br from-slate-950 via-cyan-950/25 to-slate-900 p-6 shadow-[0_0_30px_rgba(34,211,238,0.2)] md:p-7">
+            <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">Social Mission Control</p>
+            <h1 className="mt-2 text-3xl font-semibold text-white">ระบบด่านเครือข่ายสังคม 1–10</h1>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl border border-cyan-200/30 bg-cyan-400/10 p-4">
+                <p className="text-xs text-cyan-100">Social Score</p>
+                <p className="mt-1 text-3xl font-semibold text-white">{social.score} / 100</p>
+              </div>
+              <div className="rounded-2xl border border-emerald-200/30 bg-emerald-500/10 p-4">
+                <p className="text-xs text-emerald-100">Current Phase</p>
+                <p className="mt-1 text-2xl font-semibold text-white">{social.currentPhase}</p>
+              </div>
+              <div className="rounded-2xl border border-amber-200/30 bg-amber-500/10 p-4">
+                <p className="text-xs text-amber-100">Next Action</p>
+                <p className="mt-1 text-sm font-medium text-white">{social.nextAction}</p>
+              </div>
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
+            <h2 className="text-lg font-semibold text-white">เส้นทางด่าน Social (Mission Progression)</h2>
+            <div className="mt-4 space-y-3">
+              {social.levels.map((level) => {
+                const isCompleted = social.completedLevelIds.has(level.id);
+                const isCurrent = social.currentLevelId === level.id && !isCompleted;
+                const isNext = social.currentLevelId + 1 === level.id;
+                const isLocked = !isCompleted && !isCurrent && !(level.id === 1 && social.currentLevelId === 1);
+                const requirements = social.requirementsByLevelId[level.id] ?? [];
+
+                return (
+                  <div
+                    key={level.id}
+                    className={`rounded-2xl border p-4 transition ${
+                      isCompleted
+                        ? 'border-emerald-300/45 bg-emerald-500/10'
+                        : isCurrent
+                          ? 'border-cyan-300/70 bg-cyan-500/10 shadow-[0_0_24px_rgba(34,211,238,0.25)]'
+                          : isNext
+                            ? 'border-fuchsia-300/50 bg-fuchsia-500/10 shadow-[0_0_20px_rgba(232,121,249,0.25)]'
+                            : 'border-white/10 bg-slate-900/40'
+                    } ${isLocked ? 'blur-[1px] opacity-70' : ''}`}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-semibold text-white">Level {level.id}: {level.title}</p>
+                      <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-xs text-cyan-100">
+                        {level.phase} • +{level.score}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-200">{level.description}</p>
+
+                    <ul className="mt-3 space-y-1.5 text-sm text-slate-200">
+                      {requirements.map((requirement) => (
+                        <li key={requirement.id.toString()} className="flex gap-2">
+                          <span className="text-cyan-200">▢</span>
+                          <span>{requirement.requirement_text}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {isLocked ? <p className="mt-3 text-xs text-slate-300">🔒 Locked — ต้องผ่านด่านก่อนหน้า</p> : null}
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <form action={markSocialLevelCompletedAction}>
+                        <input type="hidden" name="level_id" value={level.id} />
+                        <button
+                          type="submit"
+                          disabled={isLocked || isCompleted}
+                          className="rounded-full bg-cyan-300 px-4 py-2 text-xs font-semibold text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Mark as Completed
+                        </button>
+                      </form>
+
+                      <form action={addSocialEvidenceAction} className="flex flex-wrap items-center gap-2">
+                        <input type="hidden" name="level_id" value={level.id} />
+                        <select
+                          name="type"
+                          defaultValue="chat"
+                          className="rounded-lg border border-white/20 bg-slate-950 px-2 py-1.5 text-xs text-white"
+                        >
+                          <option value="chat">chat</option>
+                          <option value="meetup">meetup</option>
+                          <option value="connection">connection</option>
+                          <option value="other">other</option>
+                        </select>
+                        <input
+                          name="note"
+                          placeholder="บันทึกหลักฐาน"
+                          className="rounded-lg border border-white/20 bg-slate-950 px-2 py-1.5 text-xs text-white"
+                        />
+                        <button type="submit" disabled={isLocked} className="rounded-full border border-white/20 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">
+                          Add Evidence
+                        </button>
+                      </form>
+                    </div>
                   </div>
                 );
               })}

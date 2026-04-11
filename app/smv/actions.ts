@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { createEvidenceAndRecalculate, markConfidenceStagePassed, updateAppearanceLevel } from '@/lib/smv/service';
+import { addSocialEvidence, createEvidenceAndRecalculate, markConfidenceStagePassed, markSocialLevelCompleted, updateAppearanceLevel } from '@/lib/smv/service';
 import { createSmvActionLog, getSmvDimensions, getSmvMetrics } from '@/lib/smv/repository';
 import { APPEARANCE_CATEGORY_KEYS } from '@/lib/smv/appearance-config';
 
@@ -198,6 +198,55 @@ export async function updateAppearanceLevelAction(formData: FormData): Promise<{
     return {
       success: false,
       message: error instanceof Error ? error.message : 'ไม่สามารถอัปเดตด่านได้'
+    };
+  }
+}
+
+export async function markSocialLevelCompletedAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const levelIdRaw = String(formData.get('level_id') ?? '').trim();
+  const levelId = Number(levelIdRaw);
+
+  if (!Number.isInteger(levelId)) {
+    return { success: false, message: 'ระดับด่านไม่ถูกต้อง' };
+  }
+
+  try {
+    await markSocialLevelCompleted(levelId);
+    revalidatePath('/smv');
+    revalidatePath('/smv/social');
+    return { success: true, message: 'อัปเดตผ่านด่านเรียบร้อย' };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'ไม่สามารถอัปเดตด่านได้'
+    };
+  }
+}
+
+export async function addSocialEvidenceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const levelId = Number(String(formData.get('level_id') ?? '').trim());
+  const type = String(formData.get('type') ?? 'other').trim() as 'chat' | 'meetup' | 'connection' | 'other';
+  const note = String(formData.get('note') ?? '').trim();
+  const imageUrl = String(formData.get('image_url') ?? '').trim();
+
+  if (!Number.isInteger(levelId)) {
+    return { success: false, message: 'ระดับด่านไม่ถูกต้อง' };
+  }
+
+  try {
+    await addSocialEvidence({
+      levelId,
+      type,
+      note: note || undefined,
+      imageUrl: imageUrl || undefined
+    });
+    revalidatePath('/smv');
+    revalidatePath('/smv/social');
+    return { success: true, message: 'เพิ่มหลักฐาน Social เรียบร้อย' };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'ไม่สามารถเพิ่มหลักฐานได้'
     };
   }
 }
