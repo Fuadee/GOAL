@@ -1,21 +1,10 @@
-export const SMV_DIMENSION_KEYS = ['confidence', 'fun', 'preselection', 'status', 'social', 'purpose', 'protection', 'look'] as const;
+export const SMV_DIMENSION_KEYS = ['confidence', 'look', 'status', 'social'] as const;
 
 export type SmvDimensionKey = (typeof SMV_DIMENSION_KEYS)[number];
 export type SmvMetricValueType = 'score_0_100' | 'count' | 'boolean' | 'currency_monthly';
 export type SmvStageStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'PASSED';
 
-export const SMV_ACTION_TYPES = [
-  'smalltalk_any',
-  'smalltalk_female',
-  'approach_high_value',
-  'conversation_long',
-  'rejection',
-  'close_day',
-  'close_night',
-  'interaction_control',
-  'frame_control',
-  'perfect_game'
-] as const;
+export const SMV_ACTION_TYPES = ['confidence_rep', 'leadership_rep', 'social_rep', 'status_rep'] as const;
 
 export type SmvActionType = (typeof SMV_ACTION_TYPES)[number];
 
@@ -36,7 +25,7 @@ export type SmvActionLogRow = {
 
 export type SmvDimensionRow = {
   id: string;
-  key: SmvDimensionKey;
+  key: string;
   label: string;
   description: string | null;
   color_token: string | null;
@@ -130,7 +119,7 @@ export type SmvImprovementTaskRow = {
 
 export type SmvStageDefinitionRow = {
   id: string;
-  dimension_key: SmvDimensionKey;
+  dimension_key: string;
   stage_number: number;
   stage_key: string;
   title_th: string;
@@ -145,7 +134,7 @@ export type SmvStageDefinitionRow = {
 
 export type SmvStageProgressRow = {
   id: string;
-  dimension_key: SmvDimensionKey;
+  dimension_key: string;
   stage_key: string;
   status: SmvStageStatus;
   passed_at: string | null;

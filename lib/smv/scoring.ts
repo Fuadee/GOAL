@@ -149,10 +149,10 @@ export function calculateSmvDimensionScore(input: {
     suggestions.push('Maintain grooming consistency for 14 consecutive days.');
   }
 
-  if (dimensionKey === 'purpose' && (metricMap.execution ?? 0) < 60) {
-    score = Math.min(score, 80);
-    guardReasons.push('Purpose capped at 80: execution quality below reliability threshold.');
-    suggestions.push('Ship weekly measurable outcomes for 4 straight weeks.');
+  if (dimensionKey === 'social' && evidenceCount30d < 4) {
+    score = Math.min(score, 72);
+    guardReasons.push('Social capped at 72: interaction evidence in last 30 days is still too low.');
+    suggestions.push('Log at least 4 high-quality social interactions this month.');
   }
 
   if (guardReasons.length === 0) {
@@ -178,7 +178,7 @@ export function buildDefaultRecommendations(weakest: Array<{ key: SmvDimensionKe
     if (item.key === 'confidence') return 'Confidence: เดินหน้าผ่านด่านถัดไปให้ได้อีก 1 ด่าน';
     if (item.key === 'look') return 'Look: maintain grooming consistency for 14 days.';
     if (item.key === 'status') return 'Status: sustain 100k+ income for 3 months.';
-    if (item.key === 'purpose') return 'Purpose: close one measurable weekly milestone for 4 weeks.';
+    if (item.key === 'social') return 'Social: สร้าง connection ใหม่และ follow-up อย่างน้อยสัปดาห์ละ 2 ครั้ง';
     return `${item.label}: continue evidence logging to unlock metric set expansion.`;
   });
 }

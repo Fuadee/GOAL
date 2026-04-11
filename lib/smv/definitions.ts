@@ -2,24 +2,26 @@ import { SmvDimensionKey } from '@/lib/smv/types';
 
 export const SMV_DIMENSION_LABELS: Record<SmvDimensionKey, string> = {
   confidence: 'เชื่อมั่นในตัวเอง / เป็นผู้นำ',
-  fun: 'สนุกสนาน',
-  preselection: 'Pre-selection',
+  look: 'รูปร่างหน้าตา / บุคลิกที่ดี',
   status: 'สถานะสังคม / อำนาจ / เงิน',
-  social: 'Social Connection',
-  purpose: 'เป้าหมายชีวิต',
-  protection: 'ดูแล / ปกป้องผู้หญิงได้',
-  look: 'รูปร่างหน้าตา / บุคลิกที่ดี'
+  social: 'Social Connection'
 };
 
-export const SMV_FULLY_IMPLEMENTED_DIMENSIONS: SmvDimensionKey[] = ['look', 'status', 'purpose'];
+export const SMV_CHART_LABELS: Record<SmvDimensionKey, string> = {
+  confidence: 'เชื่อมั่น/ผู้นำ',
+  look: 'รูปร่าง/บุคลิก',
+  status: 'สถานะ/อำนาจ/เงิน',
+  social: 'Social Connection'
+};
+
+export const SMV_FULLY_IMPLEMENTED_DIMENSIONS: SmvDimensionKey[] = ['confidence', 'look', 'status', 'social'];
 
 export const SMV_LEVEL_TARGETS = [60, 75, 85, 95, 100] as const;
 
 export const SMV_METRIC_HINTS: Record<string, string> = {
-  situation_coverage: 'จำนวน interaction จริงในช่วง 30 วัน',
-  frame_control: '0-100 จากคุณภาพการคุมเฟรม',
-  emotional_stability: '0-100 จากความนิ่งภายใต้แรงกดดัน',
-  leadership_signal: '0-100 จากการนำและตัดสินใจ',
+  situation_coverage: 'จำนวนการลงมือทำจริงในช่วง 30 วัน',
+  frame_control: '0-100 จากความนิ่งและการคุมเฟรม',
+  leadership_signal: '0-100 จากสัญญาณภาวะผู้นำ',
   consistency: '0-100 จากความสม่ำเสมอ',
   body: '0-100 จากสภาพร่างกายและ fitness',
   grooming: '0-100 จากการดูแลรายละเอียด',
@@ -32,8 +34,8 @@ export const SMV_METRIC_HINTS: Record<string, string> = {
   status_perception: '0-100 จากภาพลักษณ์สถานะ',
   authority: '0-100 จากอิทธิพลการตัดสินใจ',
   asset_leverage: '0-100 จากการใช้ทรัพย์สิน',
-  clarity: '0-100 จากความชัดเจนเป้าหมาย',
-  execution: '0-100 จากการลงมือทำจริง',
-  measurable_progress: '0-100 จากความคืบหน้าที่วัดได้',
-  adaptation: '0-100 จากการปรับตัว'
+  network_health: '0-100 จากคุณภาพเครือข่าย',
+  social_depth: '0-100 จากความลึกของความสัมพันธ์',
+  introductions: 'จำนวนการเชื่อมคนใหม่ต่อเดือน',
+  reliability: '0-100 จากความน่าเชื่อถือในสังคม'
 };

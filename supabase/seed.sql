@@ -39,19 +39,15 @@ select
 from public.runner_levels as level
 on conflict (level_id) do nothing;
 
--- SMV dimensions.
+-- SMV dimensions (4 core powers only).
 with dimensions as (
   select *
   from (
     values
       ('confidence', 'เชื่อมั่นในตัวเอง / เป็นผู้นำ', 'ภาวะผู้นำ ความมั่นใจ และความนิ่งภายใต้แรงกดดัน', 'cyan'),
-      ('fun', 'สนุกสนาน', 'พลังบวกและการสร้างบรรยากาศที่ดี', 'violet'),
-      ('preselection', 'Pre-selection', 'social proof และการได้รับการยอมรับในสังคม', 'emerald'),
+      ('look', 'รูปร่างหน้าตา / บุคลิกที่ดี', 'รูปร่าง บุคลิก สุขอนามัย และภาพรวมการนำเสนอ', 'fuchsia'),
       ('status', 'สถานะสังคม / อำนาจ / เงิน', 'ภาพรวมความมั่นคง อำนาจ และผลลัพธ์ทางการเงิน', 'amber'),
-      ('social', 'Social Connection', 'คุณภาพเครือข่ายและความสัมพันธ์', 'sky'),
-      ('purpose', 'เป้าหมายชีวิต', 'ความชัดเจน วิสัยทัศน์ และการลงมือทำอย่างต่อเนื่อง', 'indigo'),
-      ('protection', 'ดูแล / ปกป้องผู้หญิงได้', 'ความรับผิดชอบและความพร้อมในการดูแลผู้อื่น', 'rose'),
-      ('look', 'รูปร่างหน้าตา / บุคลิกที่ดี', 'รูปร่าง บุคลิก สุขอนามัย และภาพรวมการนำเสนอ', 'fuchsia')
+      ('social', 'Social Connection', 'คุณภาพเครือข่ายและความสัมพันธ์', 'sky')
   ) as t(key, label, description, color_token)
 )
 insert into public.smv_dimensions (key, label, description, color_token)
@@ -63,12 +59,13 @@ set
   description = excluded.description,
   color_token = excluded.color_token;
 
+delete from public.smv_dimensions where key not in ('confidence', 'look', 'status', 'social');
+
 insert into public.smv_dimension_scores (dimension_id, score, evidence_count_30d, guard_summary, explanation)
 select id, 0, 0, 'ยังไม่มีหลักฐานเพียงพอ', 'เริ่มจากการบันทึกหลักฐานจริงเพื่อให้ระบบคำนวณคะแนน'
 from public.smv_dimensions
 on conflict (dimension_id) do nothing;
 
--- Level definitions for each dimension.
 with level_base as (
   select * from (values
     (60, 'Foundation', 'มีพฤติกรรมที่สม่ำเสมอในระดับพื้นฐาน'),
@@ -88,7 +85,6 @@ set
   title = excluded.title,
   requirement_text = excluded.requirement_text;
 
--- Metrics: fully implemented for look, status, purpose; scaffold only for others.
 with metric_seed as (
   select *
   from (values
@@ -105,16 +101,15 @@ with metric_seed as (
     ('status', 'authority', 'Authority', 'อิทธิพลในการตัดสินใจและภาวะนำเชิงสังคม', 'score_0_100', 0.15, true),
     ('status', 'asset_leverage', 'Asset Leverage', 'การใช้ทรัพย์สินเพื่อสร้างความได้เปรียบ', 'score_0_100', 0.15, true),
 
-    ('purpose', 'clarity', 'Clarity', 'ความชัดเจนของเป้าหมายและแผนระยะใกล้', 'score_0_100', 0.20, true),
-    ('purpose', 'execution', 'Execution', 'การลงมือทำตามแผนจริง', 'score_0_100', 0.25, true),
-    ('purpose', 'measurable_progress', 'Measurable Progress', 'ผลลัพธ์ที่วัดได้ของเป้าหมาย', 'score_0_100', 0.20, true),
-    ('purpose', 'consistency', 'Consistency', 'ความต่อเนื่องของการทำงาน', 'score_0_100', 0.20, true),
-    ('purpose', 'adaptation', 'Adaptation', 'ความสามารถปรับแผนเมื่อเจออุปสรรค', 'score_0_100', 0.15, true),
+    ('social', 'network_health', 'Network Health', 'ความหนาแน่นและคุณภาพของเครือข่าย', 'score_0_100', 0.35, true),
+    ('social', 'social_depth', 'Social Depth', 'ความลึกของความสัมพันธ์สำคัญ', 'score_0_100', 0.25, true),
+    ('social', 'introductions', 'Introductions', 'จำนวนคนใหม่ที่เชื่อมต่อจริงต่อเดือน', 'count', 0.20, true),
+    ('social', 'reliability', 'Reliability', 'ระดับความน่าเชื่อถือเมื่ออยู่ในวงสังคม', 'score_0_100', 0.20, true),
 
-    ('fun', 'engagement_quality', 'Engagement Quality', 'Scaffold metric for future expansion', 'score_0_100', 1.00, false),
-    ('preselection', 'social_proof', 'Social Proof', 'Scaffold metric for future expansion', 'score_0_100', 1.00, false),
-    ('social', 'network_health', 'Network Health', 'Scaffold metric for future expansion', 'score_0_100', 1.00, false),
-    ('protection', 'reliability', 'Reliability', 'Scaffold metric for future expansion', 'score_0_100', 1.00, false)
+    ('confidence', 'situation_coverage', 'Situation Coverage', 'จำนวนสถานการณ์จริงที่ลงมือ', 'count', 0.35, true),
+    ('confidence', 'frame_control', 'Frame Control', 'ความนิ่งและการคุมเฟรม', 'score_0_100', 0.25, true),
+    ('confidence', 'leadership_signal', 'Leadership Signal', 'สัญญาณภาวะผู้นำในสถานการณ์จริง', 'score_0_100', 0.25, true),
+    ('confidence', 'consistency', 'Consistency', 'ความสม่ำเสมอของการกล้านำ', 'score_0_100', 0.15, true)
   ) as t(dimension_key, key, label, description, value_type, weight, is_required)
 )
 insert into public.smv_metrics (dimension_id, key, label, description, value_type, weight, is_required)
@@ -129,7 +124,17 @@ set
   weight = excluded.weight,
   is_required = excluded.is_required;
 
--- Confidence uses stage-based progression, not metric scoring.
+delete from public.smv_metrics
+where dimension_id in (
+  select id from public.smv_dimensions where key in ('confidence', 'look', 'status', 'social')
+)
+and key not in (
+  'body','grooming','style','cleanliness','presence','overall_impact',
+  'income_level','income_stability','status_perception','authority','asset_leverage',
+  'network_health','social_depth','introductions','reliability',
+  'situation_coverage','frame_control','leadership_signal','consistency'
+);
+
 insert into public.smv_stage_definitions (
   dimension_key,
   stage_number,
