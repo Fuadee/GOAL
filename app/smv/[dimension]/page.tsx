@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 
 import { Navbar } from '@/components/navbar';
 import { SMV_DIMENSION_LABELS } from '@/lib/smv/definitions';
-import { getConfidenceDetailData, getSmvDimensionDetailByKey } from '@/lib/smv/service';
+import { getConfidenceDetailData, getSmvDimensionDetailByKey, getStatusDetailData } from '@/lib/smv/service';
 import { SMV_DIMENSION_KEYS, SmvDimensionKey, SmvLevelDefinitionRow } from '@/lib/smv/types';
 
 type StageCardStatus = 'PASSED' | 'CURRENT' | 'LOCKED';
@@ -26,6 +26,10 @@ function getStageCardClass(status: StageCardStatus) {
     return 'border-emerald-400/35 bg-emerald-500/5';
   }
   return 'border-white/10 bg-slate-950/20 opacity-80';
+}
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('th-TH').format(Math.max(0, Math.round(amount)));
 }
 
 function getLevelProgress(score: number, levelDefinitions: SmvLevelDefinitionRow[]) {
@@ -113,6 +117,122 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
                         เพิ่ม action
                       </Link>
                     </div>
+                  </div>
+                );
+              })}
+            </div>
+          </article>
+        </section>
+      </main>
+    );
+  }
+
+  if (key === 'status') {
+    const statusDetail = await getStatusDetailData();
+    if (!statusDetail) notFound();
+
+    const {
+      levels,
+      currentLevel,
+      nextLevel,
+      currentLevelNumber,
+      monthlyIncome,
+      progressPercent,
+      remainingIncome,
+      nextThreshold
+    } = statusDetail;
+
+    return (
+      <main className="app-shell">
+        <Navbar />
+        <section className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
+          <Link href="/smv" className="text-sm text-cyan-200 hover:text-cyan-100">
+            ← กลับไปหน้า /smv
+          </Link>
+
+          <article className="rounded-3xl border border-cyan-300/45 bg-gradient-to-br from-slate-900 via-cyan-950/30 to-slate-900 p-6 shadow-[0_0_40px_rgba(6,182,212,0.2)] md:p-8">
+            <p className="text-xs uppercase tracking-[0.2em] text-cyan-200/90">Income Progression System</p>
+            <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-sm text-slate-300">ด่านปัจจุบัน</p>
+                <h1 className="mt-1 text-3xl font-semibold text-white md:text-4xl">{currentLevel ? currentLevel.title : 'ก่อนเริ่มด่านแรก'}</h1>
+                <p className="mt-1 text-xl font-medium text-cyan-100">{currentLevel?.english_label ?? 'Pre-Level'} </p>
+              </div>
+              <p className="rounded-2xl border border-cyan-300/50 bg-cyan-400/15 px-4 py-2 text-3xl font-semibold text-cyan-100">Level {currentLevelNumber}</p>
+            </div>
+
+            <p className="mt-4 text-2xl font-semibold text-white">{formatCurrency(monthlyIncome)} บาท / เดือน</p>
+            <p className="mt-2 text-sm text-slate-200">{currentLevel?.identity_text ?? 'เริ่มต้นสร้างรายได้หลักของคุณให้ถึง 10,000 บาทต่อเดือน'}</p>
+
+            <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
+              <div className="flex items-center justify-between text-sm">
+                <p className="text-slate-300">Progress ไปด่านถัดไป</p>
+                <p className="font-semibold text-cyan-100">{progressPercent.toFixed(1)}%</p>
+              </div>
+              <div className="mt-2 h-2 w-full rounded-full bg-slate-800">
+                <div className="h-2 rounded-full bg-gradient-to-r from-cyan-300 to-emerald-300" style={{ width: `${progressPercent}%` }} />
+              </div>
+              <p className="mt-3 text-sm text-cyan-100">
+                {nextLevel
+                  ? `อีก ${formatCurrency(remainingIncome)} บาท จะถึง ${nextLevel.english_label}`
+                  : 'คุณอยู่ระดับสูงสุดแล้ว — Power Player'}
+              </p>
+              {nextLevel && (
+                <p className="mt-1 text-xs text-slate-300">เป้าหมายรายได้ด่านถัดไป: {formatCurrency(nextThreshold ?? 0)} บาท / เดือน</p>
+              )}
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
+            <h2 className="text-lg font-semibold text-white">ด่านรายได้ทั้งหมด</h2>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {levels.map((level) => {
+                const cardStatus: StageCardStatus = currentLevelNumber > level.level ? 'PASSED' : currentLevelNumber === level.level ? 'CURRENT' : 'LOCKED';
+                const badge = getStageStatusBadge(cardStatus);
+                const isCurrent = cardStatus === 'CURRENT';
+                const isPassed = cardStatus === 'PASSED';
+
+                return (
+                  <div
+                    key={level.level}
+                    className={`rounded-2xl border p-5 transition ${
+                      isCurrent
+                        ? 'scale-[1.02] border-cyan-300/80 bg-cyan-500/10 shadow-[0_0_24px_rgba(34,211,238,0.35)]'
+                        : isPassed
+                          ? 'border-emerald-300/40 bg-emerald-500/10 shadow-[0_0_18px_rgba(16,185,129,0.18)]'
+                          : 'border-white/10 bg-slate-950/20'
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">ด่าน {level.level}</p>
+                        <p className="mt-1 text-lg font-semibold text-white">{level.title}</p>
+                        <p className="text-sm text-cyan-100">{level.english_label}</p>
+                      </div>
+                      <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${badge.className}`}>{badge.label}</span>
+                    </div>
+
+                    <p className="mt-4 text-sm text-slate-100">{level.short_description}</p>
+                    <p className="mt-1 text-sm text-slate-300">{level.identity_text}</p>
+                    <p className="mt-3 text-sm font-medium text-cyan-100">รายได้ขั้นต่ำ {formatCurrency(level.income_threshold)} / เดือน</p>
+
+                    {isCurrent && (
+                      <div className="mt-4 rounded-xl border border-cyan-300/40 bg-cyan-500/10 p-3">
+                        <p className="text-sm text-slate-100">รายได้ปัจจุบัน: {formatCurrency(monthlyIncome)} บาท / เดือน</p>
+                        <div className="mt-2 h-2 rounded-full bg-slate-800">
+                          <div className="h-2 rounded-full bg-cyan-300" style={{ width: `${progressPercent}%` }} />
+                        </div>
+                        <p className="mt-2 text-xs text-cyan-100">
+                          {nextLevel ? `อีก ${formatCurrency(remainingIncome)} บาท ถึงด่านถัดไป` : 'คุณอยู่ระดับสูงสุดแล้ว'}
+                        </p>
+                      </div>
+                    )}
+
+                    {isPassed && <p className="mt-4 text-sm font-semibold text-emerald-200">ผ่านแล้ว</p>}
+
+                    {!isPassed && !isCurrent && (
+                      <p className="mt-4 text-sm text-slate-300">ปลดล็อกเมื่อรายได้ถึง {formatCurrency(level.income_threshold)} บาท / เดือน</p>
+                    )}
                   </div>
                 );
               })}
