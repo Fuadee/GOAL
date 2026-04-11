@@ -1,5 +1,5 @@
 import { markRunnerRestDayAction } from '@/app/health/actions';
-import { formatPace, getNextMissionText, getPrimaryHealthAction } from '@/lib/running/quest';
+import { formatPace, getHealthTodayMissionSummary } from '@/lib/running/quest';
 import { RunnerDashboardLevel, RunnerRunLog, RunnerTodayStatus } from '@/lib/running/quest.types';
 
 const statusConfig: Record<RunnerTodayStatus, { label: string; className: string }> = {
@@ -26,7 +26,7 @@ export function HealthTodayMissionCard({
   currentLevel: RunnerDashboardLevel | null;
   latestAttempt: RunnerRunLog | null;
 }) {
-  const primaryText = getPrimaryHealthAction(todayStatus);
+  const missionSummary = getHealthTodayMissionSummary(todayStatus, currentLevel, latestAttempt);
 
   return (
     <section className="rounded-3xl border border-cyan-300/25 bg-gradient-to-br from-slate-900 to-slate-950 p-6 shadow-[0_0_50px_rgba(56,189,248,0.2)] md:p-7">
@@ -63,12 +63,12 @@ export function HealthTodayMissionCard({
 
       <article className="mt-4 rounded-xl border border-cyan-400/30 bg-cyan-500/10 p-4">
         <p className="text-xs uppercase tracking-[0.14em] text-cyan-200">Next Action</p>
-        <p className="mt-1 text-base font-semibold text-white">{getNextMissionText(currentLevel, latestAttempt, todayStatus)}</p>
+        <p className="mt-1 text-base font-semibold text-white">{missionSummary.primaryText}</p>
       </article>
 
       <div className="mt-5 flex flex-wrap gap-3">
         <a href="#quick-log" className="theme-button-primary inline-flex items-center justify-center px-5 py-2.5 text-base">
-          {primaryText}
+          {missionSummary.primaryActionLabel}
         </a>
         <a href="#quick-log" className="theme-button-secondary">บันทึกผลย้อนหลัง</a>
         <form action={markRunnerRestDayAction}>

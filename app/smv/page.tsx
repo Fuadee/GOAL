@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
 import { SMV_CHART_LABELS } from '@/lib/smv/definitions';
 import { APPEARANCE_CATEGORY_KEYS } from '@/lib/smv/appearance-config';
+import { getSmvUnifiedMissionCardData } from '@/lib/dashboard/unified-mission';
 import { getAppearanceDetailData, getPowerLevelLabel, getSmvOverviewData } from '@/lib/smv/service';
 
 type OverviewDimension = Awaited<ReturnType<typeof getSmvOverviewData>>['dimensions'][number];
@@ -72,6 +73,7 @@ export default async function SmvOverviewPage() {
   const data = await getSmvOverviewData();
   const strongest = data.strongest[0];
   const weakest = data.weakest[0];
+  const missionCard = getSmvUnifiedMissionCardData(data);
   const appearanceDetail = await getAppearanceDetailData();
 
   return (
@@ -79,9 +81,9 @@ export default async function SmvOverviewPage() {
       <Navbar />
       <section className="mx-auto w-full max-w-7xl space-y-4 px-4 py-5 md:space-y-5 md:px-8 md:py-6">
         <article className="rounded-3xl border border-cyan-300/30 bg-slate-900/90 p-6 shadow-[0_0_20px_rgba(34,211,238,0.14)]">
-          <p className="text-sm font-semibold text-cyan-100">🔥 สิ่งที่ต้องทำตอนนี้</p>
+          <p className="text-sm font-semibold text-cyan-100">🔥 {missionCard.title}</p>
           <p className="mt-2 text-2xl font-semibold text-white">
-            {weakest ? `คุณควรโฟกัส: ${weakest.dimension.label}` : 'ยังไม่มีมิติที่ต้องโฟกัสตอนนี้'}
+            {missionCard.focusLabel}: {missionCard.primaryText}
           </p>
         </article>
 

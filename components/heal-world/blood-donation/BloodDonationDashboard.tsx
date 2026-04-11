@@ -6,7 +6,8 @@ import {
   BloodDonationPlanDisplayStatus,
   getBloodDonationPlanDisplayStatus,
   getCountdownLabel,
-  getCurrentBloodDonationPlan
+  getCurrentBloodDonationPlan,
+  getNextBloodDonationMissionSummary
 } from '@/lib/blood-donation/plan-display';
 import { BloodDonationDashboardViewModel, BloodDonationEventViewModel } from '@/lib/blood-donation/types';
 
@@ -348,13 +349,15 @@ function BloodDonationNextMissionCard({
   onReschedule: (event: BloodDonationEventViewModel) => void;
   onCancel: (event: BloodDonationEventViewModel) => void;
 }) {
+  const missionSummary = getNextBloodDonationMissionSummary(currentPlan);
+
   return (
     <article className="rounded-3xl border border-rose-300/30 bg-gradient-to-br from-rose-500/15 via-slate-900/90 to-purple-500/10 p-6 shadow-2xl shadow-rose-900/20">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-200">Next Mission</p>
           <h3 className="mt-2 text-2xl font-semibold text-white">ภารกิจถัดไป</h3>
-          <p className="mt-1 text-sm text-slate-300">ภารกิจที่ต้องโฟกัสตอนนี้</p>
+          <p className="mt-1 text-sm text-slate-300">{missionSummary.primaryText}</p>
         </div>
       </div>
 
@@ -369,7 +372,7 @@ function BloodDonationNextMissionCard({
             <div>
               <p className="text-sm text-slate-300">บริจาคเลือดครั้งถัดไป</p>
               <p className="mt-1 text-3xl font-semibold text-white">{formatDate(currentPlan.planned_date)}</p>
-              <p className="mt-1 text-sm text-slate-300">{currentPlan.location || 'ไม่ระบุสถานที่'}</p>
+              <p className="mt-1 text-sm text-slate-300">{missionSummary.secondaryText || 'ไม่ระบุสถานที่'}</p>
               {currentPlan.note ? <p className="mt-2 text-sm text-slate-400">{currentPlan.note}</p> : null}
             </div>
 
@@ -465,6 +468,7 @@ function ModalShell({ open, onClose, children }: { open: boolean; onClose: () =>
 }
 
 function Input({ name, label, type = 'text', defaultValue, required = false }: { name: string; label: string; type?: string; defaultValue?: string; required?: boolean }) {
+
   return (
     <label className="space-y-1 text-sm text-slate-200">
       <span>{label}</span>
@@ -480,6 +484,7 @@ function Input({ name, label, type = 'text', defaultValue, required = false }: {
 }
 
 function GoalForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
+
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
       <h4 className="text-xl font-semibold text-white">Create Goal</h4>
@@ -495,6 +500,7 @@ function GoalForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event: F
 }
 
 function PlannedForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
+
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
       <h4 className="text-xl font-semibold text-white">Add Planned Donation</h4>
@@ -509,6 +515,7 @@ function PlannedForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event
 }
 
 function CompletedForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
+
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
       <h4 className="text-xl font-semibold text-white">Add Completed Donation</h4>
@@ -523,6 +530,7 @@ function CompletedForm({ loading, onSubmit }: { loading: boolean; onSubmit: (eve
 }
 
 function ConvertForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
+
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
       <h4 className="text-xl font-semibold text-white">Convert Planned to Completed</h4>
@@ -548,6 +556,7 @@ function RescheduleForm({
   loading: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
+
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
       <h4 className="text-xl font-semibold text-white">Reschedule Planned Event</h4>

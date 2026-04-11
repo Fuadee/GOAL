@@ -63,3 +63,18 @@ export const getBloodDonationPlanDisplayStatus = (
 
   return 'UPCOMING';
 };
+
+
+export function getNextBloodDonationMissionSummary(plan: BloodDonationEventViewModel | null): { primaryText: string; secondaryText?: string } {
+  if (!plan) {
+    return {
+      primaryText: 'ยังไม่มีแผนถัดไป',
+      secondaryText: 'ครบทุกแผนแล้ว หรือยังไม่ได้สร้างแผนใหม่'
+    };
+  }
+
+  return {
+    primaryText: plan.planned_date ? `บริจาคเลือดวันที่ ${plan.planned_date}` : 'ยังไม่ระบุวัน',
+    secondaryText: plan.location || undefined
+  };
+}
