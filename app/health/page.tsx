@@ -1,23 +1,22 @@
 import { Navbar } from '@/components/navbar';
 import { RunnerQuestDashboard } from '@/components/health/RunnerQuestDashboard';
+import { PageHeader, PageShell } from '@/components/ui/mission';
 import { getRunnerDashboardData } from '@/lib/running/quest.server';
 
 export default async function HealthPage() {
   const dashboard = await getRunnerDashboardData();
 
   return (
-    <main className="app-shell">
+    <PageShell>
       <Navbar />
-
       <section className="page-container space-y-8">
-        <header className="page-header">
-          <p className="page-kicker">Mission Control</p>
-          <h1 className="page-title">Runner Quest: ลงมือทำวันนี้</h1>
-          <p className="text-base text-[color:var(--text-secondary)]">อย่าดู progress อย่างเดียว ให้ลงมือจริง แล้วค่อยกลับมาดูรายงาน.</p>
-        </header>
-
+        <PageHeader
+          kicker="Health Performance"
+          title="Runner Quest: ลงมือทำวันนี้"
+          description="โฟกัสภารกิจวันนี้ให้ชัด แล้วเดินเกมฟิตเนสแบบมีวินัยและโมเมนตัม"
+        />
         <RunnerQuestDashboard data={dashboard} />
       </section>
-    </main>
+    </PageShell>
   );
 }

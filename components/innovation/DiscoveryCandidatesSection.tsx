@@ -25,10 +25,10 @@ function getProblemPreview(candidate: DiscoveryCandidateRow): string {
 
 export function DiscoveryCandidatesSection({ candidates }: DiscoveryCandidatesSectionProps) {
   return (
-    <section id="discovery-candidates" className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+    <section id="discovery-candidates" className="space-y-4 premium-card space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold text-white">🧠 Discovery Candidates</h2>
-        <Link href="/innovation/discovery/new" className="rounded-full bg-cyan-400/20 px-4 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-300/30">
+        <Link href="/innovation/discovery/new" className="theme-button-secondary">
           + Add Candidate
         </Link>
       </div>

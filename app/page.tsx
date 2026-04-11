@@ -2,6 +2,7 @@ import { GoalVisionBoard } from '@/components/dashboard/GoalVisionBoard';
 import { MotionReveal } from '@/components/dashboard/MotionReveal';
 import { UnifiedMissionCard } from '@/components/dashboard/UnifiedMissionCard';
 import { Navbar } from '@/components/navbar';
+import { PageShell, SectionHeader } from '@/components/ui/mission';
 import {
   getHealthUnifiedMissionCardData,
   getInnovationUnifiedMissionCardData,
@@ -27,10 +28,7 @@ export default async function Home() {
     getBloodDonationDashboardData()
   ]);
 
-  const initialVisionImages = goalVisionImages.map((row) => ({
-    ...row,
-    image_url: getGoalVisionPublicUrl(row.image_path)
-  }));
+  const initialVisionImages = goalVisionImages.map((row) => ({ ...row, image_url: getGoalVisionPublicUrl(row.image_path) }));
 
   const missionCards = [
     getSmvUnifiedMissionCardData(smvOverview),
@@ -41,17 +39,16 @@ export default async function Home() {
   ];
 
   return (
-    <main className="app-shell">
+    <PageShell>
       <Navbar />
-
-      <div className="page-container space-y-8">
+      <div className="page-container space-y-8 md:space-y-10">
         <MotionReveal>
-          <section className="rounded-3xl border border-cyan-300/20 bg-slate-950/65 p-5 shadow-[0_0_30px_rgba(34,211,238,0.08)] md:p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">สิ่งที่ต้องทำตอนนี้</p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">สิ่งที่ต้องทำตอนนี้</h2>
-            <p className="mt-1 text-sm text-slate-300">ดึงภารกิจหลักจากแต่ละหมวดมาให้ดูรวมในที่เดียว</p>
-
-            <div className="mt-5 grid gap-3 lg:grid-cols-5 md:grid-cols-2">
+          <section className="hero-panel space-y-5">
+            <SectionHeader
+              title="สิ่งที่ต้องทำตอนนี้"
+              subtitle="ภารกิจสำคัญจากทั้ง 5 ระบบ เพื่อให้คุณโฟกัสสิ่งที่ควรทำก่อนทันที"
+            />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               {missionCards.map((card) => (
                 <UnifiedMissionCard key={card.key} card={card} />
               ))}
@@ -63,6 +60,6 @@ export default async function Home() {
           <GoalVisionBoard initialImages={initialVisionImages} />
         </MotionReveal>
       </div>
-    </main>
+    </PageShell>
   );
 }

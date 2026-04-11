@@ -22,7 +22,7 @@ function DashboardNavCard({
   cta: string;
 }) {
   return (
-    <article className="rounded-2xl border border-white/10 bg-slate-900/55 p-5 shadow-lg shadow-black/10">
+    <article className="premium-card">
       <h3 className="text-lg font-semibold text-white">{title}</h3>
       <p className="mt-1 text-sm text-slate-400">{description}</p>
 

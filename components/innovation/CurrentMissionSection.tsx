@@ -26,7 +26,7 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
   const missionSummary = getInnovationMissionSummary(mission);
 
   return (
-    <section className="space-y-4 rounded-2xl border border-amber-300/40 bg-amber-500/10 p-6 shadow-[0_0_30px_rgba(251,191,36,0.15)] backdrop-blur">
+    <section className="space-y-4 hero-panel space-y-4 border-amber-300/30">
       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-200">🔥 Current Mission</p>
       {!mission ? (
         <p className="text-sm text-slate-200">{missionSummary.primaryText}</p>
@@ -44,7 +44,7 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
           <div className="flex flex-wrap gap-3">
             <Link
               href={`/innovation/${mission.id}`}
-              className="rounded-full bg-indigo-400/30 px-4 py-2 text-xs font-semibold text-indigo-100 transition hover:bg-indigo-400/40"
+              className="theme-button-secondary"
             >
               Open details
             </Link>
@@ -66,7 +66,7 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
                   router.refresh();
                 });
               }}
-              className="rounded-full bg-emerald-400/30 px-4 py-2 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-50"
+              className="theme-button-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending ? 'Saving...' : 'Mark Next Step Done'}
             </button>
