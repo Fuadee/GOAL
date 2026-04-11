@@ -19,7 +19,7 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   return (
-    <article className="group relative isolate min-h-[240px] overflow-hidden rounded-3xl border border-white/12 bg-slate-950/60 shadow-[0_16px_60px_rgba(2,6,23,0.65)] transition duration-300 hover:-translate-y-1.5 hover:border-cyan-300/50 hover:shadow-[0_20px_70px_rgba(56,189,248,0.18)]">
+    <article className="group relative isolate overflow-hidden rounded-3xl border border-white/12 bg-slate-950/60 shadow-[0_16px_60px_rgba(2,6,23,0.65)] transition duration-300 hover:-translate-y-1.5 hover:border-cyan-300/50 hover:shadow-[0_20px_70px_rgba(56,189,248,0.18)]">
       {imageUrl ? (
         <>
           <Image
@@ -39,7 +39,7 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
         </div>
       )}
 
-      <div className="absolute right-4 top-4 z-30 flex items-center justify-end gap-2 pointer-events-auto">
+      <div className="pointer-events-auto absolute right-4 top-4 z-30 flex items-center justify-end gap-2">
         <input
           ref={inputRef}
           type="file"
@@ -82,20 +82,24 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
         ) : null}
       </div>
 
-      <div className="pointer-events-none relative z-20 flex h-full flex-col justify-end p-5">
-        <p className="text-[10px] uppercase tracking-[0.28em] text-slate-300/90">Goal Domain</p>
-        <h3 className="mt-1 text-xl font-semibold text-white drop-shadow-[0_0_24px_rgba(56,189,248,0.25)]">{item.label}</h3>
-        {!imageUrl ? <p className={`mt-2 text-xs ${item.placeholderAccent}`}>+ Upload ภาพเป้าหมายของหมวดนี้</p> : null}
-      </div>
-
       <Link
         href={item.href}
         aria-label={`Open ${item.label} goal page`}
-        className="absolute inset-0 z-10"
+        className="relative z-20 flex h-full min-h-[280px] flex-col justify-between px-6 pb-6 pt-20"
       >
-        <span className="absolute bottom-5 left-5 inline-flex rounded-full border border-white/20 bg-slate-950/55 px-3 py-1.5 text-xs font-semibold text-white transition group-hover:border-cyan-300/70 group-hover:text-cyan-100">
-          Open {item.label}
-        </span>
+        <div className="max-w-[85%] space-y-2">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-slate-300/80">Goal Domain</p>
+          <h3 className="text-xl font-semibold leading-tight text-white drop-shadow-[0_0_24px_rgba(56,189,248,0.25)]">{item.label}</h3>
+        </div>
+
+        <div className="max-w-[90%]">
+          <p className={`text-xs ${imageUrl ? 'text-slate-300/80' : item.placeholderAccent}`}>
+            {imageUrl ? 'ตั้งเป้าหมายและเริ่มลงมือทำวันนี้' : '+ Upload ภาพเป้าหมายของหมวดนี้'}
+          </p>
+          <span className="mt-3 inline-flex rounded-full border border-white/20 bg-slate-950/55 px-3 py-1.5 text-xs font-semibold text-white transition group-hover:border-cyan-300/70 group-hover:text-cyan-100">
+            Open {item.label}
+          </span>
+        </div>
       </Link>
     </article>
   );
