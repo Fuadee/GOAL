@@ -15,11 +15,19 @@ type GoalVisionCardProps = {
   onRemove: () => void;
 };
 
+const isDebugDomClicks = process.env.NODE_ENV !== 'production';
+
 export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUpload, onRemove }: GoalVisionCardProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   return (
-    <article className="group relative min-h-[240px] overflow-hidden rounded-3xl border border-white/12 bg-slate-950/60 shadow-[0_16px_60px_rgba(2,6,23,0.65)] transition duration-300 hover:-translate-y-1.5 hover:border-cyan-300/50 hover:shadow-[0_20px_70px_rgba(56,189,248,0.18)]">
+    <article
+      className="group relative isolate min-h-[240px] overflow-hidden rounded-3xl border border-white/12 bg-slate-950/60 shadow-[0_16px_60px_rgba(2,6,23,0.65)] transition duration-300 hover:-translate-y-1.5 hover:border-cyan-300/50 hover:shadow-[0_20px_70px_rgba(56,189,248,0.18)]"
+      onClickCapture={(event) => {
+        if (!isDebugDomClicks) return;
+        console.log('[GoalVisionCard][capture]', item.key, 'target=', event.target);
+      }}
+    >
       {imageUrl ? (
         <>
           <Image
@@ -32,25 +40,37 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/42 to-slate-950/10" />
         </>
       ) : (
-        <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${item.placeholderGlow}`}>
+        <div className={`pointer-events-none absolute inset-0 ${item.placeholderGlow}`}>
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.2),transparent_42%)]" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.18),transparent_35%)]" />
           <div className="pointer-events-none absolute inset-0 bg-slate-950/60" />
         </div>
       )}
 
-      <div className="pointer-events-auto absolute right-4 top-4 z-30 flex items-center justify-end gap-2">
+      <div
+        className="absolute right-4 top-4 z-[100] flex items-center justify-end gap-2 pointer-events-auto"
+        onClickCapture={(event) => {
+          if (!isDebugDomClicks) return;
+          console.log('[GoalVisionCard][actions capture]', item.key, 'target=', event.target);
+        }}
+      >
         <input
           ref={inputRef}
           type="file"
           accept="image/png,image/jpeg,image/webp,image/gif"
           className="hidden"
           onClick={(event) => {
+            if (isDebugDomClicks) {
+              console.log('[GoalVisionCard][file input click]', item.key, 'target=', event.target);
+            }
             event.preventDefault();
             event.stopPropagation();
             event.currentTarget.value = '';
           }}
           onChange={(event) => {
+            if (isDebugDomClicks) {
+              console.log('[GoalVisionCard][file input change]', item.key, 'target=', event.target);
+            }
             event.preventDefault();
             event.stopPropagation();
             const file = event.target.files?.[0];
@@ -62,6 +82,9 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
           type="button"
           disabled={isUploading || isRemoving}
           onClick={(event) => {
+            if (isDebugDomClicks) {
+              console.log('[GoalVisionCard][upload button click]', item.key, 'target=', event.target);
+            }
             event.preventDefault();
             event.stopPropagation();
             inputRef.current?.click();
@@ -75,6 +98,9 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
             type="button"
             disabled={isUploading || isRemoving}
             onClick={(event) => {
+              if (isDebugDomClicks) {
+                console.log('[GoalVisionCard][remove button click]', item.key, 'target=', event.target);
+              }
               event.preventDefault();
               event.stopPropagation();
               onRemove();
@@ -86,13 +112,25 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
         ) : null}
       </div>
 
-      <Link href={item.href} className="relative z-20 flex h-full flex-col justify-end p-5" aria-label={`Open ${item.label} goal page`}>
+      <div className="relative z-10 flex h-full flex-col justify-end p-5">
         <div className="pointer-events-none">
           <p className="text-[10px] uppercase tracking-[0.28em] text-slate-300/90">Goal Domain</p>
           <h3 className="mt-1 text-xl font-semibold text-white drop-shadow-[0_0_24px_rgba(56,189,248,0.25)]">{item.label}</h3>
           {!imageUrl ? <p className={`mt-2 text-xs ${item.placeholderAccent}`}>+ Upload ภาพเป้าหมายของหมวดนี้</p> : null}
         </div>
-      </Link>
+
+        <Link
+          href={item.href}
+          aria-label={`Open ${item.label} goal page`}
+          className="relative z-10 mt-4 inline-flex w-fit rounded-full border border-white/20 bg-slate-950/55 px-3 py-1.5 text-xs font-semibold text-white transition hover:border-cyan-300/70 hover:text-cyan-100"
+          onClick={(event) => {
+            if (!isDebugDomClicks) return;
+            console.log('[GoalVisionCard][link click]', item.key, 'target=', event.target);
+          }}
+        >
+          Open {item.label}
+        </Link>
+      </div>
     </article>
   );
 }
