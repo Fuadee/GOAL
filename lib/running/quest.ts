@@ -257,3 +257,22 @@ export function buildDashboardLevels(
     latestAttempt: logs.find((log) => log.level_id === level.id) ?? null
   }));
 }
+
+
+export function getHealthTodayMissionSummary(todayStatus: RunnerTodayStatus, currentLevel: RunnerDashboardLevel | null, latestAttempt: RunnerRunLog | null) {
+  const primaryText = getNextMissionText(currentLevel, latestAttempt, todayStatus);
+
+  if (!currentLevel) {
+    return {
+      primaryText,
+      secondaryText: 'คงวินัยให้ต่อเนื่อง แล้วค่อยขยายเป้าหมายใหม่',
+      primaryActionLabel: getPrimaryHealthAction(todayStatus)
+    };
+  }
+
+  return {
+    primaryText,
+    secondaryText: `ด่านปัจจุบัน: ${currentLevel.title}`,
+    primaryActionLabel: getPrimaryHealthAction(todayStatus)
+  };
+}

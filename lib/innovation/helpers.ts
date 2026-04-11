@@ -191,3 +191,17 @@ const DISCOVERY_STATUS_ORDER: DiscoveryCandidateState[] = ['observed', 'pain_poi
 export function sortDiscoveryCandidatesByPipeline(candidate: DiscoveryCandidateRow): number {
   return DISCOVERY_STATUS_ORDER.indexOf(deriveDiscoveryCandidateState(candidate));
 }
+
+
+export function getInnovationMissionSummary(mission: InnovationCardViewModel | null): { primaryText: string; secondaryText?: string } {
+  if (!mission) {
+    return {
+      primaryText: 'No active mission right now. Add an innovation to start execution.'
+    };
+  }
+
+  return {
+    primaryText: mission.title,
+    secondaryText: mission.nextStep?.title ?? 'No pending step'
+  };
+}
