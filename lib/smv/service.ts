@@ -3,7 +3,6 @@ import {
   createSmvEvidenceLog,
   createSmvEvidenceMetricValues,
   createSmvScoreHistory,
-  getLatestMetricValuesForDimension,
   getSmvDimensionScore,
   getSmvDimensionScores,
   getSmvDimensions,
@@ -13,7 +12,6 @@ import {
   getSmvImprovementTasks,
   getSmvLevelDefinitions,
   getSmvMetrics,
-  getSmvScoreHistory,
   getSmvStageDefinitions,
   getSmvStageProgress,
   upsertImprovementTask,
@@ -21,7 +19,7 @@ import {
   upsertSmvStageProgress
 } from '@/lib/smv/repository';
 import { buildDefaultRecommendations, calculateSmvDimensionScore } from '@/lib/smv/scoring';
-import { SmvDimensionDetail, SmvDimensionKey, SmvDimensionOverview, SmvEvidenceInput, SmvMetricRow } from '@/lib/smv/types';
+import { SmvDimensionDetail, SmvDimensionKey, SmvDimensionOverview, SmvEvidenceInput } from '@/lib/smv/types';
 
 export async function getConfidenceStages() {
   return getSmvStageDefinitions('confidence');
@@ -61,7 +59,7 @@ export async function getConfidenceDetailData() {
   const dimension = dimensions.find((item) => item.key === 'confidence');
   if (!dimension) return null;
 
-  const [{ current, withStatus }, recentEvidence] = await Promise.all([getConfidenceCurrentStage(), getSmvEvidenceLogs(dimension.id, 3)]);
+  const { current, withStatus } = await getConfidenceCurrentStage();
   const passedCount = withStatus.filter((stage) => stage.status === 'PASSED').length;
   const score = getConfidenceScore(passedCount);
   const stageLabel = current ? `ด่าน ${current.stage_number}: ${current.title_th}` : 'ผ่านครบทุกด่าน';
@@ -83,8 +81,7 @@ export async function getConfidenceDetailData() {
     currentStageLabel: stageLabel,
     summary: getConfidenceSummary(passedCount),
     nextAction: getConfidenceNextAction(current),
-    stages: withStatus,
-    recentEvidence
+    stages: withStatus
   };
 }
 
@@ -106,15 +103,6 @@ function getThirtyDaysAgoIso() {
   const date = new Date();
   date.setUTCDate(date.getUTCDate() - 30);
   return date.toISOString();
-}
-
-function pickLatestValueByMetric(metricRows: SmvMetricRow[], rawValues: Awaited<ReturnType<typeof getLatestMetricValuesForDimension>>) {
-  return metricRows
-    .map((metric) => ({
-      ...metric,
-      latestValue: rawValues.find((item) => item.metric_id === metric.id)?.numeric_value ?? null
-    }))
-    .sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
 export async function recalculateDimensionScore(dimensionId: string) {
@@ -225,33 +213,10 @@ export async function getSmvDimensionDetailByKey(key: SmvDimensionKey): Promise<
   const dimension = dimensions.find((item) => item.key === key);
   if (!dimension) return null;
 
-  const [score, metrics, levelDefinitions, history, recentEvidence] = await Promise.all([
+  const [score, levelDefinitions] = await Promise.all([
     getSmvDimensionScore(dimension.id),
-    getSmvMetrics(dimension.id),
-    getSmvLevelDefinitions(dimension.id),
-    getSmvScoreHistory(dimension.id),
-    getSmvEvidenceLogs(dimension.id, 10)
+    getSmvLevelDefinitions(dimension.id)
   ]);
-
-  const evidenceIds = recentEvidence.map((item) => item.id);
-  const evidenceValues = await getSmvEvidenceMetricValuesByEvidenceIds(evidenceIds);
-  const valuesByEvidence = evidenceIds.reduce<Record<string, typeof evidenceValues>>((acc, id) => {
-    acc[id] = evidenceValues.filter((item) => item.evidence_log_id === id);
-    return acc;
-  }, {});
-
-  const latestValues = await getLatestMetricValuesForDimension(metrics.map((item) => item.id));
-  const metricRows = pickLatestValueByMetric(metrics, latestValues);
-
-  const latestBreakdown = history[0]?.score_breakdown ?? {};
-  const weakestKeys = Object.entries(latestBreakdown)
-    .sort((a, b) => a[1] - b[1])
-    .slice(0, 3)
-    .map((entry) => entry[0]);
-
-  const suggestions = weakestKeys.length
-    ? weakestKeys.map((metric) => `Increase ${metric} evidence quality over the next 14 days.`)
-    : ['Add more evidence logs to unlock metric-level coaching.'];
 
   return {
     overview: {
@@ -260,15 +225,7 @@ export async function getSmvDimensionDetailByKey(key: SmvDimensionKey): Promise<
       guardSummary: score?.guard_summary ?? 'No guard data yet.',
       explanation: score?.explanation ?? 'Score will appear after first evidence log.'
     },
-    metrics: metricRows,
-    levelDefinitions,
-    history,
-    recentEvidence: recentEvidence.map((item) => ({
-      ...item,
-      values: valuesByEvidence[item.id] ?? []
-    })),
-    breakdown: latestBreakdown,
-    suggestions
+    levelDefinitions
   };
 }
 
