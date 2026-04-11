@@ -52,11 +52,15 @@ export function getIncomeLevel(monthlyIncome: number): number {
   return 0;
 }
 
+export function getIncomeOverviewScore(monthlyIncome: number): number {
+  return getIncomeLevel(monthlyIncome) * 10;
+}
+
 export function getStatusLevelByLevel(level: number): StatusLevel | null {
   return STATUS_LEVELS.find((item) => item.level === level) ?? null;
 }
 
-export function getNextStatusLevel(currentIncome: number) {
+export function getIncomeProgressToNextLevel(currentIncome: number) {
   const currentLevelNumber = getIncomeLevel(currentIncome);
   const currentLevel = getStatusLevelByLevel(currentLevelNumber);
   const nextLevel = getStatusLevelByLevel(currentLevelNumber + 1);
@@ -87,6 +91,10 @@ export function getNextStatusLevel(currentIncome: number) {
     remainingIncome: Math.max(0, nextThreshold - currentIncome),
     progressPercent: clampPercent(rawProgress)
   };
+}
+
+export function getNextStatusLevel(currentIncome: number) {
+  return getIncomeProgressToNextLevel(currentIncome);
 }
 
 export function validateStatusLevelResult(monthlyIncome: number, level: number) {
