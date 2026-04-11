@@ -149,10 +149,5 @@ export type SmvDimensionOverview = {
 
 export type SmvDimensionDetail = {
   overview: SmvDimensionOverview;
-  metrics: Array<SmvMetricRow & { latestValue: number | boolean | string | null }>;
   levelDefinitions: SmvLevelDefinitionRow[];
-  history: SmvScoreHistoryRow[];
-  recentEvidence: Array<SmvEvidenceLogRow & { values: SmvEvidenceMetricValueRow[] }>;
-  breakdown: Record<string, number>;
-  suggestions: string[];
 };
