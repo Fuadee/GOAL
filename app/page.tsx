@@ -1,5 +1,4 @@
 import { CriticalAlertsSection } from '@/components/dashboard/CriticalAlertsSection';
-import { FocusNowSection } from '@/components/dashboard/FocusNowSection';
 import { GoalModuleGrid } from '@/components/dashboard/GoalModuleGrid';
 import { GoalVisionBoard } from '@/components/dashboard/GoalVisionBoard';
 import { MotionReveal } from '@/components/dashboard/MotionReveal';
@@ -26,14 +25,10 @@ export default async function Home() {
         </MotionReveal>
 
         <MotionReveal delay={0.14}>
-          <FocusNowSection items={dashboard.focusItems} />
-        </MotionReveal>
-
-        <MotionReveal delay={0.24}>
           <CriticalAlertsSection alerts={dashboard.alerts} />
         </MotionReveal>
 
-        <MotionReveal delay={0.28}>
+        <MotionReveal delay={0.24}>
           <GoalModuleGrid modules={dashboard.modules} />
         </MotionReveal>
       </div>

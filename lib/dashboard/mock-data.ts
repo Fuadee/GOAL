@@ -1,4 +1,4 @@
-import { FocusItem, GoalModuleSummary } from '@/lib/dashboard/types';
+import { GoalModuleSummary } from '@/lib/dashboard/types';
 
 export const mockGoalModules: GoalModuleSummary[] = [
   {
@@ -75,29 +75,5 @@ export const mockGoalModules: GoalModuleSummary[] = [
     mainMetricValue: '1 action / เดือน',
     nextAction: 'กำหนดกิจกรรมช่วยเหลือ 2 รายการในเดือนนี้และล็อกวันทันที',
     progressRatio: 0.24
-  }
-];
-
-export const mockFocusItems: FocusItem[] = [
-  {
-    id: 'focus-income-100k',
-    title: 'รายได้แตะ 100K',
-    reason: 'Money มีน้ำหนัก 40% ต่อทิศทางชีวิตรวม ขยับตรงนี้แล้วคะแนนรวมดีขึ้นเร็ว',
-    target: 'เพิ่มรายได้อีก ฿22,000 ภายในเดือนนี้',
-    status: 'At Risk'
-  },
-  {
-    id: 'focus-run-5k',
-    title: 'วิ่ง 5 km ไม่หยุด',
-    reason: 'Health กำลังเป็นคอขวด ทำให้พลังงานและวินัยรายวันลดลง',
-    target: 'อย่างน้อย 2 session ใน 7 วัน และจบ 5 km ภายใน 30 วัน',
-    status: 'Critical'
-  },
-  {
-    id: 'focus-content-consistency',
-    title: 'ทำคอนเทนต์ TikTok ให้ต่อเนื่อง',
-    reason: 'SMV เติบโตต่อได้อีกมาก หากคอนเทนต์สม่ำเสมอและจับกลุ่มเป้าหมายชัด',
-    target: 'ปล่อยคอนเทนต์คุณภาพ 3 ชิ้น/สัปดาห์',
-    status: 'On Track'
   }
 ];

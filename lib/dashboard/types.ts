@@ -32,14 +32,6 @@ export type LifeDirectionSummary = {
   interpretation: string;
 };
 
-export type FocusItem = {
-  id: string;
-  title: string;
-  reason: string;
-  target: string;
-  status: 'On Track' | 'At Risk' | 'Critical';
-};
-
 export type DashboardAlert = {
   id: string;
   moduleKey: GoalModuleKey;
@@ -62,6 +54,5 @@ export type DashboardData = {
   balancePoints: BalancePoint[];
   strongestAreas: string[];
   weakestAreas: string[];
-  focusItems: FocusItem[];
   alerts: DashboardAlert[];
 };
