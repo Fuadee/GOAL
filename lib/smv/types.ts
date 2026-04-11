@@ -1,6 +1,8 @@
 export const SMV_DIMENSION_KEYS = ['confidence', 'look', 'status', 'social'] as const;
+export const SMV_OVERVIEW_DIMENSION_KEYS = ['confidence', 'appearance', 'status', 'social_connection'] as const;
 
 export type SmvDimensionKey = (typeof SMV_DIMENSION_KEYS)[number];
+export type SmvOverviewDimensionKey = (typeof SMV_OVERVIEW_DIMENSION_KEYS)[number];
 export type SmvMetricValueType = 'score_0_100' | 'count' | 'boolean' | 'currency_monthly';
 export type SmvStageStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'PASSED';
 

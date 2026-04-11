@@ -1,5 +1,6 @@
 import { SMV_DIMENSION_LABELS, SMV_FULLY_IMPLEMENTED_DIMENSIONS } from '@/lib/smv/definitions';
-import { CONFIDENCE_LEVELS, MOCK_CONFIDENCE_LOGS } from '@/lib/smv/confidence-levels';
+import { MOCK_CONFIDENCE_LOGS } from '@/lib/smv/confidence-levels';
+import { getConfidenceStagesConfig, getSmvOverviewDimensions } from '@/lib/smv/progression-config';
 import {
   createSmvEvidenceLog,
   createSmvEvidenceMetricValues,
@@ -122,7 +123,7 @@ export async function getConfidenceDetailData() {
   const dimension = dimensions.find((item) => item.key === 'confidence');
   if (!dimension) return null;
 
-  const levels = CONFIDENCE_LEVELS;
+  const levels = getConfidenceStagesConfig();
   const logs = await getConfidenceLogs();
   const levelsWithProgress = levels.map((level) => ({ ...level, progress: getLevelProgress(level, logs) }));
   const currentLevel = getCurrentLevel(levels, logs);
@@ -290,18 +291,20 @@ export async function getSmvOverviewData() {
   });
 
   const mergedOverview = combineScoresByDimension({ dimensions, overview });
-  const sorted = [...mergedOverview].sort((a, b) => b.score - a.score);
+  const overviewDimensionKeys = new Set(getSmvOverviewDimensions().map((item) => item.dimensionKey));
+  const scopedOverview = mergedOverview.filter((item) => overviewDimensionKeys.has(item.dimension.key as SmvDimensionKey));
+  const sorted = [...scopedOverview].sort((a, b) => b.score - a.score);
   const strongest = sorted.slice(0, 1);
   const weakest = [...sorted].reverse().slice(0, 1);
   const recommendedActions = buildDefaultRecommendations(weakest.map((item) => ({ key: item.dimension.key as SmvDimensionKey, label: item.dimension.label })));
 
   return {
-    dimensions: mergedOverview,
+    dimensions: scopedOverview,
     strongest,
     weakest,
     latestLogs,
     recommendedActions,
-    averageScore: mergedOverview.length ? Math.round(mergedOverview.reduce((sum, item) => sum + item.score, 0) / mergedOverview.length) : 0
+    averageScore: scopedOverview.length ? Math.round(scopedOverview.reduce((sum, item) => sum + item.score, 0) / scopedOverview.length) : 0
   };
 }
 
