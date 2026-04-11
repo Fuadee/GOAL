@@ -32,7 +32,13 @@ import {
   upsertSmvDimensionScore,
   upsertSmvStageProgress,
   getSmvAppearanceProgress,
-  upsertSmvAppearanceProgress
+  upsertSmvAppearanceProgress,
+  createSocialEvidence,
+  getSocialEvidenceByUser,
+  getSocialLevels,
+  getSocialProgressByUser,
+  getSocialRequirements,
+  upsertSocialProgress
 } from '@/lib/smv/repository';
 import { buildDefaultRecommendations, calculateSmvDimensionScore } from '@/lib/smv/scoring';
 import {
@@ -44,8 +50,14 @@ import {
   SmvDimensionRow,
   SmvEvidenceInput,
   SmvMetricRow,
-  SMV_DIMENSION_KEYS
+  SMV_DIMENSION_KEYS,
+  SocialEvidenceType,
+  SocialLevelRow,
+  SocialPhase,
+  SocialRequirementRow
 } from '@/lib/smv/types';
+
+const SOCIAL_DEFAULT_USER_ID = 'local-user';
 
 const LEGACY_DIMENSION_KEY_MAP: Record<string, SmvDimensionKey> = {
   fun: 'social',
@@ -58,7 +70,7 @@ const POWER_SUMMARY_BY_KEY: Record<SmvDimensionKey, string> = {
   confidence: 'ยังไม่มั่นคงเวลาคุยกับคนแปลกหน้า',
   look: 'ภาพลักษณ์โดยรวมเริ่มดีขึ้น',
   status: 'มีฐานะบางส่วน แต่ยังไม่เด่นพอ',
-  social: 'เริ่มมีคนรู้จัก แต่เครือข่ายยังไม่แน่น'
+  social: 'อัปเกรดเครือข่ายด้วยระบบด่าน 1–10 แบบผ่าน/ไม่ผ่าน'
 };
 
 function toCoreDimensionKey(rawKey: string): SmvDimensionKey | null {
@@ -290,6 +302,136 @@ export async function markConfidenceStagePassed(stageKey: string) {
   });
 }
 
+function getSocialPhaseByLevel(levelId: number): SocialPhase {
+  if (levelId <= 3) return 'Survival';
+  if (levelId <= 5) return 'Presence';
+  if (levelId <= 8) return 'Influence';
+  return 'Leverage';
+}
+
+function normalizeSocialLevels(levels: SocialLevelRow[]) {
+  return levels.map((level) => ({
+    ...level,
+    score: 10,
+    phase: level.phase ?? getSocialPhaseByLevel(level.id)
+  }));
+}
+
+export async function getSocialDetailData(userId = SOCIAL_DEFAULT_USER_ID) {
+  const dimensions = mergeLegacyDimensions(await getSmvDimensions());
+  const dimension = dimensions.find((item) => item.key === 'social');
+  if (!dimension) return null;
+
+  const [rawLevels, requirements, progressRows, evidenceRows] = await Promise.all([
+    getSocialLevels(),
+    getSocialRequirements(),
+    getSocialProgressByUser(userId),
+    getSocialEvidenceByUser(userId)
+  ]);
+
+  const levels = normalizeSocialLevels(rawLevels);
+  const progressByLevelId = new Map(progressRows.map((row) => [row.level_id, row]));
+  const requirementsByLevelId = requirements.reduce<Record<number, SocialRequirementRow[]>>((acc, req) => {
+    acc[req.level_id] = acc[req.level_id] ?? [];
+    acc[req.level_id].push(req);
+    return acc;
+  }, {});
+
+  let currentLevelId = 1;
+  for (const level of levels) {
+    const isCompleted = progressByLevelId.get(level.id)?.is_completed ?? false;
+    if (!isCompleted) {
+      currentLevelId = level.id;
+      break;
+    }
+    if (level.id === levels.length) {
+      currentLevelId = level.id;
+    }
+  }
+
+  const completedLevelIds = new Set(
+    levels.filter((level) => progressByLevelId.get(level.id)?.is_completed).map((level) => level.id)
+  );
+  const score = levels.reduce((sum, level) => (completedLevelIds.has(level.id) ? sum + level.score : sum), 0);
+  const currentLevel = levels.find((level) => level.id === currentLevelId) ?? levels[0] ?? null;
+  const nextLevel = levels.find((level) => level.id === currentLevelId + 1) ?? null;
+  const currentPhase = currentLevel?.phase ?? 'Survival';
+  const nextAction =
+    requirementsByLevelId[currentLevelId]?.find((req) => !completedLevelIds.has(req.level_id))?.requirement_text ??
+    requirementsByLevelId[currentLevelId]?.[0]?.requirement_text ??
+    'คุณผ่านครบทุกด่านแล้ว รักษามาตรฐานและส่งต่อคุณค่าให้เครือข่าย';
+
+  await upsertSmvDimensionScore({
+    dimension_id: dimension.id,
+    score,
+    evidence_count_30d: evidenceRows.length,
+    guard_summary: `Level progression ${completedLevelIds.size}/${levels.length}`,
+    explanation: `Social score มาจากจำนวนด่านที่ผ่านเท่านั้น (ด่านละ 10 คะแนน, ไม่มี partial score)`
+  });
+
+  return {
+    dimension,
+    levels,
+    requirementsByLevelId,
+    progressByLevelId,
+    evidenceRows,
+    currentLevelId,
+    currentLevel,
+    nextLevel,
+    completedLevelIds,
+    score,
+    currentPhase,
+    nextAction
+  };
+}
+
+export async function markSocialLevelCompleted(levelId: number, userId = SOCIAL_DEFAULT_USER_ID) {
+  const social = await getSocialDetailData(userId);
+  if (!social) throw new Error('ไม่พบมิติ Social');
+  if (!Number.isInteger(levelId) || levelId < 1 || levelId > 10) throw new Error('ระดับไม่ถูกต้อง');
+
+  const isAlreadyCompleted = social.progressByLevelId.get(levelId)?.is_completed ?? false;
+  if (isAlreadyCompleted) return;
+
+  if (levelId > 1) {
+    const isPreviousCompleted = social.progressByLevelId.get(levelId - 1)?.is_completed ?? false;
+    if (!isPreviousCompleted) {
+      throw new Error('ต้องผ่านด่านก่อนหน้าให้ครบก่อน');
+    }
+  }
+
+  await upsertSocialProgress({
+    user_id: userId,
+    level_id: levelId,
+    is_completed: true
+  });
+
+  await getSocialDetailData(userId);
+}
+
+export async function addSocialEvidence(input: {
+  levelId: number;
+  type: SocialEvidenceType;
+  note?: string;
+  imageUrl?: string;
+  userId?: string;
+}) {
+  const userId = input.userId ?? SOCIAL_DEFAULT_USER_ID;
+  if (!Number.isInteger(input.levelId) || input.levelId < 1 || input.levelId > 10) {
+    throw new Error('ระดับด่านต้องอยู่ระหว่าง 1-10');
+  }
+
+  await createSocialEvidence({
+    user_id: userId,
+    level_id: input.levelId,
+    type: input.type,
+    note: input.note,
+    image_url: input.imageUrl
+  });
+
+  await getSocialDetailData(userId);
+}
+
 function getThirtyDaysAgoIso() {
   const date = new Date();
   date.setUTCDate(date.getUTCDate() - 30);
@@ -327,6 +469,31 @@ export async function recalculateDimensionScore(dimensionId: string) {
       explanation: appearanceResult.explanation,
       suggestions: ['ปลดล็อกด่านถัดไปในหมวดที่อ่อนที่สุด'],
       evidenceCount30d: appearanceResult.totalEvidence
+    };
+  }
+
+  if (dimensionKey === 'social') {
+    const social = await getSocialDetailData();
+    if (!social) {
+      throw new Error('Social dimension not found.');
+    }
+
+    await createSmvScoreHistory({
+      dimension_id: dimensionId,
+      score: social.score,
+      evidence_count_30d: social.evidenceRows.length,
+      guard_summary: `Level progression ${social.completedLevelIds.size}/${social.levels.length}`,
+      explanation: 'Score is strictly pass/fail by completed levels only.',
+      score_breakdown: Object.fromEntries(social.levels.map((level) => [`level_${level.id}`, social.completedLevelIds.has(level.id) ? level.score : 0]))
+    });
+
+    return {
+      score: social.score,
+      breakdown: Object.fromEntries(social.levels.map((level) => [`level_${level.id}`, social.completedLevelIds.has(level.id) ? level.score : 0])),
+      guardSummary: `Level progression ${social.completedLevelIds.size}/${social.levels.length}`,
+      explanation: 'Score is strictly pass/fail by completed levels only.',
+      suggestions: [social.nextAction],
+      evidenceCount30d: social.evidenceRows.length
     };
   }
 
@@ -509,7 +676,7 @@ export async function getSmvDimensionDetailByKey(key: SmvDimensionKey): Promise<
 }
 
 export async function getSmvLogPageData() {
-  const dimensions = mergeLegacyDimensions(await getSmvDimensions());
+  const dimensions = mergeLegacyDimensions(await getSmvDimensions()).filter((item) => item.key !== 'social');
   const metrics = await getSmvMetrics();
 
   const allowedDimensionIds = new Set(dimensions.map((item) => item.id));

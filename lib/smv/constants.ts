@@ -6,7 +6,7 @@ export const SMV_AXIS_LABELS: Record<SmvAxisKey, string> = {
   confidence_leadership: 'เชื่อมั่นในตัวเอง / เป็นผู้นำ',
   looks_presence: 'รูปร่างหน้าตา / บุคลิกที่ดี',
   status_money_power: 'สถานะสังคม / อำนาจ / เงิน',
-  social_connection: 'Social Connection'
+  social_connection: 'เครือข่ายสังคม'
 };
 
 export const SMV_AXIS_META = SMV_AXIS_KEYS.map((key) => ({ key, label: SMV_AXIS_LABELS[key] }));
@@ -32,7 +32,7 @@ export const SMV_AXIS_INSIGHTS: Record<SmvAxisKey, string> = {
   confidence_leadership: 'เพิ่มความมั่นใจและการตัดสินใจเชิงผู้นำ',
   looks_presence: 'ยกระดับรูปลักษณ์และบุคลิกให้คมขึ้น',
   status_money_power: 'สร้างความมั่นคง ผลลัพธ์ และอิทธิพลที่วัดได้',
-  social_connection: 'ขยายเครือข่ายและสร้างความสัมพันธ์ที่มีคุณภาพ'
+  social_connection: 'ขยายเครือข่ายแบบด่าน 1–10 พร้อมหลักฐานเชิงภารกิจ'
 };
 
 export function getSortedAxes(scores: SmvScores, mode: 'framework' | 'score' = 'framework') {

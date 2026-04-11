@@ -4,14 +4,14 @@ export const SMV_DIMENSION_LABELS: Record<SmvDimensionKey, string> = {
   confidence: 'เชื่อมั่นในตัวเอง / เป็นผู้นำ',
   look: 'รูปร่างหน้าตา / บุคลิกที่ดี',
   status: 'สถานะสังคม / อำนาจ / เงิน',
-  social: 'Social Connection'
+  social: 'เครือข่ายสังคม'
 };
 
 export const SMV_CHART_LABELS: Record<SmvDimensionKey, string> = {
   confidence: 'เชื่อมั่น/ผู้นำ',
   look: 'รูปร่าง/บุคลิก',
   status: 'สถานะ/อำนาจ/เงิน',
-  social: 'Social Connection'
+  social: 'เครือข่ายสังคม'
 };
 
 export const SMV_FULLY_IMPLEMENTED_DIMENSIONS: SmvDimensionKey[] = ['confidence', 'look', 'status', 'social'];
@@ -31,8 +31,5 @@ export const SMV_METRIC_HINTS: Record<string, string> = {
   status_perception: '0-100 จากภาพลักษณ์สถานะ',
   authority: '0-100 จากอิทธิพลการตัดสินใจ',
   asset_leverage: '0-100 จากการใช้ทรัพย์สิน',
-  network_health: '0-100 จากคุณภาพเครือข่าย',
-  social_depth: '0-100 จากความลึกของความสัมพันธ์',
-  introductions: 'จำนวนการเชื่อมคนใหม่ต่อเดือน',
-  reliability: '0-100 จากความน่าเชื่อถือในสังคม'
+  social_level_progression: 'ระบบด่าน Social 1-10 แบบผ่าน/ไม่ผ่านเท่านั้น'
 };

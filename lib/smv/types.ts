@@ -159,6 +159,48 @@ export type SmvAppearanceProgressRow = {
   updated_at: string;
 };
 
+export type SocialPhase = 'Survival' | 'Presence' | 'Influence' | 'Leverage';
+export type SocialRequirementType = 'metric' | 'manual' | 'evidence';
+export type SocialEvidenceType = 'chat' | 'meetup' | 'connection' | 'other';
+
+export type SocialLevelRow = {
+  id: number;
+  title: string;
+  description: string;
+  phase: SocialPhase;
+  score: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SocialRequirementRow = {
+  id: bigint;
+  level_id: number;
+  requirement_text: string;
+  requirement_type: SocialRequirementType;
+  required_value: string | null;
+  created_at: string;
+};
+
+export type SocialProgressRow = {
+  user_id: string;
+  level_id: number;
+  is_completed: boolean;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SocialEvidenceRow = {
+  id: bigint;
+  user_id: string;
+  level_id: number;
+  type: SocialEvidenceType;
+  note: string | null;
+  image_url: string | null;
+  created_at: string;
+};
+
 export type SmvMetricInputValue = {
   metricId: string;
   key: string;

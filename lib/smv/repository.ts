@@ -13,7 +13,12 @@ import {
   SmvStageProgressRow,
   SmvStageStatus,
   SmvActionLogRow,
-  SmvAppearanceProgressRow
+  SmvAppearanceProgressRow,
+  SocialEvidenceRow,
+  SocialEvidenceType,
+  SocialLevelRow,
+  SocialProgressRow,
+  SocialRequirementRow
 } from '@/lib/smv/types';
 
 export async function getSmvDimensions() {
@@ -255,4 +260,47 @@ export async function upsertSmvAppearanceProgress(input: {
   );
 
   return rows[0];
+}
+
+export async function getSocialLevels() {
+  return supabaseRestRequest<SocialLevelRow[]>('social_levels?select=*&order=id.asc', 'GET');
+}
+
+export async function getSocialRequirements() {
+  return supabaseRestRequest<SocialRequirementRow[]>('social_requirements?select=*&order=level_id.asc,id.asc', 'GET');
+}
+
+export async function getSocialProgressByUser(userId: string) {
+  return supabaseRestRequest<SocialProgressRow[]>(`social_progress?user_id=eq.${userId}&order=level_id.asc`, 'GET');
+}
+
+export async function upsertSocialProgress(input: { user_id: string; level_id: number; is_completed: boolean; completed_at?: string | null }) {
+  const rows = await supabaseRestRequest<SocialProgressRow[]>('social_progress?on_conflict=user_id,level_id', 'POST', {
+    ...input,
+    completed_at: input.is_completed ? (input.completed_at ?? new Date().toISOString()) : null,
+    updated_at: new Date().toISOString()
+  });
+
+  return rows[0];
+}
+
+export async function createSocialEvidence(input: {
+  user_id: string;
+  level_id: number;
+  type: SocialEvidenceType;
+  note?: string;
+  image_url?: string;
+}) {
+  const rows = await supabaseRestRequest<SocialEvidenceRow[]>('social_evidence', 'POST', {
+    user_id: input.user_id,
+    level_id: input.level_id,
+    type: input.type,
+    note: input.note?.trim() ? input.note.trim() : null,
+    image_url: input.image_url?.trim() ? input.image_url.trim() : null
+  });
+  return rows[0];
+}
+
+export async function getSocialEvidenceByUser(userId: string, limit = 100) {
+  return supabaseRestRequest<SocialEvidenceRow[]>(`social_evidence?user_id=eq.${userId}&order=created_at.desc&limit=${limit}`, 'GET');
 }
