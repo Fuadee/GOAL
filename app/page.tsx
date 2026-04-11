@@ -2,8 +2,6 @@ import { CriticalAlertsSection } from '@/components/dashboard/CriticalAlertsSect
 import { FocusNowSection } from '@/components/dashboard/FocusNowSection';
 import { GoalModuleGrid } from '@/components/dashboard/GoalModuleGrid';
 import { GoalVisionBoard } from '@/components/dashboard/GoalVisionBoard';
-import { LifeBalanceCard } from '@/components/dashboard/LifeBalanceCard';
-import { LifeDirectionCard } from '@/components/dashboard/LifeDirectionCard';
 import { MomentumSection } from '@/components/dashboard/MomentumSection';
 import { MotionReveal } from '@/components/dashboard/MotionReveal';
 import { Navbar } from '@/components/navbar';
@@ -26,17 +24,6 @@ export default async function Home() {
       <div className="page-container space-y-10">
         <MotionReveal>
           <GoalVisionBoard initialImages={initialVisionImages} />
-        </MotionReveal>
-
-        <MotionReveal delay={0.08}>
-          <section className="grid gap-6 xl:grid-cols-2">
-            <LifeDirectionCard summary={dashboard.lifeDirection} />
-            <LifeBalanceCard
-              points={dashboard.balancePoints}
-              strongestAreas={dashboard.strongestAreas}
-              weakestAreas={dashboard.weakestAreas}
-            />
-          </section>
         </MotionReveal>
 
         <MotionReveal delay={0.14}>
