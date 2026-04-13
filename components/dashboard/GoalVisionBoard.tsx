@@ -217,20 +217,20 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
             </button>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {traits.map((trait) => (
               <button
                 key={trait.id}
                 type="button"
                 onClick={() => toggleTrait(trait.id)}
-                className={`group relative min-h-[212px] rounded-2xl border p-4 text-left transition-all duration-200 ease-out active:scale-[0.98] ${
+                className={`group relative min-h-[120px] max-h-[140px] rounded-2xl border p-4 text-left transition-all duration-200 ease-out active:scale-[0.98] ${
                   trait.isActive
-                    ? 'border-violet-300/40 bg-gradient-to-br from-blue-950/95 via-indigo-900/90 to-violet-900/90 text-white shadow-[0_0_0_1px_rgba(129,140,248,0.2),0_0_26px_rgba(99,102,241,0.28)]'
+                    ? 'border-violet-300/25 bg-gradient-to-br from-blue-950/80 via-indigo-900/70 to-violet-900/70 text-white shadow-[0_0_0_1px_rgba(129,140,248,0.12),0_0_16px_rgba(99,102,241,0.18)]'
                     : 'border-white/10 bg-slate-900/80 text-slate-200 opacity-70'
                 }`}
               >
                 <span
-                  className={`absolute right-3 top-3 rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                  className={`absolute right-3 top-3 rounded-full border px-2 py-1 text-xs font-semibold uppercase tracking-[0.08em] ${
                     trait.isActive
                       ? 'border-emerald-300/50 bg-emerald-400/15 text-emerald-100'
                       : 'border-slate-400/35 bg-slate-500/20 text-slate-300'
@@ -238,9 +238,9 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
                 >
                   {trait.isActive ? 'Active' : 'Off'}
                 </span>
-                <div className="flex h-full flex-col justify-end gap-2">
-                  <h3 className="text-lg font-bold uppercase tracking-[0.04em]">{trait.title}</h3>
-                  <p className={`text-xs leading-relaxed ${trait.isActive ? 'text-slate-100/85' : 'text-slate-400'}`}>
+                <div className="flex h-full flex-col justify-end gap-1.5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.03em] md:text-base">{trait.title}</h3>
+                  <p className={`text-xs leading-relaxed ${trait.isActive ? 'text-slate-100/70' : 'text-slate-400/70'}`}>
                     {trait.description || 'คุณสมบัตินี้พร้อมเปิดใช้งานเมื่อคุณต้องการ'}
                   </p>
                 </div>
