@@ -14,13 +14,15 @@ import { getGoalVisionImages } from '@/lib/goal-vision/queries';
 import { getGoalVisionPublicUrl } from '@/lib/goal-vision/storage';
 import { getInnovationDashboardPageData } from '@/lib/innovation/service';
 import { getConstructionProgressData } from '@/lib/money/service';
+import { listPersonalTraits } from '@/lib/personal-traits/service';
 import { getRunnerDashboardData } from '@/lib/running/quest.server';
 import { getSmvOverviewData } from '@/lib/smv/service';
 import { getBloodDonationDashboardData } from '@/lib/blood-donation/service';
 
 export default async function Home() {
-  const [goalVisionImages, smvOverview, construction, healthDashboard, innovationDashboard, worldDashboard] = await Promise.all([
+  const [goalVisionImages, personalTraits, smvOverview, construction, healthDashboard, innovationDashboard, worldDashboard] = await Promise.all([
     getGoalVisionImages(),
+    listPersonalTraits(),
     getSmvOverviewData(),
     getConstructionProgressData(),
     getRunnerDashboardData(),
@@ -57,7 +59,7 @@ export default async function Home() {
         </MotionReveal>
 
         <MotionReveal>
-          <GoalVisionBoard initialImages={initialVisionImages} />
+          <GoalVisionBoard initialImages={initialVisionImages} initialTraits={personalTraits} />
         </MotionReveal>
       </div>
     </PageShell>
