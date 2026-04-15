@@ -6,6 +6,11 @@ import {
   BedSingle,
   CigaretteOff,
   MoonStar,
+  AlertTriangle,
+  Sparkles,
+  Shield,
+  Orbit,
+  Quote
 } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 
@@ -114,7 +119,7 @@ function HeroCard() {
       />
 
       <div className="relative space-y-5 text-center">
-        <SectionLabel icon={MoonStar} label="SECRET SAUCE / SLEEP CYCLE" />
+        <SectionLabel icon={Orbit} label="SECRET SAUCE / SLEEP CYCLE" />
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-cyan-100 shadow-[0_0_30px_rgba(56,189,248,0.4)] sm:h-14 sm:w-14">
           <MoonStar className="h-6 w-6 sm:h-7 sm:w-7" />
         </div>
@@ -176,7 +181,7 @@ function ResetTimeline() {
   return (
     <motion.section variants={sectionVariants} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-15%' }}>
       <div className="mb-4 sm:mb-5">
-        <SectionLabel icon={BedSingle} label="RESET SYSTEM" />
+        <SectionLabel icon={Shield} label="RESET SYSTEM" />
       </div>
       <CardShell className="rounded-3xl p-5 sm:p-6">
         <div className="relative grid gap-3 sm:grid-cols-3 sm:gap-4">
@@ -219,7 +224,7 @@ function WarningCard() {
       <CardShell className="rounded-3xl border-rose-300/20 bg-gradient-to-b from-rose-500/12 via-fuchsia-500/[0.08] to-transparent p-6 sm:p-7">
         <div className="mb-4 flex items-center gap-3">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200/25 bg-rose-400/10 text-rose-100 shadow-[0_0_25px_rgba(251,113,133,0.3)]">
-            <CigaretteOff className="h-5 w-5" />
+            <AlertTriangle className="h-5 w-5" />
           </span>
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-rose-100/70">Warning Block</p>
@@ -255,7 +260,7 @@ function InsightCard() {
           animate={{ y: [0, -3, 0] }}
           transition={{ duration: 4.5, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
         >
-          <MoonStar className="h-4.5 w-4.5" />
+          <Quote className="h-4.5 w-4.5" />
         </motion.div>
         <p className="text-xl font-semibold leading-relaxed text-slate-100 sm:text-2xl">❝ ง่วง ≠ ต้องนอน</p>
         <p className="text-xl font-semibold leading-relaxed text-cyan-100 sm:text-2xl">คุมเวลา = คุมชีวิต ❞</p>
@@ -320,7 +325,7 @@ export default function SleepCyclePage() {
           viewport={{ once: true, margin: '-15%' }}
           className="space-y-3"
         >
-          <SectionLabel icon={AlarmClock} label="Situation Mode" />
+          <SectionLabel icon={Sparkles} label="Situation Mode" />
           <motion.div
             variants={staggerContainer}
             initial="hidden"
