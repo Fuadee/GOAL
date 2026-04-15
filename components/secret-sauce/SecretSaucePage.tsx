@@ -58,14 +58,12 @@ function KnowledgeCardGrid({ cards }: { cards: typeof SECRET_SAUCE_TOPICS[number
   return (
     <section className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => {
-        const Icon = card.icon;
-
         return (
           <article
             key={card.title}
             className="rounded-2xl border border-slate-700/70 bg-slate-900/65 p-4 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-slate-500/80"
           >
-            <Icon className="h-4 w-4 text-cyan-200 sm:h-5 sm:w-5" />
+            <p className="text-lg leading-none sm:text-xl" aria-hidden>{card.icon}</p>
             <h2 className="mt-3 text-base font-semibold leading-snug text-slate-100">{card.title}</h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-300 sm:text-[0.95rem]">{card.body}</p>
           </article>

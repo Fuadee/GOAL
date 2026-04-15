@@ -1,10 +1,7 @@
-import { AlarmClock, BedSingle, CigaretteOff, Droplets, MoonStar, ThermometerSun, Wind, Dumbbell } from 'lucide-react';
-import type { ComponentType } from 'react';
-
 export type TopicCard = {
   title: string;
   body: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: string;
 };
 
 export type SituationCard = {
@@ -33,22 +30,22 @@ export const SECRET_SAUCE_TOPICS: SecretSauceTopic[] = [
       {
         title: 'Anchor Wake Time',
         body: 'ตั้งเวลาตื่นหลักทุกวัน เช่น 07:30 (+/- ไม่เกิน 1 ชั่วโมง) เพื่อรีเซ็ตนาฬิกาชีวิตให้ตรงเสมอ',
-        icon: AlarmClock
+        icon: '⏰'
       },
       {
         title: 'No Long Nap',
         body: 'งีบได้เมื่อจำเป็น แต่จำกัดราว 20–30 นาทีพอ เพื่อไม่ให้ร่างกายหลุดโหมดกลางคืน',
-        icon: BedSingle
+        icon: '😴'
       },
       {
         title: 'Control Night',
         body: 'ลดการกระตุ้นก่อนนอน เช่น binge content หรือไถมือถือยาว เป้าคือให้สมองค่อย ๆ ดรอป',
-        icon: MoonStar
+        icon: '🌙'
       },
       {
         title: 'No Smoke Before Bed',
         body: 'หลีกเลี่ยงบุหรี่ก่อนนอนอย่างน้อย 2 ชั่วโมง เพื่อลดการรบกวนคุณภาพการหลับลึก',
-        icon: CigaretteOff
+        icon: '🚭'
       }
     ],
     situations: [
@@ -76,22 +73,22 @@ export const SECRET_SAUCE_TOPICS: SecretSauceTopic[] = [
       {
         title: 'ดื่มสม่ำเสมอคือแกนหลัก',
         body: 'ร่างกายต้องการน้ำต่อเนื่องทั้งวัน ไม่ใช่ปล่อยขาดแล้วค่อยดื่มรวดเดียวในช่วงสั้น ๆ',
-        icon: Droplets
+        icon: '💧'
       },
       {
         title: 'สัญญาณขาดน้ำที่เจอบ่อย',
         body: 'ง่วงง่าย ปวดหัว สมาธิหลุด ปากแห้ง หรือปัสสาวะสีเข้ม คือสัญญาณที่ควรเติมน้ำทันที',
-        icon: ThermometerSun
+        icon: '🧠'
       },
       {
         title: 'วิธีง่ายที่ทำได้จริง',
         body: 'ดื่มหลังตื่น ก่อนมื้ออาหารพอประมาณ หลังเสียเหงื่อ และวางขวดน้ำไว้ใกล้ตัวเสมอ',
-        icon: Wind
+        icon: '🫗'
       },
       {
         title: 'จุดพลาดที่ทำให้หลุด',
         body: 'รอจนกระหาย ดื่มแต่น้ำหวานหรือกาแฟ หรือดื่มทีเดียวมากเกิน ล้วนทำให้สมดุลน้ำแกว่ง',
-        icon: Dumbbell
+        icon: '⚠️'
       }
     ],
     situations: [
