@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import { CigaretteOff, MoonStar, Sparkles, AlarmClock, BedSingle } from 'lucide-react';
+import { CigaretteOff, MoonStar, AlarmClock, BedSingle } from 'lucide-react';
 
 import { Navbar } from '@/components/navbar';
 import { PageShell } from '@/components/ui/mission';
@@ -136,8 +136,7 @@ export default function SleepCyclePage() {
         </section>
 
         <section className="space-y-2.5">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 shrink-0 text-cyan-200/90" />
+          <div className="flex items-center">
             <h2 className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-200">Situation Mode</h2>
           </div>
           <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
