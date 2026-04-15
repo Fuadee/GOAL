@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import { CigaretteOff, MoonStar, TimerReset, AlarmClock, BedSingle } from 'lucide-react';
+import { CigaretteOff, MoonStar, AlarmClock, BedSingle } from 'lucide-react';
 
 import { Navbar } from '@/components/navbar';
 import { PageShell } from '@/components/ui/mission';
@@ -38,14 +38,14 @@ function RuleCard({ icon: Icon, title, description }: RuleCardProps) {
 function SituationCard({ title, actions, highlighted = false }: SituationCardProps) {
   return (
     <article
-      className={`w-[280px] shrink-0 snap-center rounded-2xl border border-slate-800/80 bg-[#111827] p-6 shadow-[0_0_0_1px_rgba(15,23,42,0.25)] transition duration-200 ${
+      className={`w-[280px] shrink-0 snap-center rounded-2xl border border-slate-800/80 bg-[#111827] p-5 shadow-[0_0_0_1px_rgba(15,23,42,0.25)] transition duration-200 ${
         highlighted
           ? 'border-cyan-500/40 ring-1 ring-cyan-500/20 shadow-[0_0_30px_rgba(56,189,248,0.10)]'
           : ''
-      } min-h-[260px]`}
+      } min-h-[198px]`}
     >
       <h3 className="text-base font-semibold text-slate-50">{title}</h3>
-      <ul className="mt-4 space-y-2">
+      <ul className="mt-3 space-y-1.5">
         {actions.map((action) => (
           <li key={action} className="flex items-start gap-2 text-sm text-slate-200">
             <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
@@ -135,9 +135,8 @@ export default function SleepCyclePage() {
           <RuleCard icon={CigaretteOff} title="🚬 No Smoke Before Bed" description="งดบุหรี่ก่อนนอน 2 ชั่วโมง" />
         </section>
 
-        <section className="space-y-3">
-          <div className="flex items-center gap-2">
-            <TimerReset className="h-5 w-5 shrink-0 text-cyan-300" />
+        <section className="space-y-2.5">
+          <div className="flex items-center">
             <h2 className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-200">Situation Mode</h2>
           </div>
           <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
