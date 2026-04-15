@@ -31,37 +31,52 @@ type SectionLabelProps = {
 };
 
 const sectionVariants: Variants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 16, scale: 0.985 },
   show: {
     opacity: 1,
     y: 0,
+    scale: 1,
     transition: {
-      duration: 0.7,
+      duration: 0.75,
       ease: [0.22, 1, 0.36, 1]
     }
   }
 };
 
 const staggerContainer: Variants = {
-  hidden: {},
+  hidden: { opacity: 0 },
   show: {
+    opacity: 1,
     transition: {
       staggerChildren: 0.1,
-      delayChildren: 0.1
+      delayChildren: 0.08
     }
   }
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 12 },
   show: {
     opacity: 1,
     y: 0,
     transition: {
       type: 'spring',
-      stiffness: 120,
-      damping: 18,
-      mass: 0.6
+      stiffness: 90,
+      damping: 20,
+      mass: 0.85
+    }
+  }
+};
+
+const ambientFloatVariants: Variants = {
+  initial: { x: 0, y: 0 },
+  animate: {
+    x: [0, 8, 0, -6, 0],
+    y: [0, -6, 0, 5, 0],
+    transition: {
+      duration: 24,
+      repeat: Number.POSITIVE_INFINITY,
+      ease: 'easeInOut'
     }
   }
 };
@@ -78,7 +93,7 @@ function SectionLabel({ icon: Icon, label }: SectionLabelProps) {
 function CardShell({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.08] via-white/[0.04] to-white/[0.02] p-5 shadow-[0_1px_0_rgba(255,255,255,0.1)_inset,0_30px_70px_rgba(2,8,23,0.5)] backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-cyan-200/25 hover:shadow-[0_1px_0_rgba(255,255,255,0.14)_inset,0_36px_80px_rgba(34,211,238,0.14)] ${className}`}
+      className={`group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.08] via-white/[0.04] to-white/[0.02] p-5 shadow-[0_1px_0_rgba(255,255,255,0.1)_inset,0_30px_70px_rgba(2,8,23,0.5)] backdrop-blur-xl transition duration-500 hover:border-cyan-100/25 hover:shadow-[0_1px_0_rgba(255,255,255,0.14)_inset,0_36px_80px_rgba(34,211,238,0.1)] ${className}`}
     >
       <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-70" />
       {children}
@@ -97,20 +112,23 @@ function HeroCard() {
       <motion.div
         aria-hidden
         className="absolute -left-20 top-0 h-52 w-52 rounded-full bg-cyan-400/25 blur-3xl"
-        animate={{ x: [0, 16, 0], y: [0, -8, 0] }}
-        transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+        variants={ambientFloatVariants}
+        initial="initial"
+        animate="animate"
       />
       <motion.div
         aria-hidden
         className="absolute -right-20 bottom-0 h-56 w-56 rounded-full bg-violet-500/20 blur-3xl"
-        animate={{ x: [0, -12, 0], y: [0, 10, 0] }}
-        transition={{ duration: 9, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+        variants={ambientFloatVariants}
+        initial="initial"
+        animate="animate"
+        transition={{ delay: 2 }}
       />
       <motion.div
         aria-hidden
-        className="absolute inset-y-0 -left-1/3 w-1/2 rotate-12 bg-gradient-to-r from-transparent via-white/12 to-transparent"
+        className="absolute inset-y-0 -left-1/3 w-1/2 rotate-12 bg-gradient-to-r from-transparent via-white/10 to-transparent"
         animate={{ x: ['0%', '260%'] }}
-        transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY, ease: 'linear', repeatDelay: 3 }}
+        transition={{ duration: 9, repeat: Number.POSITIVE_INFINITY, ease: 'linear', repeatDelay: 7 }}
       />
 
       <div className="relative space-y-5 text-center">
@@ -127,7 +145,7 @@ function HeroCard() {
 
 function RuleCard({ icon: Icon, title, description, accent }: RuleCardProps) {
   return (
-    <motion.article variants={itemVariants} whileHover={{ rotateX: 1, rotateY: -1 }} transition={{ duration: 0.25 }} style={{ transformStyle: 'preserve-3d' }}>
+    <motion.article variants={itemVariants} whileHover={{ y: -3, scale: 1.01 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
       <CardShell className="h-full rounded-2xl p-4 sm:p-5">
         <div className={`absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100 ${accent}`} />
         <div className="relative">
@@ -144,9 +162,9 @@ function RuleCard({ icon: Icon, title, description, accent }: RuleCardProps) {
 
 function SituationCard({ title, actions, badge }: SituationCardProps) {
   return (
-    <motion.article variants={itemVariants} whileHover={{ y: -4, rotateX: 1 }} transition={{ type: 'spring', stiffness: 170, damping: 18 }}>
+    <motion.article variants={itemVariants} whileHover={{ y: -3, scale: 1.01 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
       <CardShell className="w-[292px] min-h-[205px] shrink-0 snap-center rounded-2xl p-5 sm:w-auto">
-        <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent" />
+        <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent transition duration-500 group-hover:via-cyan-100/90" />
         <div className="relative flex h-full flex-col">
           <span className="mb-3 inline-flex w-fit rounded-full border border-cyan-100/15 bg-cyan-300/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-100/80">
             {badge}
@@ -180,7 +198,13 @@ function ResetTimeline() {
       </div>
       <CardShell className="rounded-3xl p-5 sm:p-6">
         <div className="relative grid gap-3 sm:grid-cols-3 sm:gap-4">
-          <div className="pointer-events-none absolute left-10 right-10 top-8 hidden h-px bg-gradient-to-r from-cyan-400/30 via-indigo-300/70 to-cyan-400/30 sm:block" />
+          <motion.div
+            className="pointer-events-none absolute left-10 right-10 top-8 hidden h-px origin-left bg-gradient-to-r from-cyan-400/30 via-indigo-300/60 to-cyan-400/30 sm:block"
+            initial={{ scaleX: 0, opacity: 0 }}
+            whileInView={{ scaleX: 1, opacity: 1 }}
+            viewport={{ once: true, margin: '-10%' }}
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+          />
           {steps.map((step, index) => (
             <motion.div
               key={step.day}
@@ -188,10 +212,15 @@ function ResetTimeline() {
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, margin: '-10%' }}
-              className="relative rounded-2xl border border-white/10 bg-slate-950/45 p-4 shadow-[0_0_0_1px_rgba(15,23,42,0.4)] transition duration-300 hover:-translate-y-1 hover:border-cyan-200/35"
+              transition={{ delay: index * 0.08 }}
+              className="relative rounded-2xl border border-white/10 bg-slate-950/45 p-4 shadow-[0_0_0_1px_rgba(15,23,42,0.4)] transition duration-300 hover:-translate-y-[3px] hover:border-cyan-200/35"
             >
               <div className="flex items-center gap-2.5">
-                <span
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true, margin: '-10%' }}
+                  transition={{ duration: 0.45, delay: 0.18 + index * 0.08 }}
                   className={`relative inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold shadow-[0_0_20px_rgba(56,189,248,0.45)] ${
                     index === 0
                       ? 'bg-cyan-300 text-slate-900'
@@ -199,7 +228,7 @@ function ResetTimeline() {
                   }`}
                 >
                   {index + 1}
-                </span>
+                </motion.span>
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">{step.day}</p>
               </div>
               <p className="mt-3 text-sm text-slate-100">{step.text}</p>
@@ -215,12 +244,28 @@ function WarningCard() {
   const antiPatterns = ['นอนชดเชยยาว', 'ดูซีรี่บนเตียง', 'เปลี่ยนเวลานอนทุกวัน', 'สูบบุหรี่ก่อนนอน'];
 
   return (
-    <motion.section variants={sectionVariants} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-15%' }}>
+    <motion.section
+      variants={sectionVariants}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: '-15%' }}
+      transition={{ delay: 0.15 }}
+    >
       <CardShell className="rounded-3xl border-rose-300/20 bg-gradient-to-b from-rose-500/12 via-fuchsia-500/[0.08] to-transparent p-6 sm:p-7">
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-3xl bg-rose-400/10 blur-3xl"
+          animate={{ opacity: [0.16, 0.22, 0.16] }}
+          transition={{ duration: 7.5, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+        />
         <div className="mb-4 flex items-center gap-3">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200/25 bg-rose-400/10 text-rose-100 shadow-[0_0_25px_rgba(251,113,133,0.3)]">
+          <motion.span
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200/25 bg-rose-400/10 text-rose-100 shadow-[0_0_25px_rgba(251,113,133,0.3)]"
+            animate={{ opacity: [0.9, 1, 0.9], scale: [1, 1.02, 1] }}
+            transition={{ duration: 5.5, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+          >
             <CigaretteOff className="h-5 w-5" />
-          </span>
+          </motion.span>
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-rose-100/70">Warning Block</p>
             <h2 className="text-lg font-semibold text-rose-50">สิ่งที่ห้ามทำ</h2>
@@ -252,8 +297,8 @@ function InsightCard() {
       <CardShell className="rounded-3xl p-8 text-center sm:p-10">
         <motion.div
           className="mx-auto mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-cyan-100"
-          animate={{ y: [0, -3, 0] }}
-          transition={{ duration: 4.5, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+          animate={{ y: [0, -2, 0] }}
+          transition={{ duration: 7, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
         >
           <MoonStar className="h-4.5 w-4.5" />
         </motion.div>
@@ -269,9 +314,26 @@ export default function SleepCyclePage() {
     <PageShell className="relative overflow-hidden bg-[#070b17] text-slate-100">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(14,165,233,0.16),transparent_42%),radial-gradient(circle_at_80%_35%,rgba(124,58,237,0.14),transparent_40%),radial-gradient(circle_at_50%_100%,rgba(14,116,144,0.18),transparent_45%)]" />
-        <div className="absolute -left-16 top-20 h-72 w-72 rounded-full bg-cyan-500/20 blur-[120px]" />
-        <div className="absolute right-[-40px] top-[38%] h-80 w-80 rounded-full bg-violet-500/20 blur-[130px]" />
-        <div className="absolute bottom-[-100px] left-1/2 h-60 w-[70%] -translate-x-1/2 rounded-full bg-blue-400/15 blur-[120px]" />
+        <motion.div
+          variants={ambientFloatVariants}
+          initial="initial"
+          animate="animate"
+          className="absolute -left-16 top-20 h-72 w-72 rounded-full bg-cyan-500/20 blur-[120px]"
+        />
+        <motion.div
+          variants={ambientFloatVariants}
+          initial="initial"
+          animate="animate"
+          transition={{ delay: 4 }}
+          className="absolute right-[-40px] top-[38%] h-80 w-80 rounded-full bg-violet-500/20 blur-[130px]"
+        />
+        <motion.div
+          variants={ambientFloatVariants}
+          initial="initial"
+          animate="animate"
+          transition={{ delay: 8 }}
+          className="absolute bottom-[-100px] left-1/2 h-60 w-[70%] -translate-x-1/2 rounded-full bg-blue-400/15 blur-[120px]"
+        />
         <div className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(148,163,184,0.25)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.25)_1px,transparent_1px)] [background-size:42px_42px]" />
       </div>
 
