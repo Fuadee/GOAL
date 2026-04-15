@@ -40,11 +40,11 @@ function SituationCard({ title, actions, highlighted = false }: SituationCardPro
     <article
       className={`w-[280px] shrink-0 snap-center rounded-2xl p-[1px] transition duration-200 ${
         highlighted
-          ? 'bg-gradient-to-br from-sky-500/30 via-blue-500/20 to-purple-500/30 shadow-[0_16px_32px_rgba(96,165,250,0.28)]'
-          : 'bg-slate-700/70 shadow-[0_10px_24px_rgba(2,6,23,0.4)]'
+          ? 'bg-gradient-to-br from-sky-500/35 via-blue-500/20 to-purple-500/35 shadow-[0_16px_32px_rgba(96,165,250,0.24)]'
+          : 'bg-gradient-to-br from-sky-500/25 via-blue-500/15 to-purple-500/25 shadow-[0_10px_24px_rgba(2,6,23,0.4)]'
       }`}
     >
-      <div className="rounded-2xl bg-[#111827] p-5">
+      <div className="h-full min-h-[206px] rounded-2xl bg-[#111827] p-5">
         <h3 className="text-base font-semibold text-slate-50">{title}</h3>
         <ul className="mt-4 space-y-2">
           {actions.map((action) => (
@@ -138,8 +138,9 @@ export default function SleepCyclePage() {
         </section>
 
         <section className="space-y-3">
-          <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-cyan-200/90">
-            <TimerReset className="h-4 w-4" /> Situation Mode
+          <div className="flex items-center gap-2">
+            <TimerReset className="h-5 w-5 shrink-0 text-cyan-300" />
+            <h2 className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-200">Situation Mode</h2>
           </div>
           <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <SituationCard
