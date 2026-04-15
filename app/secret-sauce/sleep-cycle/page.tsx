@@ -38,21 +38,23 @@ function RuleCard({ icon: Icon, title, description }: RuleCardProps) {
 function SituationCard({ title, actions, highlighted = false }: SituationCardProps) {
   return (
     <article
-      className={`w-[280px] shrink-0 snap-center rounded-2xl border bg-[#111827] p-5 transition duration-200 ${
+      className={`w-[280px] shrink-0 snap-center rounded-2xl p-[1px] transition duration-200 ${
         highlighted
-          ? 'scale-[1.02] border-blue-300/45 shadow-[0_16px_32px_rgba(96,165,250,0.28)]'
-          : 'border-slate-700/70 shadow-[0_10px_24px_rgba(2,6,23,0.4)]'
+          ? 'bg-gradient-to-br from-sky-500/30 via-blue-500/20 to-purple-500/30 shadow-[0_16px_32px_rgba(96,165,250,0.28)]'
+          : 'bg-slate-700/70 shadow-[0_10px_24px_rgba(2,6,23,0.4)]'
       }`}
     >
-      <h3 className="text-base font-semibold text-slate-50">{title}</h3>
-      <ul className="mt-4 space-y-2">
-        {actions.map((action) => (
-          <li key={action} className="flex items-start gap-2 text-sm text-slate-200">
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
-            <span>{action}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="rounded-2xl bg-[#111827] p-5">
+        <h3 className="text-base font-semibold text-slate-50">{title}</h3>
+        <ul className="mt-4 space-y-2">
+          {actions.map((action) => (
+            <li key={action} className="flex items-start gap-2 text-sm text-slate-200">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
+              <span>{action}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </article>
   );
 }
