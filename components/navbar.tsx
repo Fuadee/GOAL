@@ -14,7 +14,8 @@ const menuItems: MenuItem[] = [
   { label: 'Money Management', href: '/money-management' },
   { label: 'Health', href: '/health' },
   { label: 'Innovation', href: '/innovation' },
-  { label: 'Heal the World', href: '/heal-the-world' }
+  { label: 'Heal the World', href: '/heal-the-world' },
+  { label: 'Secret Sauce', href: '/secret-sauce/sleep-cycle' }
 ];
 
 const isPathActive = (pathname: string, href: string) => {
