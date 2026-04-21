@@ -33,12 +33,24 @@ export function PageHeader({
   );
 }
 
-export function SectionHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
+export function SectionHeader({
+  title,
+  subtitle,
+  action,
+  titleClassName,
+  subtitleClassName
+}: {
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+  titleClassName?: string;
+  subtitleClassName?: string;
+}) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h2 className="section-title">{title}</h2>
-        {subtitle ? <p className="mt-1 text-sm text-[color:var(--text-secondary)]">{subtitle}</p> : null}
+        <h2 className={cx('section-title', titleClassName)}>{title}</h2>
+        {subtitle ? <p className={cx('mt-1 text-sm text-[color:var(--text-secondary)]', subtitleClassName)}>{subtitle}</p> : null}
       </div>
       {action}
     </div>
