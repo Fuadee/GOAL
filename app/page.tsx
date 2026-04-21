@@ -45,12 +45,12 @@ export default async function Home() {
       <Navbar />
       <div className="page-container space-y-8 md:space-y-10">
         <MotionReveal>
-          <section className="hero-panel space-y-5">
+          <section className="hero-panel space-y-6">
             <SectionHeader
               title="สิ่งที่ต้องทำตอนนี้"
               subtitle="ภารกิจสำคัญจากทั้ง 5 ระบบ เพื่อให้คุณโฟกัสสิ่งที่ควรทำก่อนทันที"
             />
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
               {missionCards.map((card) => (
                 <UnifiedMissionCard key={card.key} card={card} />
               ))}
