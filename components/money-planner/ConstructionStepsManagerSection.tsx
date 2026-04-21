@@ -15,6 +15,7 @@ import { ConstructionExecutionState, ConstructionRiskLevel, ConstructionStepRow,
 
 import { formatDateLabel, getCurrentConstructionStep, getNextActionAfterUnblock, getWaitingSummary } from './construction-helpers';
 import { ConstructionWaitingStatusCard } from './ConstructionWaitingStatusCard';
+import { LatestUpdateBox, LatestUpdateStatus } from './LatestUpdateBox';
 
 type Props = {
   steps: ConstructionStepRow[];
@@ -61,6 +62,29 @@ const RISK_LEVEL_OPTIONS: Array<{ value: ConstructionRiskLevel; label: string }>
   { value: 'delayed', label: 'Delayed' },
   { value: 'urgent', label: 'Urgent' }
 ];
+
+function resolveLatestUpdateStatus(step: ConstructionStepRow, latestUpdateText: string): LatestUpdateStatus {
+  const normalizedText = latestUpdateText.toLowerCase();
+
+  if (step.status === 'completed' || step.is_completed) {
+    return 'done';
+  }
+
+  if (
+    step.execution_state === 'blocked' ||
+    normalizedText.includes('ขาด') ||
+    normalizedText.includes('ติด') ||
+    normalizedText.includes('blocked')
+  ) {
+    return 'blocked';
+  }
+
+  if (step.execution_state === 'waiting' || normalizedText.includes('รอ') || normalizedText.includes('wait')) {
+    return 'waiting';
+  }
+
+  return 'info';
+}
 
 export function ConstructionStepsManagerSection({ steps }: Props) {
   const [stepState, setStepState] = useState(steps);
@@ -345,9 +369,10 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
                 </div>
 
                 <div className="mt-3">
-                  <p className="rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-xs text-slate-200">
-                    Latest update: {step.latest_update_text?.trim() || step.latest_update?.trim() || 'No updates logged yet.'}
-                  </p>
+                  <LatestUpdateBox
+                    status={resolveLatestUpdateStatus(step, step.latest_update_text?.trim() || step.latest_update?.trim() || 'No updates logged yet.')}
+                    text={step.latest_update_text?.trim() || step.latest_update?.trim() || 'No updates logged yet.'}
+                  />
                 </div>
                 <p className="mt-2 text-xs text-slate-400">
                   Execution state: <span className="font-semibold text-slate-200">{EXECUTION_STATE_LABELS[step.execution_state]}</span> · Waiting on:{' '}
