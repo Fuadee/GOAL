@@ -25,10 +25,10 @@ function getProblemPreview(candidate: DiscoveryCandidateRow): string {
 
 export function DiscoveryCandidatesSection({ candidates }: DiscoveryCandidatesSectionProps) {
   return (
-    <section id="discovery-candidates" className="space-y-3 premium-card">
+    <section id="discovery-candidates" className="space-y-4 premium-card space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-white">🧠 Discovery Candidates</h2>
-        <Link href="/innovation/discovery/new" className="theme-button-secondary px-3 py-2 text-xs">
+        <h2 className="text-xl font-semibold text-white">🧠 Discovery Candidates</h2>
+        <Link href="/innovation/discovery/new" className="theme-button-secondary">
           + Add Candidate
         </Link>
       </div>
@@ -39,21 +39,21 @@ export function DiscoveryCandidatesSection({ candidates }: DiscoveryCandidatesSe
           <p className="text-sm text-slate-400">เริ่มจากการบันทึก pain point ตัวแรก</p>
         </div>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {candidates.map((candidate) => {
             const stateMeta = getDiscoveryCandidateStateMeta(candidate);
             const primaryAction = getPrimaryDiscoveryActionLabel(candidate);
             const problemPreview = getProblemPreview(candidate);
 
             return (
-              <article key={candidate.id} className="space-y-2 rounded-xl border border-white/10 bg-slate-900/45 p-4">
+              <article key={candidate.id} className="space-y-3 rounded-xl border border-white/10 bg-slate-900/50 p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-sm font-semibold text-white">{candidate.title}</h3>
+                  <h3 className="text-base font-semibold text-white">{candidate.title}</h3>
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATE_STYLES[stateMeta.state]}`}>{stateMeta.label}</span>
                 </div>
 
-                <p className="line-clamp-2 text-xs text-slate-100">{problemPreview}</p>
-                <p className="text-xs text-slate-300">Why this state: {stateMeta.description}</p>
+                <p className="line-clamp-2 text-sm text-slate-100">{problemPreview}</p>
+                <p className="text-sm text-slate-300">Why this state: {stateMeta.description}</p>
                 {candidate.source ? <p className="text-xs text-slate-400">Source: {candidate.source}</p> : null}
 
                 <div className="flex flex-wrap gap-2 pt-1">

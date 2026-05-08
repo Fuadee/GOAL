@@ -26,26 +26,27 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
   const missionSummary = getInnovationMissionSummary(mission);
 
   return (
-    <section className="rounded-2xl border border-amber-300/35 bg-amber-500/10 p-4 backdrop-blur">
-      <div className="flex flex-wrap items-center gap-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-200">🔥 Current Mission</p>
+    <section className="space-y-4 hero-panel space-y-4 border-amber-300/30">
+      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-200">🔥 Current Mission</p>
       {!mission ? (
         <p className="text-sm text-slate-200">{missionSummary.primaryText}</p>
       ) : (
         <>
-          <p className="flex-1 text-sm font-semibold text-white md:text-base">{missionSummary.primaryText}</p>
-          <p className="text-xs text-slate-300">Next: <span className="font-medium text-white">{missionSummary.secondaryText}</span></p>
-          <p className="text-xs text-slate-300">Progress: <span className="font-medium text-white">{mission.progressPercent}%</span></p>
-          <p className="text-xs text-slate-300">Updated: <span className="font-medium text-white">{formatTimestamp(mission.updated_at)}</span></p>
+          <h2 className="text-2xl font-semibold text-white">{missionSummary.primaryText}</h2>
+          <div className="space-y-2 text-sm text-slate-100">
+            <p>Next Step: <span className="font-semibold text-white">{missionSummary.secondaryText}</span></p>
+            <p>Progress: <span className="font-semibold text-white">{mission.progressPercent}%</span></p>
+            <p>Last updated: <span className="font-semibold text-white">{formatTimestamp(mission.updated_at)}</span></p>
+          </div>
 
           {error ? <p className="text-sm text-rose-200">{error}</p> : null}
 
-          <div className="ml-auto flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             <Link
               href={`/innovation/${mission.id}`}
-              className="theme-button-secondary px-3 py-2 text-xs"
+              className="theme-button-secondary"
             >
-              Continue
+              Open details
             </Link>
             <button
               type="button"
@@ -65,14 +66,13 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
                   router.refresh();
                 });
               }}
-              className="theme-button-primary px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+              className="theme-button-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isPending ? 'Saving...' : 'Move Stage'}
+              {isPending ? 'Saving...' : 'Mark Next Step Done'}
             </button>
           </div>
         </>
       )}
-      </div>
     </section>
   );
 }
