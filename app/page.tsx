@@ -59,8 +59,8 @@ export default async function Home() {
               {focusItems.map((item) => (
                 <Link key={item.key} href={item.href} className="group flex items-center justify-between rounded-xl border border-transparent px-2 py-3 transition hover:border-[#DDE3D5] hover:bg-white/[0.02]">
                   <div>
-                    <p className="text-sm text-[#8f948f]">{item.label}</p>
-                    <p className="text-base text-[#ecebe8]">{item.title}</p>
+                    <p className="text-sm text-[#8f948f]">{item.focusLabel}</p>
+                    <p className="text-base text-[#ecebe8]">{item.primaryText}</p>
                   </div>
                   <span className="text-xs text-[#c2a56d]">Open</span>
                 </Link>
