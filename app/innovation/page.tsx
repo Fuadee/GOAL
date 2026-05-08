@@ -15,10 +15,10 @@ export default async function InnovationPage() {
   return (
     <PageShell>
       <Navbar />
-      <section className="page-container space-y-8">
+      <section className="page-container space-y-5">
         <PageHeader
           kicker="Innovation Lab"
-          title="Founder Build Pipeline"
+          title="Founder Execution Workspace"
           description="ชัดเจนว่าอะไรคือ mission ตอนนี้ อะไรพร้อมเริ่ม และอะไรต้องเร่งทดลองต่อ"
         />
         <CurrentMissionSection mission={currentMission} />

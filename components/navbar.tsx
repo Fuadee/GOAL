@@ -28,15 +28,15 @@ export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const baseItemClass =
-    'theme-focus rounded-full border border-transparent px-4 py-2 text-sm font-medium tracking-[0.02em] text-slate-300 transition duration-200 hover:border-white/10 hover:bg-white/5 hover:text-slate-100';
+    'theme-focus rounded-full border border-transparent px-3 py-1.5 text-xs font-medium tracking-[0.01em] text-slate-300 transition duration-200 hover:border-white/10 hover:bg-white/5 hover:text-slate-100';
 
   const activeItemClass =
     'border-[color:var(--border-strong)] bg-[color:color-mix(in_srgb,var(--surface-action)_88%,black_12%)] text-cyan-100 shadow-[0_0_0_1px_rgba(98,185,255,0.2)]';
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[color:var(--border)] bg-[color:rgba(10,17,30,0.86)] backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-8">
-        <Link href="/" className="theme-focus rounded-lg text-sm font-semibold uppercase tracking-[0.32em] text-slate-100">
+    <header className="sticky top-0 z-50 border-b border-[color:var(--border)] bg-[color:rgba(10,17,30,0.94)] backdrop-blur-md">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 md:px-6">
+        <Link href="/" className="theme-focus rounded-lg text-xs font-semibold uppercase tracking-[0.28em] text-slate-100">
           GOAL
         </Link>
 

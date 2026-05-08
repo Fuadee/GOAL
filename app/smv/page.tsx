@@ -58,7 +58,7 @@ export default async function SmvOverviewPage() {
     <PageShell className="smv-static">
       <Navbar />
       <section className="page-container space-y-5">
-        <PageHeader kicker="SMV Mission Control" title="Elite SMV System" description={`${missionCard.focusLabel}: ${missionCard.primaryText}`} />
+        <PageHeader kicker="SMV Mission Control" title="SMV Personal Operating System" description={`${missionCard.focusLabel}: ${missionCard.primaryText}`} />
 
         <section className="grid gap-3 md:grid-cols-3">
           <PremiumCard><p className="text-xs text-slate-400">Current SMV Score</p><p className="mt-1 text-4xl font-semibold text-cyan-100">{data.averageScore}</p></PremiumCard>

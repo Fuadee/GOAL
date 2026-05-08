@@ -9,10 +9,10 @@ export default async function HealthPage() {
   return (
     <PageShell>
       <Navbar />
-      <section className="page-container space-y-8">
+      <section className="page-container space-y-5">
         <PageHeader
           kicker="Health Performance"
-          title="Runner Quest: ลงมือทำวันนี้"
+          title="Fitness Mission Control"
           description="โฟกัสภารกิจวันนี้ให้ชัด แล้วเดินเกมฟิตเนสแบบมีวินัยและโมเมนตัม"
         />
         <RunnerQuestDashboard data={dashboard} />
