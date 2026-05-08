@@ -98,7 +98,7 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
 
   return (
     <section className="space-y-10">
-      <article className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0e1116] p-4 md:p-6">
+      <article className="overflow-hidden rounded-[28px] border border-[#DDE3D5] bg-[#0e1116] p-4 md:p-6">
         <div className="mb-5 space-y-2 md:mb-6">
           <p className="text-[11px] uppercase tracking-[0.2em] text-[#c2a56d]">Personal Operating Space</p>
           <h1 className="text-3xl font-medium leading-tight text-[#f3f2ef] md:text-5xl">Build your life deliberately.</h1>
@@ -114,14 +114,14 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
         />
       </article>
 
-      <section className="space-y-4 border-t border-white/10 pt-8">
+      <section className="space-y-4 border-t border-[#DDE3D5] pt-8">
         <div className="flex items-end justify-between">
           <h2 className="text-lg font-medium text-[#f3f2ef]">Identity</h2>
-          <button type="button" onClick={() => setIsTraitModalOpen(true)} className="rounded-full border border-white/20 px-4 py-2 text-xs text-[#d7d6d2] hover:border-[#c2a56d]/50">Add tag</button>
+          <button type="button" onClick={() => setIsTraitModalOpen(true)} className="rounded-full border border-[#DDE3D5] px-4 py-2 text-xs text-[#d7d6d2] hover:border-[#c2a56d]/50">Add tag</button>
         </div>
         <div className="flex flex-wrap gap-2.5">
           {traits.map((trait) => (
-            <button key={trait.id} type="button" onClick={() => toggleTrait(trait.id)} className={`rounded-full border px-4 py-2 text-sm transition ${trait.isActive ? 'border-[#c2a56d]/55 bg-[#c2a56d]/10 text-[#eee7d9]' : 'border-white/15 text-[#a8a8a1]'}`}>
+            <button key={trait.id} type="button" onClick={() => toggleTrait(trait.id)} className={`rounded-full border px-4 py-2 text-sm transition ${trait.isActive ? 'border-[#c2a56d]/55 bg-[#c2a56d]/10 text-[#eee7d9]' : 'border-[#DDE3D5] text-[#a8a8a1]'}`}>
               {trait.isActive ? '✓ ' : ''}{trait.title}
             </button>
           ))}
@@ -132,7 +132,7 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
 
       {message ? <p className="text-sm text-rose-300">{message}</p> : null}
 
-      {isTraitModalOpen ? <div className="fixed inset-0 z-50 flex items-center justify-center px-4"><button type="button" className="absolute inset-0 bg-black/65" onClick={() => setIsTraitModalOpen(false)} /><div className="relative z-10 w-full max-w-md rounded-2xl border border-white/15 bg-[#11151c] p-5"><h3 className="text-lg text-[#f5f2ea]">Add Identity Tag</h3><form className="mt-4 space-y-3" onSubmit={submitTrait}><input value={newTraitTitle} onChange={(e) => setNewTraitTitle(e.target.value)} placeholder="Deep Work" className="theme-input" maxLength={60} required/><textarea value={newTraitDescription} onChange={(e) => setNewTraitDescription(e.target.value)} placeholder="Optional meaning" className="theme-textarea min-h-[90px]" maxLength={220}/><div className="flex justify-end gap-2"><button type="button" onClick={() => setIsTraitModalOpen(false)} className="theme-button-secondary">Cancel</button><button type="submit" className="theme-button-primary">Save</button></div></form></div></div> : null}
+      {isTraitModalOpen ? <div className="fixed inset-0 z-50 flex items-center justify-center px-4"><button type="button" className="absolute inset-0 bg-black/65" onClick={() => setIsTraitModalOpen(false)} /><div className="relative z-10 w-full max-w-md rounded-2xl border border-[#DDE3D5] bg-[#11151c] p-5"><h3 className="text-lg text-[#f5f2ea]">Add Identity Tag</h3><form className="mt-4 space-y-3" onSubmit={submitTrait}><input value={newTraitTitle} onChange={(e) => setNewTraitTitle(e.target.value)} placeholder="Deep Work" className="theme-input" maxLength={60} required/><textarea value={newTraitDescription} onChange={(e) => setNewTraitDescription(e.target.value)} placeholder="Optional meaning" className="theme-textarea min-h-[90px]" maxLength={220}/><div className="flex justify-end gap-2"><button type="button" onClick={() => setIsTraitModalOpen(false)} className="theme-button-secondary">Cancel</button><button type="submit" className="theme-button-primary">Save</button></div></form></div></div> : null}
     </section>
   );
 }

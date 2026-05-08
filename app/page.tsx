@@ -50,14 +50,14 @@ export default async function Home() {
         </MotionReveal>
 
         <MotionReveal>
-          <section className="rounded-[24px] border border-white/10 bg-[#10141b] p-5 md:p-7">
+          <section className="rounded-[24px] border border-[#DDE3D5] bg-[#10141b] p-5 md:p-7">
             <p className="text-[11px] uppercase tracking-[0.18em] text-[#c2a56d]">Current Focus</p>
             <h2 className="mt-2 text-2xl font-medium text-[#f1f0ec] md:text-3xl">Today, only what truly matters.</h2>
             <p className="mt-1 text-sm text-[#a9aaa7]">Choose one path now. Keep the rest quiet.</p>
 
             <div className="mt-6 space-y-2">
               {focusItems.map((item) => (
-                <Link key={item.key} href={item.href} className="group flex items-center justify-between rounded-xl border border-transparent px-2 py-3 transition hover:border-white/10 hover:bg-white/[0.02]">
+                <Link key={item.key} href={item.href} className="group flex items-center justify-between rounded-xl border border-transparent px-2 py-3 transition hover:border-[#DDE3D5] hover:bg-white/[0.02]">
                   <div>
                     <p className="text-sm text-[#8f948f]">{item.label}</p>
                     <p className="text-base text-[#ecebe8]">{item.title}</p>

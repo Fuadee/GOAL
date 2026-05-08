@@ -77,7 +77,7 @@ export function SmvEditScoresModal({
       <button
         type="button"
         aria-label="Close modal backdrop"
-        className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-[#F6F7F4]/80 backdrop-blur-sm"
         onClick={onClose}
         disabled={isSaving}
       />

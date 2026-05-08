@@ -28,20 +28,20 @@ const displayStatusMeta: Record<BloodDonationPlanDisplayStatus, { label: string;
   UPCOMING: { label: 'วางแผนไว้แล้ว', className: 'bg-blue-500/20 text-blue-100 border border-blue-300/40' },
   OVERDUE: { label: 'เลยกำหนด', className: 'bg-amber-500/20 text-amber-100 border border-amber-300/40' },
   COMPLETED: { label: 'ทำแล้ว', className: 'bg-emerald-500/20 text-emerald-100 border border-emerald-300/40' },
-  CANCELLED: { label: 'ยกเลิกแล้ว', className: 'bg-slate-500/30 text-slate-200 border border-slate-300/30' }
+  CANCELLED: { label: 'ยกเลิกแล้ว', className: 'bg-slate-500/30 text-[#64748B] border border-slate-300/30' }
 };
 
 const getPlanCardTone = (status: BloodDonationPlanDisplayStatus, isCurrent: boolean) => {
   if (isCurrent || status === 'CURRENT') {
-    return 'border-rose-300/60 bg-gradient-to-br from-rose-500/15 via-slate-900/80 to-purple-500/10 shadow-lg shadow-rose-900/30';
+    return 'border-rose-300/60 bg-white shadow-sm shadow-sm';
   }
 
   if (status === 'OVERDUE') return 'border-amber-400/40 bg-amber-500/5';
   if (status === 'TODAY') return 'border-orange-400/40 bg-orange-500/5';
-  if (status === 'CANCELLED') return 'border-slate-500/40 bg-slate-900/50 opacity-80';
+  if (status === 'CANCELLED') return 'border-slate-500/40 bg-white/50 opacity-80';
   if (status === 'COMPLETED') return 'border-emerald-400/40 bg-emerald-500/5';
 
-  return 'border-white/10 bg-slate-950/40';
+  return 'border-[#DDE3D5] bg-[#F6F7F4]/40';
 };
 
 export function BloodDonationDashboard({ initialData }: Props) {
@@ -94,13 +94,13 @@ export function BloodDonationDashboard({ initialData }: Props) {
 
   return (
     <section className="space-y-6">
-      <article className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/30">
+      <article className="rounded-3xl border border-[#DDE3D5] bg-white/70 p-6 shadow-sm shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-semibold text-white">Blood Donation</h2>
-            <p className="mt-2 text-slate-300">ติดตามแผนบริจาค วันที่ไปจริง และโอกาสไปถึงเป้าหมาย</p>
+            <h2 className="text-3xl font-semibold text-[#1E293B]">Blood Donation</h2>
+            <p className="mt-2 text-[#64748B]">ติดตามแผนบริจาค วันที่ไปจริง และโอกาสไปถึงเป้าหมาย</p>
             {data.goal ? (
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 text-sm text-[#94A3B8]">
                 ช่วงเป้าหมาย: {formatDate(data.goal.start_date)} - {formatDate(data.goal.end_date)}
               </p>
             ) : null}
@@ -113,14 +113,14 @@ export function BloodDonationDashboard({ initialData }: Props) {
             <button
               onClick={() => setModal('planned')}
               disabled={!canManageEvents}
-              className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-[#1E293B] disabled:cursor-not-allowed disabled:opacity-40"
             >
               + วางแผนบริจาค
             </button>
             <button
               onClick={() => setModal('completed')}
               disabled={!canManageEvents}
-              className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-[#1E293B] disabled:cursor-not-allowed disabled:opacity-40"
             >
               + บันทึกว่าบริจาคแล้ว
             </button>
@@ -128,9 +128,9 @@ export function BloodDonationDashboard({ initialData }: Props) {
         </div>
 
         {!data.goal ? (
-          <div className="mt-6 rounded-2xl border border-dashed border-white/20 bg-slate-950/40 p-6 text-center text-slate-200">
+          <div className="mt-6 rounded-2xl border border-dashed border-[#DDE3D5] bg-[#F6F7F4]/40 p-6 text-center text-[#64748B]">
             <p className="text-lg font-medium">ยังไม่มีเป้าหมายการบริจาคเลือด</p>
-            <p className="mt-2 text-sm text-slate-400">เริ่มต้นด้วยการตั้งเป้าหมาย 3 ครั้งในปีนี้</p>
+            <p className="mt-2 text-sm text-[#94A3B8]">เริ่มต้นด้วยการตั้งเป้าหมาย 3 ครั้งในปีนี้</p>
           </div>
         ) : null}
       </article>
@@ -162,39 +162,39 @@ export function BloodDonationDashboard({ initialData }: Props) {
               ['วางแผนไว้แล้ว', `${summary.plannedCount} ครั้ง`],
               ['เหลืออีก', `${summary.remainingToTarget} ครั้ง`]
             ].map(([label, value]) => (
-              <article key={label} className="rounded-2xl border border-white/10 bg-slate-900/70 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{value}</p>
-                {label === 'เหลืออีก' && nextPlanSummaryLabel ? <p className="mt-1 text-xs text-slate-400">แผนถัดไป: {nextPlanSummaryLabel}</p> : null}
+              <article key={label} className="rounded-2xl border border-[#DDE3D5] bg-white/70 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-[#94A3B8]">{label}</p>
+                <p className="mt-3 text-2xl font-semibold text-[#1E293B]">{value}</p>
+                {label === 'เหลืออีก' && nextPlanSummaryLabel ? <p className="mt-1 text-xs text-[#94A3B8]">แผนถัดไป: {nextPlanSummaryLabel}</p> : null}
               </article>
             ))}
           </section>
 
           <section className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
-            <article className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-              <p className="text-sm text-slate-300">Progress</p>
-              <p className="mt-2 text-2xl font-semibold text-white">{completedRatioLabel}</p>
-              <div className="mt-4 h-3 rounded-full bg-slate-800">
-                <div className="h-3 rounded-full bg-gradient-to-r from-rose-400 to-orange-300" style={{ width: `${summary.progressPercent}%` }} />
+            <article className="rounded-2xl border border-[#DDE3D5] bg-white/70 p-5">
+              <p className="text-sm text-[#64748B]">Progress</p>
+              <p className="mt-2 text-2xl font-semibold text-[#1E293B]">{completedRatioLabel}</p>
+              <div className="mt-4 h-3 rounded-full bg-[#EEF1EA]">
+                <div className="h-3 rounded-full bg-white" style={{ width: `${summary.progressPercent}%` }} />
               </div>
             </article>
 
-            <article className="rounded-2xl border border-rose-300/20 bg-gradient-to-br from-rose-500/10 to-purple-500/10 p-5">
-              <p className="text-sm text-slate-300">Chance to Reach Goal</p>
-              <p className="mt-2 text-4xl font-semibold text-white">{chance.score}%</p>
-              <p className="mt-1 inline-flex rounded-full bg-white/10 px-3 py-1 text-sm text-slate-100">{chance.label}</p>
-              <p className="mt-3 text-sm text-slate-200">{chance.shortMessage}</p>
-              <p className="mt-1 text-xs text-slate-400">{chance.coachingMessage}</p>
+            <article className="rounded-2xl border border-rose-300/20 bg-white p-5">
+              <p className="text-sm text-[#64748B]">Chance to Reach Goal</p>
+              <p className="mt-2 text-4xl font-semibold text-[#1E293B]">{chance.score}%</p>
+              <p className="mt-1 inline-flex rounded-full bg-white/10 px-3 py-1 text-sm text-[#1E293B]">{chance.label}</p>
+              <p className="mt-3 text-sm text-[#64748B]">{chance.shortMessage}</p>
+              <p className="mt-1 text-xs text-[#94A3B8]">{chance.coachingMessage}</p>
             </article>
           </section>
         </>
       ) : null}
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <article className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-          <h3 className="text-xl font-semibold text-white">Upcoming Plans</h3>
+        <article className="rounded-2xl border border-[#DDE3D5] bg-white/70 p-5">
+          <h3 className="text-xl font-semibold text-[#1E293B]">Upcoming Plans</h3>
           {!data.upcomingPlans.length ? (
-            <p className="mt-4 text-sm text-slate-400">ยังไม่มีแผนการบริจาค ลองเพิ่มวันแรกของคุณ</p>
+            <p className="mt-4 text-sm text-[#94A3B8]">ยังไม่มีแผนการบริจาค ลองเพิ่มวันแรกของคุณ</p>
           ) : (
             <ul className="mt-4 space-y-3">
               {data.upcomingPlans.map((event) => (
@@ -222,18 +222,18 @@ export function BloodDonationDashboard({ initialData }: Props) {
           )}
         </article>
 
-        <article className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-          <h3 className="text-xl font-semibold text-white">Donation History</h3>
+        <article className="rounded-2xl border border-[#DDE3D5] bg-white/70 p-5">
+          <h3 className="text-xl font-semibold text-[#1E293B]">Donation History</h3>
           {!data.history.length ? (
-            <p className="mt-4 text-sm text-slate-400">ยังไม่มีประวัติ completed</p>
+            <p className="mt-4 text-sm text-[#94A3B8]">ยังไม่มีประวัติ completed</p>
           ) : (
             <ul className="mt-4 space-y-3">
               {data.history.map((event) => (
-                <li key={event.id} className="rounded-xl border border-white/10 bg-slate-950/40 p-4">
-                  <p className="text-lg font-semibold text-white">{formatDate(event.actual_date)}</p>
+                <li key={event.id} className="rounded-xl border border-[#DDE3D5] bg-[#F6F7F4]/40 p-4">
+                  <p className="text-lg font-semibold text-[#1E293B]">{formatDate(event.actual_date)}</p>
                   {event.planned_date ? <p className="text-xs text-slate-500">จากแผน: {formatDate(event.planned_date)}</p> : null}
-                  <p className="mt-1 text-xs text-slate-400">{event.location || 'ไม่ระบุสถานที่'}</p>
-                  {event.note ? <p className="mt-1 text-sm text-slate-300">{event.note}</p> : null}
+                  <p className="mt-1 text-xs text-[#94A3B8]">{event.location || 'ไม่ระบุสถานที่'}</p>
+                  {event.note ? <p className="mt-1 text-sm text-[#64748B]">{event.note}</p> : null}
                 </li>
               ))}
             </ul>
@@ -352,34 +352,34 @@ function BloodDonationNextMissionCard({
   const missionSummary = getNextBloodDonationMissionSummary(currentPlan);
 
   return (
-    <article className="rounded-3xl border border-rose-300/30 bg-gradient-to-br from-rose-500/15 via-slate-900/90 to-purple-500/10 p-6 shadow-2xl shadow-rose-900/20">
+    <article className="rounded-3xl border border-rose-300/30 bg-white p-6 shadow-sm shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-200">Next Mission</p>
-          <h3 className="mt-2 text-2xl font-semibold text-white">ภารกิจถัดไป</h3>
-          <p className="mt-1 text-sm text-slate-300">{missionSummary.primaryText}</p>
+          <h3 className="mt-2 text-2xl font-semibold text-[#1E293B]">ภารกิจถัดไป</h3>
+          <p className="mt-1 text-sm text-[#64748B]">{missionSummary.primaryText}</p>
         </div>
       </div>
 
       {!currentPlan ? (
-        <div className="mt-5 rounded-2xl border border-dashed border-white/20 bg-slate-950/30 p-5">
-          <p className="text-lg font-medium text-white">ยังไม่มีแผนถัดไป</p>
-          <p className="mt-1 text-sm text-slate-400">ครบทุกแผนแล้ว หรือยังไม่ได้สร้างแผนใหม่</p>
+        <div className="mt-5 rounded-2xl border border-dashed border-[#DDE3D5] bg-[#F6F7F4]/30 p-5">
+          <p className="text-lg font-medium text-[#1E293B]">ยังไม่มีแผนถัดไป</p>
+          <p className="mt-1 text-sm text-[#94A3B8]">ครบทุกแผนแล้ว หรือยังไม่ได้สร้างแผนใหม่</p>
         </div>
       ) : (
         <div className="mt-5 space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-slate-300">บริจาคเลือดครั้งถัดไป</p>
-              <p className="mt-1 text-3xl font-semibold text-white">{formatDate(currentPlan.planned_date)}</p>
-              <p className="mt-1 text-sm text-slate-300">{missionSummary.secondaryText || 'ไม่ระบุสถานที่'}</p>
-              {currentPlan.note ? <p className="mt-2 text-sm text-slate-400">{currentPlan.note}</p> : null}
+              <p className="text-sm text-[#64748B]">บริจาคเลือดครั้งถัดไป</p>
+              <p className="mt-1 text-3xl font-semibold text-[#1E293B]">{formatDate(currentPlan.planned_date)}</p>
+              <p className="mt-1 text-sm text-[#64748B]">{missionSummary.secondaryText || 'ไม่ระบุสถานที่'}</p>
+              {currentPlan.note ? <p className="mt-2 text-sm text-[#94A3B8]">{currentPlan.note}</p> : null}
             </div>
 
             <div className="space-y-2 text-right">
               <span className="inline-flex rounded-full px-3 py-1 text-xs font-medium bg-rose-500/20 text-rose-100 border border-rose-300/40">แผนปัจจุบัน</span>
               <p className="text-2xl font-semibold text-rose-100">{getCountdownLabel(currentPlan.planned_date, now)}</p>
-              <p className="text-xs text-slate-300">{displayStatusMeta[getBloodDonationPlanDisplayStatus(currentPlan, currentPlan, now)].label}</p>
+              <p className="text-xs text-[#64748B]">{displayStatusMeta[getBloodDonationPlanDisplayStatus(currentPlan, currentPlan, now)].label}</p>
             </div>
           </div>
 
@@ -390,7 +390,7 @@ function BloodDonationNextMissionCard({
             <button className="rounded-full bg-blue-500/20 px-3 py-1 text-blue-100" onClick={() => onReschedule(currentPlan)}>
               เลื่อนแผน
             </button>
-            <button className="rounded-full bg-slate-500/30 px-3 py-1 text-slate-200" onClick={() => onCancel(currentPlan)}>
+            <button className="rounded-full bg-slate-500/30 px-3 py-1 text-[#64748B]" onClick={() => onCancel(currentPlan)}>
               ยกเลิก
             </button>
           </div>
@@ -423,10 +423,10 @@ function BloodDonationPlanCard({
     <li className={`rounded-xl border p-4 ${getPlanCardTone(status, isCurrent)}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-lg font-semibold text-white">{formatDate(event.planned_date)}</p>
+          <p className="text-lg font-semibold text-[#1E293B]">{formatDate(event.planned_date)}</p>
           <p className="text-sm font-medium text-rose-100">{getCountdownLabel(event.planned_date, now)}</p>
-          <p className="text-xs text-slate-400">{event.location || 'ไม่ระบุสถานที่'}</p>
-          {event.note ? <p className="mt-1 text-sm text-slate-300">{event.note}</p> : null}
+          <p className="text-xs text-[#94A3B8]">{event.location || 'ไม่ระบุสถานที่'}</p>
+          {event.note ? <p className="mt-1 text-sm text-[#64748B]">{event.note}</p> : null}
         </div>
 
         <div className="flex flex-col items-end gap-1">
@@ -442,7 +442,7 @@ function BloodDonationPlanCard({
         <button className="rounded-full bg-blue-500/20 px-3 py-1 text-blue-100" onClick={onReschedule}>
           เลื่อนแผน
         </button>
-        <button className="rounded-full bg-slate-500/30 px-3 py-1 text-slate-200" onClick={onCancel}>
+        <button className="rounded-full bg-slate-500/30 px-3 py-1 text-[#64748B]" onClick={onCancel}>
           ยกเลิก
         </button>
       </div>
@@ -455,9 +455,9 @@ function ModalShell({ open, onClose, children }: { open: boolean; onClose: () =>
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 p-5">
+      <div className="w-full max-w-lg rounded-2xl border border-[#DDE3D5] bg-white p-5">
         <div className="mb-4 flex justify-end">
-          <button onClick={onClose} className="rounded-full bg-white/10 px-3 py-1 text-xs text-white">
+          <button onClick={onClose} className="rounded-full bg-white/10 px-3 py-1 text-xs text-[#1E293B]">
             ปิด
           </button>
         </div>
@@ -470,14 +470,14 @@ function ModalShell({ open, onClose, children }: { open: boolean; onClose: () =>
 function Input({ name, label, type = 'text', defaultValue, required = false }: { name: string; label: string; type?: string; defaultValue?: string; required?: boolean }) {
 
   return (
-    <label className="space-y-1 text-sm text-slate-200">
+    <label className="space-y-1 text-sm text-[#64748B]">
       <span>{label}</span>
       <input
         name={name}
         type={type}
         defaultValue={defaultValue}
         required={required}
-        className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 text-white outline-none"
+        className="w-full rounded-xl border border-[#DDE3D5] bg-[#F6F7F4]/60 px-3 py-2 text-[#1E293B] outline-none"
       />
     </label>
   );
@@ -487,7 +487,7 @@ function GoalForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event: F
 
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
-      <h4 className="text-xl font-semibold text-white">Create Goal</h4>
+      <h4 className="text-xl font-semibold text-[#1E293B]">Create Goal</h4>
       <Input name="title" label="Title" required />
       <Input name="target_count" label="Target Count" type="number" defaultValue="3" required />
       <Input name="start_date" label="Start Date" type="date" required />
@@ -503,7 +503,7 @@ function PlannedForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event
 
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
-      <h4 className="text-xl font-semibold text-white">Add Planned Donation</h4>
+      <h4 className="text-xl font-semibold text-[#1E293B]">Add Planned Donation</h4>
       <Input name="planned_date" label="Planned Date" type="date" required />
       <Input name="location" label="Location" />
       <Input name="note" label="Note" />
@@ -518,7 +518,7 @@ function CompletedForm({ loading, onSubmit }: { loading: boolean; onSubmit: (eve
 
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
-      <h4 className="text-xl font-semibold text-white">Add Completed Donation</h4>
+      <h4 className="text-xl font-semibold text-[#1E293B]">Add Completed Donation</h4>
       <Input name="actual_date" label="Actual Date" type="date" required />
       <Input name="location" label="Location" />
       <Input name="note" label="Note" />
@@ -533,7 +533,7 @@ function ConvertForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event
 
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
-      <h4 className="text-xl font-semibold text-white">Convert Planned to Completed</h4>
+      <h4 className="text-xl font-semibold text-[#1E293B]">Convert Planned to Completed</h4>
       <Input name="actual_date" label="Actual Date" type="date" required />
       <Input name="note" label="Note" />
       <button disabled={loading} className="rounded-full bg-emerald-500/20 px-4 py-2 text-sm text-emerald-100 disabled:opacity-60">
@@ -559,7 +559,7 @@ function RescheduleForm({
 
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
-      <h4 className="text-xl font-semibold text-white">Reschedule Planned Event</h4>
+      <h4 className="text-xl font-semibold text-[#1E293B]">Reschedule Planned Event</h4>
       <Input name="planned_date" label="Planned Date" type="date" defaultValue={defaultDate} required />
       <Input name="location" label="Location" defaultValue={defaultLocation} />
       <Input name="note" label="Note" defaultValue={defaultNote} />

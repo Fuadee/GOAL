@@ -17,7 +17,7 @@ type InnovationProcessSectionProps = {
 };
 
 const stepStatusStyles: Record<InnovationStepStatus, string> = {
-  todo: 'bg-slate-500/20 text-slate-300 border border-slate-400/30',
+  todo: 'bg-slate-500/20 text-[#64748B] border border-slate-400/30',
   in_progress: 'bg-amber-500/20 text-amber-300 border border-amber-400/40',
   done: 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40'
 };
@@ -28,8 +28,8 @@ export function InnovationProcessSection({ innovationId, steps }: InnovationProc
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <section className="space-y-5 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-      <h2 className="text-xl font-semibold text-white">Process Checklist</h2>
+    <section className="space-y-5 rounded-2xl border border-[#DDE3D5] bg-white/5 p-6 backdrop-blur">
+      <h2 className="text-xl font-semibold text-[#1E293B]">Process Checklist</h2>
 
       <form
         action={(formData) => {
@@ -43,43 +43,43 @@ export function InnovationProcessSection({ innovationId, steps }: InnovationProc
             router.refresh();
           });
         }}
-        className="grid gap-3 rounded-xl border border-white/10 bg-slate-900/40 p-4"
+        className="grid gap-3 rounded-xl border border-[#DDE3D5] bg-white/40 p-4"
       >
-        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Add process step</h3>
+        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#64748B]">Add process step</h3>
         <input
           name="title"
           type="text"
           required
           placeholder="Step title"
-          className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300"
+          className="rounded-xl border border-[#DDE3D5] bg-white/70 px-4 py-3 text-sm text-[#1E293B] outline-none transition focus:border-[#DDE3D5]"
         />
         <textarea
           name="description"
           rows={2}
           placeholder="Step description"
-          className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300"
+          className="rounded-xl border border-[#DDE3D5] bg-white/70 px-4 py-3 text-sm text-[#1E293B] outline-none transition focus:border-[#DDE3D5]"
         />
-        <input name="step_order" type="number" min={1} placeholder="Order (optional)" className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300" />
+        <input name="step_order" type="number" min={1} placeholder="Order (optional)" className="rounded-xl border border-[#DDE3D5] bg-white/70 px-4 py-3 text-sm text-[#1E293B] outline-none transition focus:border-[#DDE3D5]" />
         {error ? <p className="text-sm text-rose-300">{error}</p> : null}
         <button
           type="submit"
           disabled={isPending}
-          className="w-fit rounded-full bg-indigo-400/20 px-4 py-2 text-sm font-semibold text-indigo-200 transition hover:bg-indigo-400/30 disabled:opacity-50"
+          className="w-fit rounded-full bg-[#EEF1EA]/20 px-4 py-2 text-sm font-semibold text-[#334155] transition hover:bg-[#EEF1EA]/30 disabled:opacity-50"
         >
           {isPending ? 'Saving...' : 'Add Step'}
         </button>
       </form>
 
       {steps.length === 0 ? (
-        <p className="text-slate-300">No process steps yet. Define the real checklist first.</p>
+        <p className="text-[#64748B]">No process steps yet. Define the real checklist first.</p>
       ) : (
         <ul className="space-y-3">
           {steps.map((step) => (
-            <li key={step.id} className="rounded-xl border border-white/10 bg-slate-900/50 p-4">
+            <li key={step.id} className="rounded-xl border border-[#DDE3D5] bg-white/50 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-white">{step.title}</p>
-                  {step.description ? <p className="text-sm text-slate-300">{step.description}</p> : null}
+                  <p className="font-semibold text-[#1E293B]">{step.title}</p>
+                  {step.description ? <p className="text-sm text-[#64748B]">{step.description}</p> : null}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -120,7 +120,7 @@ export function InnovationProcessSection({ innovationId, steps }: InnovationProc
                           router.refresh();
                         });
                       }}
-                      className="rounded-full bg-white/10 px-3 py-2 text-xs text-white"
+                      className="rounded-full bg-white/10 px-3 py-2 text-xs text-[#1E293B]"
                     >
                       Reopen
                     </button>
