@@ -27,10 +27,10 @@ type BadgeConfig = {
 
 const STATUS_BADGES: Record<ConstructionStepStatus, BadgeConfig> = {
   not_started: {
-    selectClassName: 'border-slate-500/50 bg-slate-800 text-slate-100'
+    selectClassName: 'border-slate-500/50 bg-[#EEF1EA] text-[#1E293B]'
   },
   in_progress: {
-    selectClassName: 'border-cyan-400/60 bg-cyan-950/30 text-cyan-100'
+    selectClassName: 'border-[#DDE3D5]/60 bg-[#EEF1EA] text-[#334155]'
   },
   completed: {
     selectClassName: 'border-emerald-400/60 bg-emerald-950/40 text-emerald-100'
@@ -38,10 +38,10 @@ const STATUS_BADGES: Record<ConstructionStepStatus, BadgeConfig> = {
 };
 
 const EXECUTION_STATE_BADGES: Record<ConstructionExecutionState, string> = {
-  doing: 'border-cyan-400/60 bg-cyan-950/30 text-cyan-100',
+  doing: 'border-[#DDE3D5]/60 bg-[#EEF1EA] text-[#334155]',
   waiting: 'border-amber-400/60 bg-amber-950/40 text-amber-100',
   blocked: 'border-rose-500/70 bg-rose-950/60 text-rose-100',
-  follow_up_needed: 'border-violet-400/60 bg-violet-950/40 text-violet-100'
+  follow_up_needed: 'border-[#DDE3D5]/60 bg-[#EEF1EA] text-[#334155]'
 };
 
 const STATUS_LABELS: Record<ConstructionStepStatus, string> = {
@@ -288,8 +288,8 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold text-white">Construction Step Controls</h2>
-        <Link href="/money-management" className="rounded-full border border-white/20 px-4 py-2 text-sm text-slate-200 transition hover:bg-white/10">
+        <h2 className="text-xl font-semibold text-[#1E293B]">Construction Step Controls</h2>
+        <Link href="/money-management" className="rounded-full border border-[#DDE3D5] px-4 py-2 text-sm text-[#64748B] transition hover:bg-white/10">
           ← Back to dashboard
         </Link>
       </div>
@@ -301,21 +301,21 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
         onEditWaitingDetails={() => setEditWaitingStepId(currentStepId)}
       />
 
-      <div className="rounded-3xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">All milestones ({stepState.length})</p>
+      <div className="rounded-3xl border border-[#DDE3D5] bg-white/55 p-4 md:p-5">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[#94A3B8]">All milestones ({stepState.length})</p>
         <ol className="space-y-3">
           {stepState.map((step) => {
             const isCurrent = currentStep?.id === step.id && step.status !== 'completed' && !step.is_completed;
             const badge = STATUS_BADGES[step.status];
 
             return (
-              <li key={step.id} className={`rounded-2xl border p-4 ${isCurrent ? 'border-cyan-300/45 bg-cyan-500/5' : 'border-white/10 bg-slate-950/60'}`}>
+              <li key={step.id} className={`rounded-2xl border p-4 ${isCurrent ? 'border-[#DDE3D5]/45 bg-[#EEF1EA]/5' : 'border-[#DDE3D5] bg-[#F6F7F4]/60'}`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-slate-100">
+                    <p className="text-sm font-semibold text-[#1E293B]">
                       {step.step_order}. {step.step_name}
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">Milestone status: {STATUS_LABELS[step.status]}</p>
+                    <p className="mt-1 text-xs text-[#94A3B8]">Milestone status: {STATUS_LABELS[step.status]}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <select
@@ -353,7 +353,7 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
                       type="button"
                       onClick={() => setActiveStepId(step.id)}
                       disabled={isPending}
-                      className="rounded-full border border-white/20 px-3 py-1 text-xs text-slate-200 transition enabled:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-full border border-[#DDE3D5] px-3 py-1 text-xs text-[#64748B] transition enabled:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Add update
                     </button>
@@ -361,7 +361,7 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
                       type="button"
                       onClick={() => setEditWaitingStepId(step.id)}
                       disabled={isPending}
-                      className="rounded-full border border-cyan-300/40 px-3 py-1 text-xs text-cyan-100 transition enabled:hover:bg-cyan-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-full border border-[#DDE3D5]/40 px-3 py-1 text-xs text-[#334155] transition enabled:hover:bg-[#EEF1EA]/15 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Edit waiting details
                     </button>
@@ -374,10 +374,10 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
                     text={step.latest_update_text?.trim() || step.latest_update?.trim() || 'No updates logged yet.'}
                   />
                 </div>
-                <p className="mt-2 text-xs text-slate-400">
-                  Execution state: <span className="font-semibold text-slate-200">{EXECUTION_STATE_LABELS[step.execution_state]}</span> · Waiting on:{' '}
-                  <span className="text-slate-200">{step.waiting_on || 'N/A'}</span> · Expected by: <span className="text-slate-200">{formatDateLabel(step.expected_response_date, 'No ETA')}</span> · Next action:{' '}
-                  <span className="text-slate-200">{getNextActionAfterUnblock(step)}</span>
+                <p className="mt-2 text-xs text-[#94A3B8]">
+                  Execution state: <span className="font-semibold text-[#64748B]">{EXECUTION_STATE_LABELS[step.execution_state]}</span> · Waiting on:{' '}
+                  <span className="text-[#64748B]">{step.waiting_on || 'N/A'}</span> · Expected by: <span className="text-[#64748B]">{formatDateLabel(step.expected_response_date, 'No ETA')}</span> · Next action:{' '}
+                  <span className="text-[#64748B]">{getNextActionAfterUnblock(step)}</span>
                 </p>
               </li>
             );
@@ -389,10 +389,10 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
 
       {activeStepId ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl shadow-black/40">
+          <div className="w-full max-w-lg rounded-2xl border border-[#DDE3D5] bg-white p-5 shadow-sm shadow-sm">
             <div className="mb-4 flex items-center justify-between gap-2">
-              <h4 className="text-sm font-semibold text-white">Add construction update</h4>
-              <button type="button" onClick={() => setActiveStepId(null)} className="rounded-full border border-white/20 px-3 py-1 text-xs text-slate-200 transition hover:bg-white/10">
+              <h4 className="text-sm font-semibold text-[#1E293B]">Add construction update</h4>
+              <button type="button" onClick={() => setActiveStepId(null)} className="rounded-full border border-[#DDE3D5] px-3 py-1 text-xs text-[#64748B] transition hover:bg-white/10">
                 Close
               </button>
             </div>
@@ -403,13 +403,13 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
                 onChange={(event) => setUpdateMessage(event.target.value)}
                 rows={5}
                 placeholder="Log field update, blocker, or progress details..."
-                className="w-full rounded-xl border border-white/15 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300"
+                className="w-full rounded-xl border border-[#DDE3D5] bg-[#F6F7F4]/70 px-4 py-3 text-sm text-[#1E293B] outline-none transition focus:border-[#DDE3D5]"
               />
               <div className="flex justify-end">
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-medium text-cyan-100 transition enabled:hover:bg-cyan-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full border border-[#DDE3D5]/40 px-4 py-2 text-sm font-medium text-[#334155] transition enabled:hover:bg-[#EEF1EA]/15 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Save update
                 </button>
@@ -421,30 +421,30 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
 
       {editingWaitingStep ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl shadow-black/40">
+          <div className="w-full max-w-2xl rounded-2xl border border-[#DDE3D5] bg-white p-5 shadow-sm shadow-sm">
             <div className="mb-4 flex items-center justify-between gap-2">
-              <h4 className="text-sm font-semibold text-white">Edit waiting details</h4>
-              <button type="button" onClick={() => setEditWaitingStepId(null)} className="rounded-full border border-white/20 px-3 py-1 text-xs text-slate-200 transition hover:bg-white/10">
+              <h4 className="text-sm font-semibold text-[#1E293B]">Edit waiting details</h4>
+              <button type="button" onClick={() => setEditWaitingStepId(null)} className="rounded-full border border-[#DDE3D5] px-3 py-1 text-xs text-[#64748B] transition hover:bg-white/10">
                 Close
               </button>
             </div>
 
             <form className="grid gap-3 md:grid-cols-2" onSubmit={handleSubmitWaitingDetails}>
-              <label className="space-y-1 text-xs text-slate-300">
+              <label className="space-y-1 text-xs text-[#64748B]">
                 <span>Waiting on / Owner</span>
-                <input name="waiting_on" defaultValue={editingWaitingStep.waiting_on ?? ''} className="w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-sm text-slate-100" />
+                <input name="waiting_on" defaultValue={editingWaitingStep.waiting_on ?? ''} className="w-full rounded-lg border border-[#DDE3D5] bg-[#F6F7F4]/70 px-3 py-2 text-sm text-[#1E293B]" />
               </label>
-              <label className="space-y-1 text-xs text-slate-300">
+              <label className="space-y-1 text-xs text-[#64748B]">
                 <span>Waiting since</span>
-                <input type="date" name="waiting_since" defaultValue={editingWaitingStep.waiting_since ?? ''} className="w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-sm text-slate-100" />
+                <input type="date" name="waiting_since" defaultValue={editingWaitingStep.waiting_since ?? ''} className="w-full rounded-lg border border-[#DDE3D5] bg-[#F6F7F4]/70 px-3 py-2 text-sm text-[#1E293B]" />
               </label>
-              <label className="space-y-1 text-xs text-slate-300">
+              <label className="space-y-1 text-xs text-[#64748B]">
                 <span>Expected by</span>
-                <input type="date" name="expected_response_date" defaultValue={editingWaitingStep.expected_response_date ?? ''} className="w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-sm text-slate-100" />
+                <input type="date" name="expected_response_date" defaultValue={editingWaitingStep.expected_response_date ?? ''} className="w-full rounded-lg border border-[#DDE3D5] bg-[#F6F7F4]/70 px-3 py-2 text-sm text-[#1E293B]" />
               </label>
-              <label className="space-y-1 text-xs text-slate-300">
+              <label className="space-y-1 text-xs text-[#64748B]">
                 <span>Risk level</span>
-                <select name="risk_level" defaultValue={editingWaitingStep.risk_level ?? ''} className="w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-sm text-slate-100">
+                <select name="risk_level" defaultValue={editingWaitingStep.risk_level ?? ''} className="w-full rounded-lg border border-[#DDE3D5] bg-[#F6F7F4]/70 px-3 py-2 text-sm text-[#1E293B]">
                   <option value="">None</option>
                   {RISK_LEVEL_OPTIONS.map((riskOption) => (
                     <option key={riskOption.value} value={riskOption.value}>
@@ -453,25 +453,25 @@ export function ConstructionStepsManagerSection({ steps }: Props) {
                   ))}
                 </select>
               </label>
-              <label className="space-y-1 text-xs text-slate-300 md:col-span-2">
+              <label className="space-y-1 text-xs text-[#64748B] md:col-span-2">
                 <span>Next action after unblocking</span>
-                <input name="next_action_label" defaultValue={editingWaitingStep.next_action_label ?? ''} className="w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-sm text-slate-100" />
+                <input name="next_action_label" defaultValue={editingWaitingStep.next_action_label ?? ''} className="w-full rounded-lg border border-[#DDE3D5] bg-[#F6F7F4]/70 px-3 py-2 text-sm text-[#1E293B]" />
               </label>
-              <label className="space-y-1 text-xs text-slate-300 md:col-span-2">
+              <label className="space-y-1 text-xs text-[#64748B] md:col-span-2">
                 <span>Waiting reason / latest status note</span>
                 <textarea
                   name="latest_update_text"
                   rows={4}
                   defaultValue={editingWaitingStep.latest_update_text ?? editingWaitingStep.latest_update ?? ''}
-                  className="w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-sm text-slate-100"
+                  className="w-full rounded-lg border border-[#DDE3D5] bg-[#F6F7F4]/70 px-3 py-2 text-sm text-[#1E293B]"
                 />
               </label>
-              <label className="flex items-center gap-2 text-xs text-slate-300 md:col-span-2">
+              <label className="flex items-center gap-2 text-xs text-[#64748B] md:col-span-2">
                 <input type="checkbox" name="is_current_focus" defaultChecked={editingWaitingStep.is_current_focus} />
                 Set this step as current focus
               </label>
               <div className="flex justify-end gap-2 md:col-span-2">
-                <button type="submit" className="rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:bg-cyan-500/15">
+                <button type="submit" className="rounded-full border border-[#DDE3D5]/40 px-4 py-2 text-sm font-medium text-[#334155] transition hover:bg-[#EEF1EA]/15">
                   Save waiting details
                 </button>
               </div>

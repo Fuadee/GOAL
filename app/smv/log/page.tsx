@@ -14,14 +14,14 @@ export default async function SmvLogPage({ searchParams }: { searchParams?: { di
     <main className="app-shell">
       <Navbar />
       <section className="mx-auto w-full max-w-5xl space-y-5 px-4 py-8 md:px-8">
-        <header className="rounded-3xl border border-white/10 bg-white/5 p-6">
-          <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">Evidence Logging</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">/smv/log</h1>
-          <p className="mt-2 text-sm text-slate-300">This page logs evidence only. Core scores are recalculated automatically.</p>
-          {actionType ? <p className="mt-2 text-sm text-cyan-100">Action ที่เลือก: {actionType}</p> : null}
+        <header className="rounded-3xl border border-[#DDE3D5] bg-white/5 p-6">
+          <p className="text-xs uppercase tracking-[0.2em] text-[#64748B]">Evidence Logging</p>
+          <h1 className="mt-2 text-3xl font-semibold text-[#1E293B]">/smv/log</h1>
+          <p className="mt-2 text-sm text-[#64748B]">This page logs evidence only. Core scores are recalculated automatically.</p>
+          {actionType ? <p className="mt-2 text-sm text-[#334155]">Action ที่เลือก: {actionType}</p> : null}
         </header>
 
-        <article className="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <article className="rounded-3xl border border-[#DDE3D5] bg-white/5 p-6">
           <SmvEvidenceForm
             dimensions={data.dimensions}
             metricsByDimension={data.metricsByDimension}

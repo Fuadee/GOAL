@@ -5,10 +5,10 @@ type Props = {
 };
 
 const STATUS_STYLES: Record<ConstructionMilestoneView['status'], string> = {
-  done: 'border-emerald-400/35 bg-gradient-to-br from-emerald-500/16 via-emerald-500/6 to-slate-950/70 text-emerald-100 shadow-[0_0_26px_rgba(16,185,129,0.14)]',
+  done: 'border-emerald-400/35 bg-white text-emerald-100 shadow-sm',
   current:
-    'border-cyan-300/70 bg-gradient-to-br from-cyan-400/20 via-cyan-500/10 to-indigo-950/70 text-cyan-50 shadow-[0_0_34px_rgba(56,189,248,0.28)] scale-[1.025]',
-  upcoming: 'border-white/12 bg-gradient-to-br from-slate-900/95 via-slate-900/80 to-slate-950/95 text-slate-300 opacity-80'
+    'border-[#DDE3D5]/70 bg-white text-[#334155] shadow-sm scale-[1.025]',
+  upcoming: 'border-white/12 bg-white text-[#64748B] opacity-80'
 };
 const STATUS_LABELS: Record<ConstructionMilestoneView['status'], string> = {
   done: 'Completed',
@@ -35,7 +35,7 @@ export function ConstructionMilestoneStepper({ milestones }: Props) {
           >
             {index < milestones.length - 1 ? (
               <span
-                className="pointer-events-none absolute -right-2 top-1/2 hidden h-px w-3 bg-gradient-to-r from-cyan-300/40 to-transparent md:block"
+                className="pointer-events-none absolute -right-2 top-1/2 hidden h-px w-3 bg-white md:block"
                 aria-hidden
               />
             ) : null}
