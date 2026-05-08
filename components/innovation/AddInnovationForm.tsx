@@ -19,14 +19,14 @@ export function AddInnovationForm({ currentCount, maxCount }: AddInnovationFormP
   const isLimitReached = currentCount >= maxCount;
 
   return (
-    <section className="space-y-4 rounded-2xl border border-[#DDE3D5] bg-white/5 p-6 backdrop-blur">
+    <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-[#1E293B]">Add Innovation</h2>
+        <h2 className="text-lg font-semibold text-white">Add Innovation</h2>
         <button
           type="button"
           onClick={() => setIsAdding((prev) => !prev)}
           disabled={isLimitReached}
-          className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-[#1E293B] transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
         >
           + Add Innovation
         </button>
@@ -55,34 +55,34 @@ export function AddInnovationForm({ currentCount, maxCount }: AddInnovationFormP
             type="text"
             name="title"
             placeholder="Innovation title"
-            className="rounded-xl border border-[#DDE3D5] bg-white/70 px-4 py-3 text-sm text-[#1E293B] outline-none transition focus:border-[#DDE3D5]"
+            className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300"
             required
           />
           <textarea
             name="description"
             placeholder="Innovation description"
             rows={3}
-            className="rounded-xl border border-[#DDE3D5] bg-white/70 px-4 py-3 text-sm text-[#1E293B] outline-none transition focus:border-[#DDE3D5]"
+            className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300"
           />
           <textarea
             name="goal"
             placeholder="Outcome goal"
             rows={2}
-            className="rounded-xl border border-[#DDE3D5] bg-white/70 px-4 py-3 text-sm text-[#1E293B] outline-none transition focus:border-[#DDE3D5]"
+            className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300"
           />
           {error ? <p className="text-sm text-rose-300">{error}</p> : null}
           <div className="flex items-center gap-3">
             <button
               type="submit"
               disabled={isPending}
-              className="rounded-full bg-[#EEF1EA]/20 px-4 py-2 text-sm font-semibold text-[#334155] transition hover:bg-[#EEF1EA]/30 disabled:opacity-50"
+              className="rounded-full bg-indigo-400/20 px-4 py-2 text-sm font-semibold text-indigo-200 transition hover:bg-indigo-400/30 disabled:opacity-50"
             >
               {isPending ? 'Saving...' : 'Save Innovation'}
             </button>
             <button
               type="button"
               onClick={() => setIsAdding(false)}
-              className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-[#64748B] transition hover:bg-white/20"
+              className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/20"
             >
               Cancel
             </button>

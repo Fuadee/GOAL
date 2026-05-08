@@ -69,7 +69,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
   return (
     <section className="theme-card space-y-4 p-5">
       <h3 className="card-title">Quick Log</h3>
-      <p className="text-sm text-[#64748B]">บันทึกทันทีหลังวิ่ง เพื่อให้ด่านอัปเดตทันที</p>
+      <p className="text-sm text-slate-300">บันทึกทันทีหลังวิ่ง เพื่อให้ด่านอัปเดตทันที</p>
       <form
         action={(formData) => {
           setError(null);
@@ -136,7 +136,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
               className="theme-input"
             />
             <p className="helper-text">พิมพ์ได้ทั้ง 930, 09:30 หรือ 0:09:30 ระบบอ่านให้เอง</p>
-            {durationValidation.displayValue ? <p className="text-xs text-[#64748B]">เวลาที่อ่านได้: {durationValidation.displayValue}</p> : null}
+            {durationValidation.displayValue ? <p className="text-xs text-cyan-200">เวลาที่อ่านได้: {durationValidation.displayValue}</p> : null}
             {isDurationTouched && durationValidation.error ? (
               <p className="text-xs text-amber-300">{durationValidation.error}</p>
             ) : null}
@@ -171,7 +171,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
 
         {preview ? (
           <div className="action-surface p-3 text-sm text-[color:var(--text-primary)]">
-            <p>Pace preview: <span className="font-medium text-[#1E293B]">{formatPace(preview.pace)}</span></p>
+            <p>Pace preview: <span className="font-medium text-white">{formatPace(preview.pace)}</span></p>
             <p className={preview.evaluation.passed ? 'text-emerald-300' : 'text-amber-300'}>
               {preview.evaluation.passed ? 'This attempt will pass the level.' : getFailureReason(preview.evaluation)}
             </p>

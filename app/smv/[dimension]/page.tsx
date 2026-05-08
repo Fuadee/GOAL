@@ -15,19 +15,19 @@ function getStageStatusBadge(status: StageCardStatus) {
     return { label: 'ผ่านแล้ว', className: 'border-emerald-300/40 bg-emerald-500/15 text-emerald-100' };
   }
   if (status === 'CURRENT') {
-    return { label: 'ด่านปัจจุบัน', className: 'border-[#DDE3D5]/50 bg-[#334155]/20 text-[#334155]' };
+    return { label: 'ด่านปัจจุบัน', className: 'border-cyan-300/50 bg-cyan-400/20 text-cyan-100' };
   }
-  return { label: 'ยังไม่ถึง', className: 'border-slate-500/40 bg-slate-700/20 text-[#64748B]' };
+  return { label: 'ยังไม่ถึง', className: 'border-slate-500/40 bg-slate-700/20 text-slate-300' };
 }
 
 function getStageCardClass(status: StageCardStatus) {
   if (status === 'CURRENT') {
-    return 'border-[#DDE3D5]/70 bg-[#EEF1EA]/10 shadow-sm 0_1px_rgba(103,232,249,0.25)]';
+    return 'border-cyan-300/70 bg-cyan-500/10 shadow-[0_0_0_1px_rgba(103,232,249,0.25)]';
   }
   if (status === 'PASSED') {
     return 'border-emerald-400/35 bg-emerald-500/5';
   }
-  return 'border-[#DDE3D5] bg-[#F6F7F4]/20 opacity-80';
+  return 'border-white/10 bg-slate-950/20 opacity-80';
 }
 
 function formatCurrency(amount: number) {
@@ -63,31 +63,31 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
       <main className="app-shell">
         <Navbar />
         <section className="mx-auto w-full max-w-5xl space-y-6 px-4 py-8 md:px-8">
-          <Link href="/smv" className="text-sm text-[#64748B] hover:text-[#334155]">
+          <Link href="/smv" className="text-sm text-cyan-200 hover:text-cyan-100">
             ← กลับไปหน้า /smv
           </Link>
 
-          <header className="rounded-3xl border border-[#DDE3D5]/40 bg-[#EEF1EA]/10 p-6 md:p-7">
-            <h1 className="text-3xl font-semibold text-[#1E293B]">ด่านทั้งหมด</h1>
-            <p className="mt-2 text-sm text-[#64748B]">เส้นทางฝึกความมั่นใจของหัวข้อ เชื่อมั่นในตัวเอง / เป็นผู้นำ</p>
+          <header className="rounded-3xl border border-cyan-300/40 bg-cyan-500/10 p-6 md:p-7">
+            <h1 className="text-3xl font-semibold text-white">ด่านทั้งหมด</h1>
+            <p className="mt-2 text-sm text-slate-200">เส้นทางฝึกความมั่นใจของหัวข้อ เชื่อมั่นในตัวเอง / เป็นผู้นำ</p>
           </header>
 
-          <article className="rounded-3xl border border-[#DDE3D5]/40 bg-[#EEF1EA]/10 p-5 md:p-6">
-            <h2 className="text-sm text-[#334155]">เป้าหมายถัดไป</h2>
+          <article className="rounded-3xl border border-cyan-300/40 bg-cyan-500/10 p-5 md:p-6">
+            <h2 className="text-sm text-cyan-100">เป้าหมายถัดไป</h2>
             {confidence.allCompleted ? (
-              <p className="mt-2 text-lg font-semibold text-[#1E293B]">คุณผ่านเส้นทาง Confidence ครบทั้งหมดแล้ว</p>
+              <p className="mt-2 text-lg font-semibold text-white">คุณผ่านเส้นทาง Confidence ครบทั้งหมดแล้ว</p>
             ) : (
               <>
-                <p className="mt-2 text-lg font-semibold text-[#1E293B]">
+                <p className="mt-2 text-lg font-semibold text-white">
                   {currentLevel.title} ({confidence.currentStageProgress.current}/{confidence.currentStageProgress.required})
                 </p>
-                <p className="mt-2 text-sm text-[#64748B]">{currentLevel.description}</p>
-                <p className="mt-2 text-sm text-[#334155]">เหลืออีก {remainCount} ครั้ง เพื่อผ่านด่านนี้</p>
+                <p className="mt-2 text-sm text-slate-200">{currentLevel.description}</p>
+                <p className="mt-2 text-sm text-cyan-100">เหลืออีก {remainCount} ครั้ง เพื่อผ่านด่านนี้</p>
               </>
             )}
           </article>
 
-          <article className="rounded-3xl border border-[#DDE3D5] bg-white/5 p-5 md:p-6">
+          <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
             <div className="space-y-3">
               {confidence.stages.map((stage) => {
                 const isCurrent = stage.level === currentLevel.level;
@@ -98,27 +98,27 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
                 return (
                   <div
                     key={stage.level}
-                    className={`rounded-2xl border p-4 transition ${getStageCardClass(cardStatus)} ${isCurrent ? 'scale-[1.01] shadow-sm' : ''}`}
+                    className={`rounded-2xl border p-4 transition ${getStageCardClass(cardStatus)} ${isCurrent ? 'scale-[1.01] shadow-[0_0_24px_rgba(34,211,238,0.25)]' : ''}`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-semibold text-[#1E293B]">
+                      <p className="font-semibold text-white">
                         ด่าน {stage.level}: {stage.title}
                       </p>
                       <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${badge.className}`}>{badge.label}</span>
                     </div>
-                    <p className="mt-2 text-sm text-[#64748B]">{stage.description}</p>
+                    <p className="mt-2 text-sm text-slate-200">{stage.description}</p>
                     <div className="mt-3">
-                      <p className="text-sm font-medium text-[#334155]">
+                      <p className="text-sm font-medium text-cyan-100">
                         {Math.min(stage.progress.current, stage.progress.required)} / {stage.progress.required}
                       </p>
-                      <div className="mt-1 h-2 w-full rounded-full bg-[#EEF1EA]">
-                        <div className="h-2 rounded-full bg-[#334155] transition-all" style={{ width: `${stage.progress.percent}%` }} />
+                      <div className="mt-1 h-2 w-full rounded-full bg-slate-800">
+                        <div className="h-2 rounded-full bg-cyan-300 transition-all" style={{ width: `${stage.progress.percent}%` }} />
                       </div>
                     </div>
                     <div className="mt-4">
                       <Link
                         href={`/smv/log?dimension=confidence&action_type=${stage.action_type}`}
-                        className="inline-flex rounded-full bg-[#334155] px-4 py-2 text-xs font-semibold text-slate-900 transition hover:bg-[#EEF1EA]"
+                        className="inline-flex rounded-full bg-cyan-300 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:bg-cyan-200"
                       >
                         เพิ่ม action
                       </Link>
@@ -152,53 +152,53 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
       <main className="app-shell">
         <Navbar />
         <section className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
-          <Link href="/smv" className="text-sm text-[#64748B] hover:text-[#334155]">
+          <Link href="/smv" className="text-sm text-cyan-200 hover:text-cyan-100">
             ← กลับไปหน้า /smv
           </Link>
 
-          <article className="rounded-3xl border border-[#DDE3D5]/45 bg-white p-6 shadow-sm md:p-8">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#64748B]/90">Income Progression System</p>
+          <article className="rounded-3xl border border-cyan-300/45 bg-gradient-to-br from-slate-900 via-cyan-950/30 to-slate-900 p-6 shadow-[0_0_40px_rgba(6,182,212,0.2)] md:p-8">
+            <p className="text-xs uppercase tracking-[0.2em] text-cyan-200/90">Income Progression System</p>
             <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-sm text-[#64748B]">ด่านปัจจุบัน</p>
-                <h1 className="mt-1 text-3xl font-semibold text-[#1E293B] md:text-4xl">{currentLevel ? currentLevel.title : 'ก่อนเริ่มด่านแรก'}</h1>
-                <p className="mt-1 text-xl font-medium text-[#334155]">{currentLevel?.english_label ?? 'Pre-Level'} </p>
+                <p className="text-sm text-slate-300">ด่านปัจจุบัน</p>
+                <h1 className="mt-1 text-3xl font-semibold text-white md:text-4xl">{currentLevel ? currentLevel.title : 'ก่อนเริ่มด่านแรก'}</h1>
+                <p className="mt-1 text-xl font-medium text-cyan-100">{currentLevel?.english_label ?? 'Pre-Level'} </p>
               </div>
-              <p className="rounded-2xl border border-[#DDE3D5]/50 bg-[#334155]/15 px-4 py-2 text-3xl font-semibold text-[#334155]">Level {currentLevelNumber}</p>
+              <p className="rounded-2xl border border-cyan-300/50 bg-cyan-400/15 px-4 py-2 text-3xl font-semibold text-cyan-100">Level {currentLevelNumber}</p>
             </div>
 
-            <p className="mt-4 text-2xl font-semibold text-[#1E293B]">{formatCurrency(monthlyIncome)} บาท / เดือน</p>
-            <p className="mt-2 text-sm text-[#64748B]">{currentLevel?.identity_text ?? 'เริ่มต้นสร้างรายได้หลักของคุณให้ถึง 10,000 บาทต่อเดือน'}</p>
+            <p className="mt-4 text-2xl font-semibold text-white">{formatCurrency(monthlyIncome)} บาท / เดือน</p>
+            <p className="mt-2 text-sm text-slate-200">{currentLevel?.identity_text ?? 'เริ่มต้นสร้างรายได้หลักของคุณให้ถึง 10,000 บาทต่อเดือน'}</p>
             <StatusIncomeActions showSecondaryLink />
 
             {currentLevelNumber === 0 ? (
-              <div className="mt-4 rounded-2xl border border-[#DDE3D5]/30 bg-[#EEF1EA]/10 p-4">
-                <p className="text-sm text-[#334155]">เริ่มต้นด้วยการกรอกรายได้ปัจจุบันของคุณ เพื่อให้ระบบคำนวณด่านแรกทันที</p>
+              <div className="mt-4 rounded-2xl border border-cyan-300/30 bg-cyan-500/10 p-4">
+                <p className="text-sm text-cyan-100">เริ่มต้นด้วยการกรอกรายได้ปัจจุบันของคุณ เพื่อให้ระบบคำนวณด่านแรกทันที</p>
                 <StatusIncomeActions triggerLabel="เริ่มกรอกรายได้" triggerStyle="inline" compact />
               </div>
             ) : null}
 
-            <div className="mt-6 rounded-2xl border border-[#DDE3D5] bg-[#F6F7F4]/40 p-4">
+            <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
               <div className="flex items-center justify-between text-sm">
-                <p className="text-[#64748B]">Progress ไปด่านถัดไป</p>
-                <p className="font-semibold text-[#334155]">{progressPercent.toFixed(1)}%</p>
+                <p className="text-slate-300">Progress ไปด่านถัดไป</p>
+                <p className="font-semibold text-cyan-100">{progressPercent.toFixed(1)}%</p>
               </div>
-              <div className="mt-2 h-2 w-full rounded-full bg-[#EEF1EA]">
-                <div className="h-2 rounded-full bg-white" style={{ width: `${progressPercent}%` }} />
+              <div className="mt-2 h-2 w-full rounded-full bg-slate-800">
+                <div className="h-2 rounded-full bg-gradient-to-r from-cyan-300 to-emerald-300" style={{ width: `${progressPercent}%` }} />
               </div>
-              <p className="mt-3 text-sm text-[#334155]">
+              <p className="mt-3 text-sm text-cyan-100">
                 {nextLevel
                   ? `อีก ${formatCurrency(remainingIncome)} บาท จะถึง ${nextLevel.english_label}`
                   : 'คุณอยู่ระดับสูงสุดแล้ว — Power Player'}
               </p>
               {nextLevel && (
-                <p className="mt-1 text-xs text-[#64748B]">เป้าหมายรายได้ด่านถัดไป: {formatCurrency(nextThreshold ?? 0)} บาท / เดือน</p>
+                <p className="mt-1 text-xs text-slate-300">เป้าหมายรายได้ด่านถัดไป: {formatCurrency(nextThreshold ?? 0)} บาท / เดือน</p>
               )}
             </div>
           </article>
 
-          <article className="rounded-3xl border border-[#DDE3D5] bg-white/5 p-5 md:p-6">
-            <h2 className="text-lg font-semibold text-[#1E293B]">ด่านรายได้ทั้งหมด</h2>
+          <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
+            <h2 className="text-lg font-semibold text-white">ด่านรายได้ทั้งหมด</h2>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               {levels.map((level) => {
                 const cardStatus: StageCardStatus = currentLevelNumber > level.level ? 'PASSED' : currentLevelNumber === level.level ? 'CURRENT' : 'LOCKED';
@@ -211,39 +211,39 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
                     key={level.level}
                     className={`rounded-2xl border p-5 transition ${
                       isCurrent
-                        ? 'scale-[1.02] border-[#DDE3D5]/80 bg-[#EEF1EA]/10 shadow-sm'
+                        ? 'scale-[1.02] border-cyan-300/80 bg-cyan-500/10 shadow-[0_0_24px_rgba(34,211,238,0.35)]'
                         : isPassed
-                          ? 'border-emerald-300/40 bg-emerald-500/10 shadow-sm'
-                          : 'border-[#DDE3D5] bg-[#F6F7F4]/20'
+                          ? 'border-emerald-300/40 bg-emerald-500/10 shadow-[0_0_18px_rgba(16,185,129,0.18)]'
+                          : 'border-white/10 bg-slate-950/20'
                     }`}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.2em] text-[#94A3B8]">ด่าน {level.level}</p>
-                        <p className="mt-1 text-lg font-semibold text-[#1E293B]">{level.title}</p>
-                        <p className="text-sm text-[#334155]">{level.english_label}</p>
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">ด่าน {level.level}</p>
+                        <p className="mt-1 text-lg font-semibold text-white">{level.title}</p>
+                        <p className="text-sm text-cyan-100">{level.english_label}</p>
                       </div>
                       <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${badge.className}`}>{badge.label}</span>
                     </div>
 
-                    <p className="mt-4 text-sm text-[#1E293B]">{level.short_description}</p>
-                    <p className="mt-1 text-sm text-[#64748B]">{level.identity_text}</p>
-                    <p className="mt-3 text-sm font-medium text-[#334155]">รายได้ขั้นต่ำ {formatCurrency(level.income_threshold)} / เดือน</p>
+                    <p className="mt-4 text-sm text-slate-100">{level.short_description}</p>
+                    <p className="mt-1 text-sm text-slate-300">{level.identity_text}</p>
+                    <p className="mt-3 text-sm font-medium text-cyan-100">รายได้ขั้นต่ำ {formatCurrency(level.income_threshold)} / เดือน</p>
 
                     {isCurrent && (
-                      <div className="mt-4 rounded-xl border border-[#DDE3D5]/40 bg-[#EEF1EA]/10 p-3">
-                        <p className="text-sm text-[#1E293B]">รายได้ปัจจุบัน: {formatCurrency(monthlyIncome)} บาท / เดือน</p>
-                        <div className="mt-2 h-2 rounded-full bg-[#EEF1EA]">
-                          <div className="h-2 rounded-full bg-[#334155]" style={{ width: `${progressPercent}%` }} />
+                      <div className="mt-4 rounded-xl border border-cyan-300/40 bg-cyan-500/10 p-3">
+                        <p className="text-sm text-slate-100">รายได้ปัจจุบัน: {formatCurrency(monthlyIncome)} บาท / เดือน</p>
+                        <div className="mt-2 h-2 rounded-full bg-slate-800">
+                          <div className="h-2 rounded-full bg-cyan-300" style={{ width: `${progressPercent}%` }} />
                         </div>
-                        <p className="mt-2 text-xs text-[#334155]">
+                        <p className="mt-2 text-xs text-cyan-100">
                           {nextLevel ? `อีก ${formatCurrency(remainingIncome)} บาท ถึงด่านถัดไป` : 'คุณอยู่ระดับสูงสุดแล้ว'}
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <StatusIncomeActions triggerLabel="อัปเดตรายได้" triggerStyle="inline" compact />
                           <Link
                             href="/smv/log?dimension=status"
-                            className="inline-flex rounded-full border border-[#DDE3D5] bg-white/5 px-4 py-2 text-xs font-semibold text-[#1E293B] transition hover:border-[#DDE3D5] hover:text-[#334155]"
+                            className="inline-flex rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:border-cyan-200 hover:text-cyan-100"
                           >
                             เพิ่มหลักฐานรายได้
                           </Link>
@@ -255,8 +255,8 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
 
                     {!isPassed && !isCurrent && (
                       <div className="mt-4 space-y-1">
-                        <p className="text-sm text-[#64748B]">ต้องมีรายได้ขั้นต่ำ {formatCurrency(level.income_threshold)} / เดือน</p>
-                        <p className="text-xs text-[#64748B]/90">อัปเดตรายได้เพื่อปลดล็อก</p>
+                        <p className="text-sm text-slate-300">ต้องมีรายได้ขั้นต่ำ {formatCurrency(level.income_threshold)} / เดือน</p>
+                        <p className="text-xs text-cyan-200/90">อัปเดตรายได้เพื่อปลดล็อก</p>
                       </div>
                     )}
                   </div>
@@ -277,31 +277,31 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
       <main className="app-shell">
         <Navbar />
         <section className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
-          <Link href="/smv" className="text-sm text-[#64748B] hover:text-[#334155]">
+          <Link href="/smv" className="text-sm text-cyan-200 hover:text-cyan-100">
             ← กลับไปหน้า /smv
           </Link>
 
-          <article className="rounded-3xl border border-[#DDE3D5]/40 bg-white p-6 shadow-sm md:p-7">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#64748B]">Social Mission Control</p>
-            <h1 className="mt-2 text-3xl font-semibold text-[#1E293B]">ระบบด่านเครือข่ายสังคม 1–10</h1>
+          <article className="rounded-3xl border border-cyan-300/40 bg-gradient-to-br from-slate-950 via-cyan-950/25 to-slate-900 p-6 shadow-[0_0_30px_rgba(34,211,238,0.2)] md:p-7">
+            <p className="text-xs uppercase tracking-[0.2em] text-cyan-200">Social Mission Control</p>
+            <h1 className="mt-2 text-3xl font-semibold text-white">ระบบด่านเครือข่ายสังคม 1–10</h1>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
-              <div className="rounded-2xl border border-[#DDE3D5] bg-[#334155]/10 p-4">
-                <p className="text-xs text-[#334155]">Social Score</p>
-                <p className="mt-1 text-3xl font-semibold text-[#1E293B]">{social.score} / 100</p>
+              <div className="rounded-2xl border border-cyan-200/30 bg-cyan-400/10 p-4">
+                <p className="text-xs text-cyan-100">Social Score</p>
+                <p className="mt-1 text-3xl font-semibold text-white">{social.score} / 100</p>
               </div>
               <div className="rounded-2xl border border-emerald-200/30 bg-emerald-500/10 p-4">
                 <p className="text-xs text-emerald-100">Current Phase</p>
-                <p className="mt-1 text-2xl font-semibold text-[#1E293B]">{social.currentPhase}</p>
+                <p className="mt-1 text-2xl font-semibold text-white">{social.currentPhase}</p>
               </div>
               <div className="rounded-2xl border border-amber-200/30 bg-amber-500/10 p-4">
                 <p className="text-xs text-amber-100">Next Action</p>
-                <p className="mt-1 text-sm font-medium text-[#1E293B]">{social.nextAction}</p>
+                <p className="mt-1 text-sm font-medium text-white">{social.nextAction}</p>
               </div>
             </div>
           </article>
 
-          <article className="rounded-3xl border border-[#DDE3D5] bg-white/5 p-5 md:p-6">
-            <h2 className="text-lg font-semibold text-[#1E293B]">เส้นทางด่าน Social (Mission Progression)</h2>
+          <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
+            <h2 className="text-lg font-semibold text-white">เส้นทางด่าน Social (Mission Progression)</h2>
             <div className="mt-4 space-y-3">
               {social.levels.map((level) => {
                 const isCompleted = social.completedLevelIds.has(level.id);
@@ -317,30 +317,30 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
                       isCompleted
                         ? 'border-emerald-300/45 bg-emerald-500/10'
                         : isCurrent
-                          ? 'border-[#DDE3D5]/70 bg-[#EEF1EA]/10 shadow-sm'
+                          ? 'border-cyan-300/70 bg-cyan-500/10 shadow-[0_0_24px_rgba(34,211,238,0.25)]'
                           : isNext
-                            ? 'border-fuchsia-300/50 bg-fuchsia-500/10 shadow-sm'
-                            : 'border-[#DDE3D5] bg-white/40'
+                            ? 'border-fuchsia-300/50 bg-fuchsia-500/10 shadow-[0_0_20px_rgba(232,121,249,0.25)]'
+                            : 'border-white/10 bg-slate-900/40'
                     } ${isLocked ? 'blur-[1px] opacity-70' : ''}`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-semibold text-[#1E293B]">Level {level.id}: {level.title}</p>
-                      <span className="rounded-full border border-[#DDE3D5] bg-white/10 px-2.5 py-1 text-xs text-[#334155]">
+                      <p className="font-semibold text-white">Level {level.id}: {level.title}</p>
+                      <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-xs text-cyan-100">
                         {level.phase} • +{level.score}
                       </span>
                     </div>
-                    <p className="mt-2 text-sm text-[#64748B]">{level.description}</p>
+                    <p className="mt-2 text-sm text-slate-200">{level.description}</p>
 
-                    <ul className="mt-3 space-y-1.5 text-sm text-[#64748B]">
+                    <ul className="mt-3 space-y-1.5 text-sm text-slate-200">
                       {requirements.map((requirement) => (
                         <li key={requirement.id.toString()} className="flex gap-2">
-                          <span className="text-[#64748B]">▢</span>
+                          <span className="text-cyan-200">▢</span>
                           <span>{requirement.requirement_text}</span>
                         </li>
                       ))}
                     </ul>
 
-                    {isLocked ? <p className="mt-3 text-xs text-[#64748B]">🔒 Locked — ต้องผ่านด่านก่อนหน้า</p> : null}
+                    {isLocked ? <p className="mt-3 text-xs text-slate-300">🔒 Locked — ต้องผ่านด่านก่อนหน้า</p> : null}
 
                     <div className="mt-4 flex flex-wrap gap-2">
                       <form action={markSocialLevelCompletedAction}>
@@ -348,7 +348,7 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
                         <button
                           type="submit"
                           disabled={isLocked || isCompleted}
-                          className="rounded-full bg-[#334155] px-4 py-2 text-xs font-semibold text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-full bg-cyan-300 px-4 py-2 text-xs font-semibold text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Mark as Completed
                         </button>
@@ -359,7 +359,7 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
                         <select
                           name="type"
                           defaultValue="chat"
-                          className="rounded-lg border border-[#DDE3D5] bg-[#F6F7F4] px-2 py-1.5 text-xs text-[#1E293B]"
+                          className="rounded-lg border border-white/20 bg-slate-950 px-2 py-1.5 text-xs text-white"
                         >
                           <option value="chat">chat</option>
                           <option value="meetup">meetup</option>
@@ -369,9 +369,9 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
                         <input
                           name="note"
                           placeholder="บันทึกหลักฐาน"
-                          className="rounded-lg border border-[#DDE3D5] bg-[#F6F7F4] px-2 py-1.5 text-xs text-[#1E293B]"
+                          className="rounded-lg border border-white/20 bg-slate-950 px-2 py-1.5 text-xs text-white"
                         />
-                        <button type="submit" disabled={isLocked} className="rounded-full border border-[#DDE3D5] px-3 py-1.5 text-xs font-semibold text-[#1E293B] disabled:opacity-50">
+                        <button type="submit" disabled={isLocked} className="rounded-full border border-white/20 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">
                           Add Evidence
                         </button>
                       </form>
@@ -395,22 +395,22 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
     <main className="app-shell">
       <Navbar />
       <section className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
-        <Link href="/smv" className="text-sm text-[#64748B] hover:text-[#334155]">
+        <Link href="/smv" className="text-sm text-cyan-200 hover:text-cyan-100">
           ← กลับไปหน้า /smv
         </Link>
 
-        <header className="rounded-3xl border border-[#DDE3D5] bg-white/5 p-6 md:p-7">
-          <p className="text-sm text-[#64748B]">ด่านปัจจุบัน</p>
-          <h1 className="mt-1 text-3xl font-semibold text-[#1E293B]">{SMV_DIMENSION_LABELS[key] ?? detail.overview.dimension.label}</h1>
-          <p className="mt-4 text-5xl font-semibold text-[#334155]">{detail.overview.score.toFixed(1)} / 100</p>
-          <p className="mt-2 text-lg text-[#1E293B]">
+        <header className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-7">
+          <p className="text-sm text-slate-300">ด่านปัจจุบัน</p>
+          <h1 className="mt-1 text-3xl font-semibold text-white">{SMV_DIMENSION_LABELS[key] ?? detail.overview.dimension.label}</h1>
+          <p className="mt-4 text-5xl font-semibold text-cyan-100">{detail.overview.score.toFixed(1)} / 100</p>
+          <p className="mt-2 text-lg text-white">
             {currentLevel ? `ด่าน ${passedCount >= sortedLevels.length ? sortedLevels.length : passedCount + 1}: ${currentLevel.title}` : 'ยังไม่มีระดับด่าน'}
           </p>
-          <p className="mt-4 text-sm leading-relaxed text-[#64748B]">{detail.overview.dimension.description ?? detail.overview.explanation}</p>
+          <p className="mt-4 text-sm leading-relaxed text-slate-200">{detail.overview.dimension.description ?? detail.overview.explanation}</p>
         </header>
 
-        <article className="rounded-3xl border border-[#DDE3D5] bg-white/5 p-5 md:p-6">
-          <h2 className="text-lg font-semibold text-[#1E293B]">ด่านทั้งหมด</h2>
+        <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
+          <h2 className="text-lg font-semibold text-white">ด่านทั้งหมด</h2>
           <div className="mt-4 space-y-3">
             {sortedLevels.map((level, index) => {
               const cardStatus: StageCardStatus =
@@ -420,22 +420,22 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
               return (
                 <div key={level.id} className={`rounded-2xl border p-4 ${getStageCardClass(cardStatus)}`}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-semibold text-[#1E293B]">
+                    <p className="font-semibold text-white">
                       ด่าน {index + 1}: {level.title}
                     </p>
                     <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${badge.className}`}>{badge.label}</span>
                   </div>
-                  <p className="mt-1 text-xs text-[#94A3B8]">คะแนนเป้าหมาย {level.level_score}</p>
-                  <p className="mt-2 text-sm text-[#64748B]">{level.requirement_text}</p>
+                  <p className="mt-1 text-xs text-slate-400">คะแนนเป้าหมาย {level.level_score}</p>
+                  <p className="mt-2 text-sm text-slate-200">{level.requirement_text}</p>
                 </div>
               );
             })}
           </div>
         </article>
 
-        <article className="rounded-3xl border border-[#DDE3D5] bg-white/5 p-5 md:p-6">
-          <h2 className="text-lg font-semibold text-[#1E293B]">เป้าหมายถัดไป</h2>
-          <div className="mt-4 space-y-2 text-sm leading-relaxed text-[#64748B]">
+        <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
+          <h2 className="text-lg font-semibold text-white">เป้าหมายถัดไป</h2>
+          <div className="mt-4 space-y-2 text-sm leading-relaxed text-slate-200">
             <p>ตอนนี้คุณอยู่ด่าน {passedCount >= sortedLevels.length ? sortedLevels.length : passedCount + 1}</p>
             <p>เป้าหมายถัดไป: {nextLevel ? `ผ่านด่าน ${passedCount + 1}` : 'รักษามาตรฐานด่านสูงสุด'}</p>
             <p>เงื่อนไข: {nextLevel?.requirement_text ?? 'คุณผ่านครบทุกด่านแล้ว ให้รักษาคะแนนและคุณภาพการลงมือทำอย่างต่อเนื่อง'}</p>
@@ -443,18 +443,18 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
           </div>
         </article>
 
-        <article className="rounded-3xl border border-[#DDE3D5] bg-white/5 p-5 md:p-6">
-          <h2 className="text-lg font-semibold text-[#1E293B]">ลงมือทำต่อทันที</h2>
+        <article className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
+          <h2 className="text-lg font-semibold text-white">ลงมือทำต่อทันที</h2>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
               href={`/smv/log?dimension=${key}`}
-              className="inline-flex rounded-full bg-[#334155] px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-[#EEF1EA]"
+              className="inline-flex rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-200"
             >
               เพิ่มหลักฐาน
             </Link>
             <Link
               href={`/smv/plan?dimension=${key}`}
-              className="inline-flex rounded-full border border-[#DDE3D5] bg-white/5 px-5 py-2 text-sm font-semibold text-[#1E293B] transition hover:border-[#DDE3D5] hover:text-[#334155]"
+              className="inline-flex rounded-full border border-white/20 bg-white/5 px-5 py-2 text-sm font-semibold text-white transition hover:border-cyan-200 hover:text-cyan-100"
             >
               ดูแผนพัฒนา
             </Link>

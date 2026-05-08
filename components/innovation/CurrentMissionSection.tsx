@@ -29,14 +29,14 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
     <section className="space-y-4 hero-panel space-y-4 border-amber-300/30">
       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-200">🔥 Current Mission</p>
       {!mission ? (
-        <p className="text-sm text-[#64748B]">{missionSummary.primaryText}</p>
+        <p className="text-sm text-slate-200">{missionSummary.primaryText}</p>
       ) : (
         <>
-          <h2 className="text-2xl font-semibold text-[#1E293B]">{missionSummary.primaryText}</h2>
-          <div className="space-y-2 text-sm text-[#1E293B]">
-            <p>Next Step: <span className="font-semibold text-[#1E293B]">{missionSummary.secondaryText}</span></p>
-            <p>Progress: <span className="font-semibold text-[#1E293B]">{mission.progressPercent}%</span></p>
-            <p>Last updated: <span className="font-semibold text-[#1E293B]">{formatTimestamp(mission.updated_at)}</span></p>
+          <h2 className="text-2xl font-semibold text-white">{missionSummary.primaryText}</h2>
+          <div className="space-y-2 text-sm text-slate-100">
+            <p>Next Step: <span className="font-semibold text-white">{missionSummary.secondaryText}</span></p>
+            <p>Progress: <span className="font-semibold text-white">{mission.progressPercent}%</span></p>
+            <p>Last updated: <span className="font-semibold text-white">{formatTimestamp(mission.updated_at)}</span></p>
           </div>
 
           {error ? <p className="text-sm text-rose-200">{error}</p> : null}

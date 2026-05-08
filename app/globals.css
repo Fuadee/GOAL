@@ -6,19 +6,19 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
-  --bg-base: #f6f7f4;
-  --bg-layer: #f3f5f0;
-  --bg-deep: #eef1ea;
-  --surface: #ffffff;
-  --surface-elevated: #ffffff;
-  --surface-action: #eef1ea;
-  --border: #dde3d5;
-  --border-strong: #334155;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
-  --accent-gold: #b8a06a;
+  color-scheme: dark;
+  --bg-base: #0b0d11;
+  --bg-layer: #10131a;
+  --bg-deep: #141922;
+  --surface: rgba(18, 22, 30, 0.92);
+  --surface-elevated: rgba(22, 27, 37, 0.96);
+  --surface-action: rgba(29, 35, 46, 0.96);
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(194, 165, 109, 0.45);
+  --text-primary: #f2f1ee;
+  --text-secondary: #b5b2ab;
+  --text-muted: #8f8b82;
+  --accent-gold: #c2a56d;
 }
 
 html,
@@ -28,7 +28,7 @@ body {
   margin: 0;
   font-family: 'LINE Seed Sans TH', 'IBM Plex Sans Thai', 'Prompt', 'Noto Sans Thai', sans-serif;
   color: var(--text-primary);
-  background: var(--bg-base);
+  background: linear-gradient(180deg, #0a0c10 0%, #11151d 100%);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -37,22 +37,22 @@ h1,h2,h3,h4,h5,h6 { letter-spacing: 0; }
 
 .app-shell { min-height: 100vh; }
 .page-container { @apply mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-10; }
-.page-kicker { @apply text-xs font-medium tracking-[0.1em]; color: var(--text-secondary); }
+.page-kicker { @apply text-xs font-medium uppercase tracking-[0.25em]; color: var(--accent-gold); }
 .page-title { @apply text-xl font-medium leading-tight md:text-2xl; color: var(--text-primary); }
 .section-title { @apply text-base font-medium md:text-lg; color: var(--text-primary); }
 
-.hero-panel { @apply relative overflow-hidden rounded-2xl border p-5 md:p-6; border-color: var(--border); background: var(--surface); box-shadow: 0 4px 16px rgba(30, 41, 59, 0.06); }
+.hero-panel { @apply relative overflow-hidden rounded-2xl border p-5 md:p-6; border-color: var(--border); background: var(--surface); box-shadow: 0 10px 22px rgba(0,0,0,0.24); }
 
 .premium-card,.theme-card,.mission-card { @apply rounded-2xl border p-4; border-color: var(--border); background: var(--surface); transition: border-color 180ms ease, background-color 180ms ease; }
-.premium-card:hover,.theme-card:hover,.mission-card:hover { border-color: #cfd8c6; }
+.premium-card:hover,.theme-card:hover,.mission-card:hover { border-color: rgba(194, 165, 109, 0.35); }
 
-.theme-button-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-white; background: #334155; }
+.theme-button-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[#1c1812]; background: #c2a56d; }
 .theme-button-primary:hover { filter: brightness(1.05); }
-.theme-button-secondary { @apply inline-flex items-center justify-center rounded-xl border px-4 py-2.5 text-sm font-medium; border-color: var(--border); color: var(--text-primary); background: #fff; }
-.theme-button-ghost { @apply inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-medium hover:bg-[#EEF1EA]; color: var(--text-secondary); }
+.theme-button-secondary { @apply inline-flex items-center justify-center rounded-xl border px-4 py-2.5 text-sm font-medium; border-color: var(--border); color: var(--text-primary); background: rgba(17, 21, 28, 0.8); }
+.theme-button-ghost { @apply inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-medium hover:bg-white/5; color: var(--text-secondary); }
 
-.theme-input,.theme-select,.theme-textarea,.theme-date { @apply min-h-11 w-full rounded-xl border px-3.5 py-2.5 placeholder:text-slate-400; border-color: var(--border); background: #fff; color: var(--text-primary); }
-.theme-input:focus,.theme-select:focus,.theme-textarea:focus,.theme-date:focus,.theme-focus:focus-visible { outline: none; border-color: var(--border-strong); box-shadow: 0 0 0 3px rgba(51, 65, 85, 0.12); }
+.theme-input,.theme-select,.theme-textarea,.theme-date { @apply min-h-11 w-full rounded-xl border px-3.5 py-2.5 placeholder:text-slate-500; border-color: var(--border); background: rgba(7, 9, 13, 0.72); color: var(--text-primary); }
+.theme-input:focus,.theme-select:focus,.theme-textarea:focus,.theme-date:focus,.theme-focus:focus-visible { outline: none; border-color: var(--border-strong); box-shadow: 0 0 0 3px rgba(194, 165, 109, 0.22); }
 
 @media (max-width: 430px) {
   .page-container { @apply px-3.5 py-4; }

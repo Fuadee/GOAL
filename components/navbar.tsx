@@ -31,10 +31,10 @@ export function Navbar() {
     'theme-focus relative whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium tracking-[0.01em] text-stone-400 transition-colors duration-200 hover:bg-stone-100/5 hover:text-stone-100';
 
   const activeItemClass =
-    'bg-[#b89a64]/15 text-[#e6d6b5] shadow-sm';
+    'bg-[#b89a64]/15 text-[#e6d6b5] shadow-[inset_0_0_0_1px_rgba(184,154,100,0.35)]';
 
   return (
-    <header className="sticky top-0 z-50 border-b border-stone-500/30 bg-[linear-gradient(180deg,rgba(16,18,24,0.96),rgba(14,16,22,0.9))] shadow-sm backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-stone-500/30 bg-[linear-gradient(180deg,rgba(16,18,24,0.96),rgba(14,16,22,0.9))] shadow-[0_10px_24px_rgba(0,0,0,0.22)] backdrop-blur-xl">
       <div className="mx-auto flex h-[72px] w-full max-w-[90rem] items-center justify-between gap-4 px-4 md:px-7">
         <Link href="/" className="theme-focus group rounded-md pr-2">
           <span className="block text-[1.55rem] font-semibold tracking-[0.08em] text-stone-100 transition-colors duration-200 group-hover:text-[#efe4cd] md:text-[1.65rem]">
