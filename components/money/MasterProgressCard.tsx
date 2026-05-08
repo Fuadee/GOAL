@@ -31,10 +31,10 @@ export function MasterProgressCard({
   const completionPercent = (completed / totalTarget) * 100;
 
   return (
-    <section className="space-y-5 rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-[0_0_50px_rgba(56,189,248,0.08)] backdrop-blur md:p-8">
+    <section className="space-y-5 rounded-3xl border border-[#DDE3D5] bg-white/[0.03] p-6 shadow-sm backdrop-blur md:p-8">
       <div className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Master Progress</p>
-        <h2 className="text-2xl font-semibold text-white md:text-3xl">12-House Mission Control</h2>
+        <p className="text-xs uppercase tracking-[0.25em] text-[#94A3B8]">Master Progress</p>
+        <h2 className="text-2xl font-semibold text-[#1E293B] md:text-3xl">12-House Mission Control</h2>
       </div>
 
       <ProgressSection
@@ -66,9 +66,9 @@ type MetricTileProps = {
 
 function MetricTile({ label, value, positive }: MetricTileProps) {
   return (
-    <article className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p className={`mt-2 text-xl font-semibold ${positive === undefined ? 'text-white' : positive ? 'text-emerald-300' : 'text-rose-300'}`}>
+    <article className="rounded-2xl border border-[#DDE3D5] bg-white/50 p-4">
+      <p className="text-xs uppercase tracking-wide text-[#94A3B8]">{label}</p>
+      <p className={`mt-2 text-xl font-semibold ${positive === undefined ? 'text-[#1E293B]' : positive ? 'text-emerald-300' : 'text-rose-300'}`}>
         {value}
       </p>
     </article>

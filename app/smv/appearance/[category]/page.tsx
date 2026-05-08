@@ -21,17 +21,17 @@ export default async function SmvAppearanceCategoryPage({ params }: { params: { 
     <main className="app-shell">
       <Navbar />
       <section className="mx-auto w-full max-w-5xl space-y-6 px-4 py-8 md:px-8">
-        <Link href="/smv/appearance" className="text-sm text-cyan-200 hover:text-cyan-100">← กลับไปหน้า Appearance</Link>
+        <Link href="/smv/appearance" className="text-sm text-[#64748B] hover:text-[#334155]">← กลับไปหน้า Appearance</Link>
 
-        <header className="rounded-3xl border border-cyan-300/30 bg-gradient-to-br from-slate-900 via-cyan-950/20 to-slate-900 p-6">
-          <h1 className="text-3xl font-semibold text-white">{category.category.titleTh}</h1>
-          <p className="mt-3 text-4xl font-semibold text-cyan-100">{category.score} / {category.maxScore}</p>
-          <p className="mt-1 text-sm text-slate-300">ด่านปัจจุบัน: {category.currentLevel} • หลักฐานสะสม: {category.evidenceCount}</p>
-          <p className="mt-2 text-sm text-cyan-100">สถานะ: {category.nextLevel ? `กำลังไต่ไปด่าน ${category.nextLevel}` : 'ผ่านครบทุกด่านแล้ว'}</p>
+        <header className="rounded-3xl border border-[#DDE3D5]/30 bg-white p-6">
+          <h1 className="text-3xl font-semibold text-[#1E293B]">{category.category.titleTh}</h1>
+          <p className="mt-3 text-4xl font-semibold text-[#334155]">{category.score} / {category.maxScore}</p>
+          <p className="mt-1 text-sm text-[#64748B]">ด่านปัจจุบัน: {category.currentLevel} • หลักฐานสะสม: {category.evidenceCount}</p>
+          <p className="mt-2 text-sm text-[#334155]">สถานะ: {category.nextLevel ? `กำลังไต่ไปด่าน ${category.nextLevel}` : 'ผ่านครบทุกด่านแล้ว'}</p>
         </header>
 
-        <article className="rounded-3xl border border-white/10 bg-white/5 p-5">
-          <h2 className="text-lg font-semibold text-white">ด่านทั้งหมด</h2>
+        <article className="rounded-3xl border border-[#DDE3D5] bg-white/5 p-5">
+          <h2 className="text-lg font-semibold text-[#1E293B]">ด่านทั้งหมด</h2>
           <div className="mt-4 space-y-3">
             {category.category.levels.map((level) => {
               const isPassed = level.level <= category.currentLevel;
@@ -45,18 +45,18 @@ export default async function SmvAppearanceCategoryPage({ params }: { params: { 
                     isPassed
                       ? 'border-emerald-300/40 bg-emerald-500/10'
                       : isCurrent
-                        ? 'border-cyan-300/70 bg-cyan-500/10 shadow-[0_0_24px_rgba(34,211,238,0.3)]'
-                        : 'border-white/10 bg-slate-950/30 opacity-80'
+                        ? 'border-[#DDE3D5]/70 bg-[#EEF1EA]/10 shadow-sm'
+                        : 'border-[#DDE3D5] bg-[#F6F7F4]/30 opacity-80'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <p className="font-semibold text-white">ด่าน {level.level}: {level.title}</p>
-                    <span className={`rounded-full border px-2 py-1 text-xs ${isPassed ? 'border-emerald-200/50 text-emerald-100' : isNext ? 'border-cyan-200/50 text-cyan-100' : 'border-slate-500/50 text-slate-300'}`}>
+                    <p className="font-semibold text-[#1E293B]">ด่าน {level.level}: {level.title}</p>
+                    <span className={`rounded-full border px-2 py-1 text-xs ${isPassed ? 'border-emerald-200/50 text-emerald-100' : isNext ? 'border-[#DDE3D5] text-[#334155]' : 'border-slate-500/50 text-[#64748B]'}`}>
                       {isPassed ? 'ผ่านแล้ว' : isNext ? 'ด่านถัดไป' : 'ล็อกอยู่'}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-slate-200">{level.description}</p>
-                  <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-slate-300">
+                  <p className="mt-2 text-sm text-[#64748B]">{level.description}</p>
+                  <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-[#64748B]">
                     {level.criteria.map((item) => <li key={item}>{item}</li>)}
                   </ul>
 
@@ -70,9 +70,9 @@ export default async function SmvAppearanceCategoryPage({ params }: { params: { 
                       >
                         <input type="hidden" name="category_key" value={category.category.key} />
                         <input type="hidden" name="unlocked_level" value={level.level} />
-                        <button type="submit" className="rounded-full bg-cyan-300 px-4 py-1.5 text-xs font-semibold text-slate-900">ปลดล็อกด่านนี้</button>
+                        <button type="submit" className="rounded-full bg-[#334155] px-4 py-1.5 text-xs font-semibold text-slate-900">ปลดล็อกด่านนี้</button>
                       </form>
-                      <Link href={`/smv/log?dimension=look&appearance_category=${category.category.key}&target_level=${level.level}`} className="rounded-full border border-cyan-200/40 px-4 py-1.5 text-xs font-semibold text-cyan-100">เพิ่มหลักฐาน</Link>
+                      <Link href={`/smv/log?dimension=look&appearance_category=${category.category.key}&target_level=${level.level}`} className="rounded-full border border-[#DDE3D5] px-4 py-1.5 text-xs font-semibold text-[#334155]">เพิ่มหลักฐาน</Link>
                     </div>
                   ) : null}
                 </div>

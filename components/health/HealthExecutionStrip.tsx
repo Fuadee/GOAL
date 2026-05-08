@@ -12,16 +12,16 @@ export function HealthExecutionStrip({ todayStatus }: { todayStatus: RunnerToday
   const activeStep = getActiveStep(todayStatus);
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Execution Strip</p>
+    <section className="rounded-2xl border border-[#DDE3D5] bg-[#F6F7F4]/70 p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#94A3B8]">Execution Strip</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
         {steps.map((step, index) => (
           <div
             key={step}
             className={`rounded-xl border px-3 py-2 text-sm font-medium ${
               index === activeStep
-                ? 'border-cyan-300/60 bg-cyan-500/15 text-cyan-100'
-                : 'border-white/10 bg-white/5 text-slate-400'
+                ? 'border-[#DDE3D5]/60 bg-[#EEF1EA]/15 text-[#334155]'
+                : 'border-[#DDE3D5] bg-white/5 text-[#94A3B8]'
             }`}
           >
             Step {index + 1}: {step}

@@ -21,10 +21,10 @@ export function MonthlyCashFlowSection({
   occupancyRate
 }: MonthlyCashFlowSectionProps) {
   return (
-    <section className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur md:p-8">
+    <section className="space-y-4 rounded-3xl border border-[#DDE3D5] bg-white/[0.03] p-6 backdrop-blur md:p-8">
       <div className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Monthly Cash Flow</p>
-        <h2 className="text-2xl font-semibold text-white">Rental Income Summary</h2>
+        <p className="text-xs uppercase tracking-[0.22em] text-[#94A3B8]">Monthly Cash Flow</p>
+        <h2 className="text-2xl font-semibold text-[#1E293B]">Rental Income Summary</h2>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -46,9 +46,9 @@ type CashMetricProps = {
 
 function CashMetric({ label, value, positive }: CashMetricProps) {
   return (
-    <article className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p className={`mt-2 text-lg font-semibold ${positive === undefined ? 'text-white' : positive ? 'text-emerald-300' : 'text-rose-300'}`}>
+    <article className="rounded-2xl border border-[#DDE3D5] bg-white/60 p-4">
+      <p className="text-xs uppercase tracking-wide text-[#94A3B8]">{label}</p>
+      <p className={`mt-2 text-lg font-semibold ${positive === undefined ? 'text-[#1E293B]' : positive ? 'text-emerald-300' : 'text-rose-300'}`}>
         {value}
       </p>
     </article>

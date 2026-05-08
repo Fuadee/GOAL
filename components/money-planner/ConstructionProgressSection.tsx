@@ -58,14 +58,14 @@ export function ConstructionProgressSection({ steps }: Props) {
       <ConstructionWaitingStatusCard summary={waitingSummary} showControls={false} />
 
       <ConstructionHeroCard statusLabel={status} progressPercent={progressPercent} actionItems={[]}>
-        <div className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
+        <div className="rounded-2xl border border-[#DDE3D5] bg-white/55 p-4 md:p-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Project milestones</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#94A3B8]">Project milestones</p>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => router.push('/money-management/construction/steps')}
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+                className="inline-flex items-center gap-2 rounded-full border border-[#DDE3D5] bg-white/5 px-4 py-2 text-sm font-medium text-[#1E293B] transition hover:bg-white/10"
               >
                 View full steps →
               </button>
