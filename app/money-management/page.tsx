@@ -10,10 +10,10 @@ export default async function MoneyManagementPage() {
   return (
     <PageShell>
       <Navbar />
-      <section className="page-container space-y-8">
+      <section className="page-container space-y-5">
         <PageHeader
           kicker="Money Management"
-          title="Executive Capital Control"
+          title="Financial Command Center"
           description="จัดการรายรับ รายจ่าย และ mission การเงินที่สำคัญในมุมมองเดียวแบบชัดเจน"
         />
         <ConstructionProgressSection steps={construction.steps} />
