@@ -1,8 +1,9 @@
+import Link from 'next/link';
+
 import { GoalVisionBoard } from '@/components/dashboard/GoalVisionBoard';
 import { MotionReveal } from '@/components/dashboard/MotionReveal';
-import { UnifiedMissionCard } from '@/components/dashboard/UnifiedMissionCard';
 import { Navbar } from '@/components/navbar';
-import { PageShell, SectionHeader } from '@/components/ui/mission';
+import { PageShell } from '@/components/ui/mission';
 import {
   getHealthUnifiedMissionCardData,
   getInnovationUnifiedMissionCardData,
@@ -32,33 +33,37 @@ export default async function Home() {
 
   const initialVisionImages = goalVisionImages.map((row) => ({ ...row, image_url: getGoalVisionPublicUrl(row.image_path) }));
 
-  const missionCards = [
+  const focusItems = [
     getSmvUnifiedMissionCardData(smvOverview),
     getMoneyUnifiedMissionCardData(construction.steps),
     getHealthUnifiedMissionCardData(healthDashboard),
     getInnovationUnifiedMissionCardData(innovationDashboard.currentMission),
     getWorldUnifiedMissionCardData(worldDashboard)
-  ];
+  ].slice(0, 3);
 
   return (
     <PageShell>
       <Navbar />
-      <div className="page-container space-y-5 md:space-y-6">
+      <div className="page-container space-y-8 md:space-y-10">
         <MotionReveal>
           <GoalVisionBoard initialImages={initialVisionImages} initialTraits={personalTraits} />
         </MotionReveal>
 
         <MotionReveal>
-          <section className="mission-card space-y-4 border-white/10 bg-slate-950/45 p-5 md:p-6">
-            <SectionHeader
-              title="Current Focus: วันนี้ต้องทำอะไรต่อ"
-              subtitle="Command bar สำหรับ 5 ระบบหลัก — เลือก mission แล้วลงมือทันที"
-              titleClassName="text-lg md:text-xl text-white/95"
-              subtitleClassName="text-xs text-white/70"
-            />
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-              {missionCards.map((card) => (
-                <UnifiedMissionCard key={card.key} card={card} />
+          <section className="rounded-[24px] border border-white/10 bg-[#10141b] p-5 md:p-7">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-[#c2a56d]">Current Focus</p>
+            <h2 className="mt-2 text-2xl font-medium text-[#f1f0ec] md:text-3xl">Today, only what truly matters.</h2>
+            <p className="mt-1 text-sm text-[#a9aaa7]">Choose one path now. Keep the rest quiet.</p>
+
+            <div className="mt-6 space-y-2">
+              {focusItems.map((item) => (
+                <Link key={item.key} href={item.href} className="group flex items-center justify-between rounded-xl border border-transparent px-2 py-3 transition hover:border-white/10 hover:bg-white/[0.02]">
+                  <div>
+                    <p className="text-sm text-[#8f948f]">{item.label}</p>
+                    <p className="text-base text-[#ecebe8]">{item.title}</p>
+                  </div>
+                  <span className="text-xs text-[#c2a56d]">Open</span>
+                </Link>
               ))}
             </div>
           </section>
