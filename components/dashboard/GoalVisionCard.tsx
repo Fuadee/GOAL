@@ -19,7 +19,7 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   return (
-    <article className="group relative isolate min-h-[280px] overflow-hidden rounded-3xl border border-white/12 bg-slate-950/60 shadow-[0_16px_60px_rgba(2,6,23,0.65)] transition duration-300 hover:-translate-y-1.5 hover:border-cyan-300/45 hover:shadow-[0_20px_70px_rgba(56,189,248,0.18)]">
+    <article className="group relative isolate aspect-[4/5] overflow-hidden rounded-2xl border border-white/15 bg-slate-950/60 shadow-[0_18px_60px_rgba(2,6,23,0.58)] transition duration-300 hover:-translate-y-1 hover:border-cyan-200/45 hover:shadow-[0_22px_72px_rgba(56,189,248,0.16)]">
       <input
         ref={inputRef}
         type="file"
@@ -41,7 +41,7 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
           alt={`${item.label} vision`}
           fill
           sizes="(max-width: 768px) 100vw, 20vw"
-          className="absolute inset-0 object-cover"
+          className="absolute inset-0 object-cover transition duration-500 group-hover:scale-[1.02]"
         />
       ) : (
         <button
@@ -57,7 +57,7 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
         </button>
       )}
 
-      <div className="pointer-events-none absolute inset-0 z-20 bg-slate-950/0 transition duration-300 group-hover:bg-slate-950/15" />
+      <div className="pointer-events-none absolute inset-0 z-20 bg-slate-950/5 transition duration-300 group-hover:bg-slate-950/15" />
 
       <div className="pointer-events-none absolute right-3 top-3 z-30 flex items-center gap-2 opacity-0 transition duration-300 group-hover:opacity-100">
         <button
