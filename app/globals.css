@@ -143,7 +143,7 @@ h6 {
 .status-planned { @apply border-violet-300/40 bg-violet-500/15 text-violet-100; }
 
 @media (max-width: 430px) {
-  .page-container { @apply px-3.5 py-4.5; }
+  .page-container { @apply px-3.5 py-4; }
   .premium-card,
   .hero-panel,
   .mission-card { @apply rounded-2xl p-4; }
