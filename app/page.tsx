@@ -45,12 +45,16 @@ export default async function Home() {
       <Navbar />
       <div className="page-container space-y-5 md:space-y-6">
         <MotionReveal>
-          <section className="hero-panel space-y-4 border-[color:var(--border-strong)]/40">
+          <GoalVisionBoard initialImages={initialVisionImages} initialTraits={personalTraits} />
+        </MotionReveal>
+
+        <MotionReveal>
+          <section className="mission-card space-y-4 border-white/10 bg-slate-950/45 p-5 md:p-6">
             <SectionHeader
               title="Current Focus: วันนี้ต้องทำอะไรต่อ"
               subtitle="Command bar สำหรับ 5 ระบบหลัก — เลือก mission แล้วลงมือทันที"
-              titleClassName="text-lg md:text-xl text-white"
-              subtitleClassName="text-xs text-white/80"
+              titleClassName="text-lg md:text-xl text-white/95"
+              subtitleClassName="text-xs text-white/70"
             />
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
               {missionCards.map((card) => (
@@ -58,10 +62,6 @@ export default async function Home() {
               ))}
             </div>
           </section>
-        </MotionReveal>
-
-        <MotionReveal>
-          <GoalVisionBoard initialImages={initialVisionImages} initialTraits={personalTraits} />
         </MotionReveal>
       </div>
     </PageShell>

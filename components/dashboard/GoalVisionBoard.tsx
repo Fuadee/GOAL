@@ -180,25 +180,26 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
   };
 
   return (
-    <section className="mission-card overflow-visible p-5 md:p-7">
+    <section className="hero-panel overflow-visible border-[color:var(--border-strong)]/45 p-5 md:p-7">
       <div className="relative z-10 space-y-6">
-        <div className="space-y-2">
+        <div className="space-y-2 md:space-y-3">
           <p className="mission-label text-cyan-200/90">GOAL VISION BOARD</p>
           <h1 className="page-title text-3xl md:text-4xl">GOAL VISION BOARD</h1>
-          <p className="text-base text-[color:var(--text-secondary)]">ภาพแทนเป้าหมายสูงสุดของคุณในแต่ละด้าน</p>
+          <p className="text-sm text-[color:var(--text-secondary)] md:text-base">ภาพแทนชีวิตที่คุณกำลังสร้าง</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-2 md:mx-0 md:grid md:snap-none md:overflow-visible md:px-0 md:pb-0 md:grid-cols-2 xl:grid-cols-5">
           {GOAL_VISION_ITEMS.map((item) => (
-            <GoalVisionCard
-              key={item.key}
-              item={item}
-              imageUrl={imagesByKey[item.key]?.image_url ?? null}
-              isUploading={Boolean(uploading[item.key])}
-              isRemoving={Boolean(removing[item.key])}
-              onUpload={(file) => uploadImage(item.key, file)}
-              onRemove={() => removeImage(item.key)}
-            />
+            <div key={item.key} className="w-[72vw] max-w-[290px] shrink-0 snap-start md:w-auto md:max-w-none md:shrink">
+              <GoalVisionCard
+                item={item}
+                imageUrl={imagesByKey[item.key]?.image_url ?? null}
+                isUploading={Boolean(uploading[item.key])}
+                isRemoving={Boolean(removing[item.key])}
+                onUpload={(file) => uploadImage(item.key, file)}
+                onRemove={() => removeImage(item.key)}
+              />
+            </div>
           ))}
         </div>
 
