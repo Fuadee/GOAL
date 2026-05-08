@@ -48,8 +48,8 @@ export function RadarCard({
   }, [dimensions]);
 
   return (
-    <article className="mx-auto w-full max-w-5xl rounded-3xl border border-[#DDE3D5] bg-white/5 p-5 md:p-6">
-      <h2 className="text-lg font-semibold text-[#1E293B]">Radar Chart</h2>
+    <article className="mx-auto w-full max-w-5xl rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
+      <h2 className="text-lg font-semibold text-white">Radar Chart</h2>
 
       <div className="mt-4 overflow-x-auto">
         <svg viewBox={`0 0 ${RADAR_SIZE} ${RADAR_SIZE}`} className="mx-auto h-[320px] w-[320px] md:h-[350px] md:w-[350px]">
@@ -81,8 +81,8 @@ export function RadarCard({
         </svg>
       </div>
 
-      <div className="mt-4 border-t border-[#DDE3D5] pt-4">
-        <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[#94A3B8]">Axis Breakdown</p>
+      <div className="mt-4 border-t border-white/10 pt-4">
+        <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-400">Axis Breakdown</p>
         <AxisSelector
           dimensions={dimensions}
           selectedDimensionId={selectedDimensionId}

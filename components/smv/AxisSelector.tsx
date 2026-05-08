@@ -23,12 +23,12 @@ export function AxisSelector({ dimensions, selectedDimensionId, strongestIds, we
             onClick={() => onSelect(dimension.id)}
             className={`rounded-full border px-3 py-2 text-xs font-medium transition-all duration-300 md:text-sm ${
               isActive
-                ? 'border-[#DDE3D5] bg-[#334155]/25 text-[#334155] shadow-sm 0_1px_rgba(103,232,249,0.35),0_0_24px_rgba(6,182,212,0.35)]'
+                ? 'border-cyan-200/70 bg-cyan-300/25 text-cyan-50 shadow-[0_0_0_1px_rgba(103,232,249,0.35),0_0_24px_rgba(6,182,212,0.35)]'
                 : isWeak
                   ? 'border-amber-300/35 bg-amber-300/10 text-amber-100 hover:border-amber-200/60 hover:bg-amber-300/15'
                   : isStrong
                     ? 'border-emerald-300/35 bg-emerald-300/10 text-emerald-100 hover:border-emerald-200/60 hover:bg-emerald-300/15'
-                    : 'border-[#DDE3D5] bg-white/60 text-[#64748B] hover:border-[#DDE3D5]/40 hover:bg-[#EEF1EA]/90'
+                    : 'border-white/15 bg-slate-900/60 text-slate-200 hover:border-cyan-300/40 hover:bg-slate-800/90'
             }`}
           >
             {dimension.label}

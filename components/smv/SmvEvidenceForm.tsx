@@ -44,12 +44,12 @@ export function SmvEvidenceForm({ dimensions, metricsByDimension, initialDimensi
       className="space-y-4"
     >
       <div>
-        <label className="text-xs text-[#64748B]">หัวข้อพลัง</label>
+        <label className="text-xs text-slate-300">หัวข้อพลัง</label>
         <select
           name="dimension_id"
           value={dimensionId}
           onChange={(event) => setDimensionId(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-[#DDE3D5] bg-[#F6F7F4] px-3 py-2 text-sm text-[#1E293B]"
+          className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white"
         >
           {dimensions.map((dimension) => (
             <option key={dimension.id} value={dimension.id}>{dimension.label}</option>
@@ -60,12 +60,12 @@ export function SmvEvidenceForm({ dimensions, metricsByDimension, initialDimensi
       {isLookDimension ? (
         <div className="grid gap-3 md:grid-cols-3">
           <label className="block">
-            <span className="text-xs text-[#64748B]">หมวดหลักฐาน</span>
+            <span className="text-xs text-slate-300">หมวดหลักฐาน</span>
             <select
               name="appearance_category"
               value={appearanceCategory}
               onChange={(event) => setAppearanceCategory(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-[#DDE3D5]/30 bg-[#F6F7F4] px-3 py-2 text-sm text-[#1E293B]"
+              className="mt-1 w-full rounded-lg border border-cyan-300/30 bg-slate-950 px-3 py-2 text-sm text-white"
             >
               <option value="">เลือกหมวด</option>
               {APPEARANCE_CATEGORY_KEYS.map((key) => (
@@ -74,12 +74,12 @@ export function SmvEvidenceForm({ dimensions, metricsByDimension, initialDimensi
             </select>
           </label>
           <label className="block">
-            <span className="text-xs text-[#64748B]">ผูกกับด่านเป้าหมาย (ไม่บังคับ)</span>
-            <input type="number" min={1} max={4} name="target_level" className="mt-1 w-full rounded-lg border border-[#DDE3D5] bg-[#F6F7F4] px-3 py-2 text-sm text-[#1E293B]" />
+            <span className="text-xs text-slate-300">ผูกกับด่านเป้าหมาย (ไม่บังคับ)</span>
+            <input type="number" min={1} max={4} name="target_level" className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white" />
           </label>
           <label className="block">
-            <span className="text-xs text-[#64748B]">ประเภทหลักฐาน (ไม่บังคับ)</span>
-            <input name="evidence_type" placeholder="photo / routine / treatment" className="mt-1 w-full rounded-lg border border-[#DDE3D5] bg-[#F6F7F4] px-3 py-2 text-sm text-[#1E293B]" />
+            <span className="text-xs text-slate-300">ประเภทหลักฐาน (ไม่บังคับ)</span>
+            <input name="evidence_type" placeholder="photo / routine / treatment" className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white" />
           </label>
         </div>
       ) : null}
@@ -88,38 +88,38 @@ export function SmvEvidenceForm({ dimensions, metricsByDimension, initialDimensi
         <div className="grid gap-3 md:grid-cols-2">
           {metrics.map((metric) => (
             <label key={metric.id} className="block">
-              <span className="text-xs text-[#64748B]">{metric.label}</span>
+              <span className="text-xs text-slate-300">{metric.label}</span>
               <input
                 type="number"
                 step="0.01"
                 name={`metric_${metric.id}`}
-                className="mt-1 w-full rounded-lg border border-[#DDE3D5] bg-[#F6F7F4] px-3 py-2 text-sm text-[#1E293B]"
+                className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white"
                 placeholder="Enter evidence value"
               />
             </label>
           ))}
         </div>
       ) : (
-        <p className="rounded-xl border border-[#DDE3D5]/30 bg-[#EEF1EA]/10 p-3 text-xs text-[#334155]">
+        <p className="rounded-xl border border-cyan-400/30 bg-cyan-500/10 p-3 text-xs text-cyan-100">
           หมวดรูปร่างหน้าตา / บุคลิกที่ดี ใช้ระบบด่านโดยตรง คะแนนจะถูกคำนวณจากด่านที่ปลดล็อก ไม่ใช่กรอกตัวเลขเอง
         </p>
       )}
 
       <label className="block">
-        <span className="text-xs text-[#64748B]">Context</span>
-        <input name="context" className="mt-1 w-full rounded-lg border border-[#DDE3D5] bg-[#F6F7F4] px-3 py-2 text-sm text-[#1E293B]" />
+        <span className="text-xs text-slate-300">Context</span>
+        <input name="context" className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white" />
       </label>
 
       <label className="block">
-        <span className="text-xs text-[#64748B]">Note</span>
-        <textarea name="note" rows={3} className="mt-1 w-full rounded-lg border border-[#DDE3D5] bg-[#F6F7F4] px-3 py-2 text-sm text-[#1E293B]" />
+        <span className="text-xs text-slate-300">Note</span>
+        <textarea name="note" rows={3} className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white" />
       </label>
 
-      <button type="submit" disabled={pending} className="rounded-lg bg-[#334155] px-4 py-2 text-sm font-semibold text-slate-900 disabled:opacity-70">
+      <button type="submit" disabled={pending} className="rounded-lg bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-900 disabled:opacity-70">
         บันทึกหลักฐาน + คำนวณคะแนน
       </button>
 
-      {message ? <p className="text-sm text-[#64748B]">{message}</p> : null}
+      {message ? <p className="text-sm text-slate-300">{message}</p> : null}
     </form>
   );
 }

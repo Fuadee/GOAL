@@ -61,9 +61,9 @@ export default async function SmvOverviewPage() {
         <PageHeader kicker="SMV Mission Control" title="SMV Personal Operating System" description={`${missionCard.focusLabel}: ${missionCard.primaryText}`} />
 
         <section className="grid gap-3 md:grid-cols-3">
-          <PremiumCard><p className="text-xs text-[#94A3B8]">Current SMV Score</p><p className="mt-1 text-4xl font-semibold text-[#334155]">{data.averageScore}</p></PremiumCard>
-          <PremiumCard><p className="text-xs text-[#94A3B8]">Strongest Dimension</p><p className="mt-1 text-lg font-semibold text-[#1E293B]">{strongest?.dimension.label ?? '-'}</p></PremiumCard>
-          <PremiumCard><p className="text-xs text-[#94A3B8]">Need Upgrade First</p><p className="mt-1 text-lg font-semibold text-[#1E293B]">{weakest?.dimension.label ?? '-'}</p></PremiumCard>
+          <PremiumCard><p className="text-xs text-slate-400">Current SMV Score</p><p className="mt-1 text-4xl font-semibold text-cyan-100">{data.averageScore}</p></PremiumCard>
+          <PremiumCard><p className="text-xs text-slate-400">Strongest Dimension</p><p className="mt-1 text-lg font-semibold text-white">{strongest?.dimension.label ?? '-'}</p></PremiumCard>
+          <PremiumCard><p className="text-xs text-slate-400">Need Upgrade First</p><p className="mt-1 text-lg font-semibold text-white">{weakest?.dimension.label ?? '-'}</p></PremiumCard>
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
@@ -75,11 +75,11 @@ export default async function SmvOverviewPage() {
               const isWeak = weakest?.dimension.id === item.dimension.id;
               const isAppearance = item.dimension.key === 'look' && appearanceDetail;
               return (
-                <div key={item.dimension.id} className="rounded-xl border border-[#DDE3D5] bg-[#F6F7F4]/50 p-4">
-                  <div className="flex items-center justify-between gap-2"><p className="font-semibold text-[#1E293B]">{item.dimension.label}</p>{isBest ? <StatusBadge label="จุดแข็ง" tone="success" /> : isWeak ? <StatusBadge label="เร่งพัฒนา" tone="warning" /> : null}</div>
-                  <p className="mt-1 text-sm text-[#334155]">{item.score.toFixed(0)} / 100 · {getPowerLevelLabel(item.score)}</p>
-                  <div className="mt-2 h-2 rounded-full bg-[#EEF1EA]"><div className="h-2 rounded-full bg-[#334155]" style={{ width: `${item.score}%` }} /></div>
-                  {isAppearance ? <p className="mt-2 text-xs text-[#64748B]">{APPEARANCE_CATEGORY_KEYS.length} หมวด appearance progression</p> : <p className="mt-2 text-xs text-[#64748B]">{item.explanation}</p>}
+                <div key={item.dimension.id} className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+                  <div className="flex items-center justify-between gap-2"><p className="font-semibold text-white">{item.dimension.label}</p>{isBest ? <StatusBadge label="จุดแข็ง" tone="success" /> : isWeak ? <StatusBadge label="เร่งพัฒนา" tone="warning" /> : null}</div>
+                  <p className="mt-1 text-sm text-cyan-100">{item.score.toFixed(0)} / 100 · {getPowerLevelLabel(item.score)}</p>
+                  <div className="mt-2 h-2 rounded-full bg-slate-800"><div className="h-2 rounded-full bg-cyan-300" style={{ width: `${item.score}%` }} /></div>
+                  {isAppearance ? <p className="mt-2 text-xs text-slate-300">{APPEARANCE_CATEGORY_KEYS.length} หมวด appearance progression</p> : <p className="mt-2 text-xs text-slate-300">{item.explanation}</p>}
                   <Link href={item.dimension.key === 'look' ? '/smv/appearance' : `/smv/${item.dimension.key}`} className="theme-button-secondary mt-3">ดูรายละเอียด</Link>
                 </div>
               );

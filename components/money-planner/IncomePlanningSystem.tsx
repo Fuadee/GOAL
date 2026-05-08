@@ -23,21 +23,21 @@ function DashboardNavCard({
 }) {
   return (
     <article className="premium-card">
-      <h3 className="text-lg font-semibold text-[#1E293B]">{title}</h3>
-      <p className="mt-1 text-sm text-[#94A3B8]">{description}</p>
+      <h3 className="text-lg font-semibold text-white">{title}</h3>
+      <p className="mt-1 text-sm text-slate-400">{description}</p>
 
-      <div className="mt-4 space-y-2 rounded-xl border border-[#DDE3D5] bg-[#F6F7F4]/60 p-4">
+      <div className="mt-4 space-y-2 rounded-xl border border-white/10 bg-slate-950/60 p-4">
         {stats.map((stat) => (
           <div key={stat.label} className="flex items-center justify-between text-sm">
-            <span className="text-[#94A3B8]">{stat.label}</span>
-            <span className="font-medium text-[#1E293B]">{stat.value}</span>
+            <span className="text-slate-400">{stat.label}</span>
+            <span className="font-medium text-slate-100">{stat.value}</span>
           </div>
         ))}
       </div>
 
       <Link
         href={href}
-        className="mt-5 inline-flex rounded-full border border-[#DDE3D5]/30 bg-[#EEF1EA]/10 px-4 py-2 text-sm font-semibold text-[#334155] transition hover:bg-[#EEF1EA]/20"
+        className="mt-5 inline-flex rounded-full border border-indigo-300/30 bg-indigo-500/10 px-4 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20"
       >
         {cta}
       </Link>

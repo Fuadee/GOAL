@@ -22,7 +22,7 @@ const defaultPlanForm: PlanFormState = {
   status: 'planned'
 };
 
-function SummaryCard({ label, value, tone = 'text-[#1E293B]' }: { label: string; value: string; tone?: string }) {
+function SummaryCard({ label, value, tone = 'text-white' }: { label: string; value: string; tone?: string }) {
   return (
     <article className="surface-elevated p-4">
       <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--text-muted)]">{label}</p>
@@ -50,7 +50,7 @@ export function MoneyPlanSystem({ data }: Props) {
       <section className="theme-card space-y-4 p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="page-kicker text-[#64748B]/85">Plan to 100K</p>
+            <p className="page-kicker text-cyan-200/85">Plan to 100K</p>
             <h2 className="page-title mt-2 text-3xl md:text-4xl">Net Income Plan</h2>
           </div>
           <p className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-action)] px-3 py-1 text-sm text-[color:var(--text-secondary)]">
@@ -58,7 +58,7 @@ export function MoneyPlanSystem({ data }: Props) {
           </p>
         </div>
 
-        <SummaryCard label="Current Net Income" value={currency.format(data.currentNet)} tone={data.currentNet >= 0 ? 'text-[#334155]' : 'text-rose-300'} />
+        <SummaryCard label="Current Net Income" value={currency.format(data.currentNet)} tone={data.currentNet >= 0 ? 'text-cyan-300' : 'text-rose-300'} />
       </section>
 
       <section className="theme-card p-5">
@@ -195,9 +195,9 @@ export function MoneyPlanSystem({ data }: Props) {
         <p className="helper-text">System-calculated projection toward 100K target.</p>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard label="Current Net" value={currency.format(data.currentNet)} tone={data.currentNet >= 0 ? 'text-[#334155]' : 'text-rose-300'} />
+          <SummaryCard label="Current Net" value={currency.format(data.currentNet)} tone={data.currentNet >= 0 ? 'text-cyan-300' : 'text-rose-300'} />
           <SummaryCard label="Planned Increase" value={currency.format(data.plannedIncrease)} tone="text-emerald-300" />
-          <SummaryCard label="Projected Net" value={currency.format(data.projectedNet)} tone="text-[#334155]" />
+          <SummaryCard label="Projected Net" value={currency.format(data.projectedNet)} tone="text-indigo-300" />
           <SummaryCard label="Remaining Gap" value={currency.format(data.remainingGap)} tone="text-rose-300" />
         </div>
       </section>

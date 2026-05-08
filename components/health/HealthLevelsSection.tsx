@@ -25,20 +25,20 @@ const progressPercent = (currentLevel / TOTAL_LEVELS) * 100;
 
 export function HealthLevelsSection() {
   return (
-    <section className="space-y-6 rounded-2xl border border-[#DDE3D5] bg-white/40 p-6 shadow-sm md:p-8">
+    <section className="space-y-6 rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-[0_0_30px_rgba(15,23,42,0.4)] md:p-8">
       <div className="space-y-2">
-        <h2 className="text-2xl font-semibold text-[#1E293B]">🧠 Health Levels (ด่านการวิ่ง)</h2>
-        <p className="text-sm text-[#64748B]">Build momentum with clear milestones from 1 to 5 km.</p>
+        <h2 className="text-2xl font-semibold text-white">🧠 Health Levels (ด่านการวิ่ง)</h2>
+        <p className="text-sm text-slate-300">Build momentum with clear milestones from 1 to 5 km.</p>
       </div>
 
-      <div className="space-y-3 rounded-xl border border-[#DDE3D5] bg-[#F6F7F4]/70 p-4">
+      <div className="space-y-3 rounded-xl border border-white/10 bg-slate-950/70 p-4">
         <div className="flex items-center justify-between text-sm font-medium">
-          <span className="text-[#64748B]">Level {currentLevel} / {TOTAL_LEVELS}</span>
+          <span className="text-slate-300">Level {currentLevel} / {TOTAL_LEVELS}</span>
           <span className="text-sky-300">{Math.round(progressPercent)}%</span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-[#EEF1EA]">
+        <div className="h-2 overflow-hidden rounded-full bg-slate-800">
           <div
-            className="h-full rounded-full bg-white transition-all duration-500"
+            className="h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-400 transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
             aria-hidden="true"
           />
