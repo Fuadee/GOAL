@@ -116,36 +116,44 @@ export function BloodDonationDashboard({ initialData }: Props) {
             }
           />
 
-          <section className="grid gap-4 md:grid-cols-4">
+          <section className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
             {[
               ['เป้าหมาย', `${summary.targetCount} ครั้ง`],
               ['ทำสำเร็จแล้ว', `${summary.completedCount} ครั้ง`],
               ['วางแผนไว้แล้ว', `${summary.plannedCount} ครั้ง`],
               ['เหลืออีก', `${summary.remainingToTarget} ครั้ง`]
             ].map(([label, value]) => (
-              <article key={label} className="rounded-2xl border border-white/10 bg-slate-900/70 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{value}</p>
-                {label === 'เหลืออีก' && nextPlanSummaryLabel ? <p className="mt-1 text-xs text-slate-400">แผนถัดไป: {nextPlanSummaryLabel}</p> : null}
+              <article
+                key={label}
+                className="rounded-xl border border-white/10 bg-slate-900/75 p-3 shadow-[0_10px_26px_-20px_rgba(15,23,42,0.9)] backdrop-blur-sm sm:rounded-2xl sm:p-3.5"
+              >
+                <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">{label}</p>
+                <p className="mt-1.5 text-xl font-semibold leading-tight text-white sm:text-2xl">{value}</p>
+                {label === 'เหลืออีก' && nextPlanSummaryLabel ? <p className="mt-0.5 text-[11px] text-slate-400">แผนถัดไป: {nextPlanSummaryLabel}</p> : null}
               </article>
             ))}
           </section>
 
-          <section className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
-            <article className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-              <p className="text-sm text-slate-300">Progress</p>
-              <p className="mt-2 text-2xl font-semibold text-white">{completedRatioLabel}</p>
-              <div className="mt-4 h-3 rounded-full bg-slate-800">
-                <div className="h-3 rounded-full bg-gradient-to-r from-rose-400 to-orange-300" style={{ width: `${summary.progressPercent}%` }} />
+          <section className="grid gap-2.5 sm:gap-3 lg:grid-cols-[1.05fr_1fr]">
+            <article className="rounded-xl border border-white/10 bg-slate-900/75 p-3.5 shadow-[0_14px_30px_-24px_rgba(15,23,42,1)] sm:rounded-2xl sm:p-4">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Progress</p>
+              <div className="mt-2 flex items-baseline justify-between gap-2">
+                <p className="text-xl font-semibold text-white sm:text-2xl">{completedRatioLabel}</p>
+                <p className="text-xs text-slate-400">{summary.progressPercent}%</p>
+              </div>
+              <div className="mt-2 h-2 rounded-full bg-slate-800">
+                <div className="h-2 rounded-full bg-gradient-to-r from-rose-400 to-orange-300" style={{ width: `${summary.progressPercent}%` }} />
               </div>
             </article>
 
-            <article className="rounded-2xl border border-rose-300/20 bg-gradient-to-br from-rose-500/10 to-purple-500/10 p-5">
-              <p className="text-sm text-slate-300">Chance to Reach Goal</p>
-              <p className="mt-2 text-4xl font-semibold text-white">{chance.score}%</p>
-              <p className="mt-1 inline-flex rounded-full bg-white/10 px-3 py-1 text-sm text-slate-100">{chance.label}</p>
-              <p className="mt-3 text-sm text-slate-200">{chance.shortMessage}</p>
-              <p className="mt-1 text-xs text-slate-400">{chance.coachingMessage}</p>
+            <article className="rounded-xl border border-rose-300/20 bg-gradient-to-br from-rose-500/10 to-purple-500/10 p-3.5 shadow-[0_14px_30px_-24px_rgba(225,29,72,0.85)] sm:rounded-2xl sm:p-4">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300">Chance to Reach Goal</p>
+              <div className="mt-1.5 flex items-center justify-between gap-2">
+                <p className="text-3xl font-semibold leading-none text-white">{chance.score}%</p>
+                <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 text-xs text-slate-100">{chance.label}</p>
+              </div>
+              <p className="mt-1.5 text-xs text-slate-200">{chance.shortMessage}</p>
+              <p className="mt-1 text-[11px] text-slate-400">{chance.coachingMessage}</p>
             </article>
           </section>
         </>
