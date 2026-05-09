@@ -17,8 +17,12 @@ export default async function InnovationPage() {
   return (
     <PageShell>
       <Navbar />
-      <section className="page-container space-y-5">
-        <ProgressBar current={innovations.length} total={TARGET_INNOVATIONS} activeCount={activeInnovations.length} completedCount={completedInnovations.length} />
+      <section className="page-container mx-auto max-w-4xl space-y-4">
+        <header className="space-y-1 pt-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">GOAL</p>
+          <h1 className="text-base font-semibold text-slate-900">Founder Execution Workspace</h1>
+        </header>
+
         <DiscoveryGapSection
           currentCount={innovations.length}
           goalCount={TARGET_INNOVATIONS}
@@ -26,25 +30,29 @@ export default async function InnovationPage() {
           candidateCount={discoveryCandidates.length}
           nextAction={nextDiscoveryAction}
         />
-        <DiscoveryCandidatesSection candidates={discoveryCandidates} />
+
         {innovations.length === 0 ? (
           <section className="premium-card border-dashed p-10 text-center"><p className="text-[color:var(--text-secondary)]">No innovation yet. Start building your future.</p></section>
         ) : (
           <>
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold text-slate-900">Active Innovations</h2>
-              <div className="grid gap-4 md:grid-cols-2">
+              <h2 className="text-base font-semibold text-slate-900">Active Innovation</h2>
+              <div className="grid gap-3">
                 {activeInnovations.map((innovation) => (
                   <InnovationCard key={innovation.id} innovation={innovation} isCurrent={currentMission?.id === innovation.id} />
                 ))}
               </div>
             </section>
 
+            <DiscoveryCandidatesSection candidates={discoveryCandidates} />
+
+            <ProgressBar current={innovations.length} total={TARGET_INNOVATIONS} activeCount={activeInnovations.length} completedCount={completedInnovations.length} />
+
             <details className="rounded-2xl border border-slate-200 bg-white p-3">
               <summary className="cursor-pointer text-sm font-semibold text-slate-700">Completed Innovations ({completedInnovations.length})</summary>
-              <div className="mt-3 grid gap-4 md:grid-cols-2">
+              <div className="mt-3 grid gap-2">
                 {completedInnovations.map((innovation) => (
-                  <InnovationCard key={innovation.id} innovation={innovation} isCurrent={false} />
+                  <InnovationCard key={innovation.id} innovation={innovation} compactCompleted />
                 ))}
               </div>
             </details>

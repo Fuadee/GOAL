@@ -11,9 +11,9 @@ export function ProgressBar({ current, total, activeCount, completedCount }: Pro
   const isComplete = clampedCurrent >= total;
 
   return (
-    <section className="space-y-2 rounded-2xl border border-slate-300/80 bg-white p-3.5 shadow-sm">
+    <section className="space-y-1.5 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-700">Momentum</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-600">Momentum</h2>
         <span className="text-sm font-semibold text-slate-900">
           {clampedCurrent} / {total} innovations
         </span>
