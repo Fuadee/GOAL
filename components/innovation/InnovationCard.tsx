@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { deriveInnovationState, getInnovationStateMeta } from '@/lib/innovation/helpers';
 import { InnovationCardViewModel, InnovationDerivedState } from '@/lib/innovation/types';
+import { innovationUi, statusBadge } from './uiTokens';
 
 type InnovationCardProps = {
   innovation: InnovationCardViewModel;
@@ -10,10 +11,10 @@ type InnovationCardProps = {
 };
 
 const stateStyles: Record<InnovationDerivedState, string> = {
-  idea: 'border border-slate-300 bg-slate-100 text-slate-700',
-  building: 'border border-amber-300 bg-amber-100 text-amber-800',
+  idea: `${statusBadge.base} ${statusBadge.concept}`,
+  building: `${statusBadge.base} ${statusBadge.building}`,
   blocked: 'border border-rose-300 bg-rose-100 text-rose-800',
-  completed: 'border border-emerald-300 bg-emerald-100 text-emerald-800'
+  completed: `${statusBadge.base} ${statusBadge.completed}`
 };
 
 function formatTimestamp(value: string): string {
@@ -26,10 +27,10 @@ export function InnovationCard({ innovation, isCurrent = false, compactCompleted
 
   if (compactCompleted) {
     return (
-      <article className="rounded-xl border border-slate-200 bg-white p-3">
+      <article className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="line-clamp-1 text-sm font-semibold text-slate-900">{innovation.title}</h3>
-          <span className="rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">COMPLETED</span>
+          <span className={`${statusBadge.base} ${statusBadge.completed}`}>COMPLETED</span>
         </div>
         <p className="mt-1 text-xs text-slate-600">Updated {formatTimestamp(innovation.updated_at)}</p>
         <Link href={`/innovation/${innovation.id}`} className="mt-2 inline-flex text-xs font-semibold text-slate-700 underline underline-offset-2">Open details</Link>
@@ -43,8 +44,8 @@ export function InnovationCard({ innovation, isCurrent = false, compactCompleted
         <div className="flex items-start justify-between gap-2">
           <h3 className="line-clamp-2 text-base font-semibold text-slate-950">{innovation.title}</h3>
           <div className="flex gap-1.5">
-            {isCurrent ? <span className="rounded-full bg-slate-950 px-2 py-0.5 text-[10px] font-bold text-white">CURRENT</span> : null}
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${stateStyles[derivedState]}`}>{stateMeta.label}</span>
+            {isCurrent ? <span className={`${statusBadge.base} ${statusBadge.current}`}>CURRENT</span> : null}
+            <span className={stateStyles[derivedState]}>{stateMeta.label}</span>
           </div>
         </div>
         <p className="line-clamp-2 text-sm text-slate-700">{innovation.description || 'No description yet.'}</p>
@@ -72,8 +73,8 @@ export function InnovationCard({ innovation, isCurrent = false, compactCompleted
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <Link href={`/innovation/${innovation.id}`} className="inline-flex h-10 items-center justify-center rounded-lg bg-slate-900 text-sm font-semibold text-white">Continue</Link>
-        <Link href={`/innovation/${innovation.id}`} className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-sm font-semibold text-slate-800">Open details</Link>
+        <Link href={`/innovation/${innovation.id}`} className={innovationUi.primaryButton}>Continue</Link>
+        <Link href={`/innovation/${innovation.id}`} className={innovationUi.secondaryButton}>Open details</Link>
       </div>
     </article>
   );

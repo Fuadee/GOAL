@@ -11,9 +11,9 @@ export function ProgressBar({ current, total, activeCount, completedCount }: Pro
   const isComplete = clampedCurrent >= total;
 
   return (
-    <section className="space-y-1.5 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+    <section className="space-y-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-600">Momentum</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">MOMENTUM</h2>
         <span className="text-sm font-semibold text-slate-900">
           {clampedCurrent} / {total} innovations
         </span>
@@ -22,7 +22,7 @@ export function ProgressBar({ current, total, activeCount, completedCount }: Pro
       <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
         <div
           className={`h-full rounded-full transition-all duration-500 ${
-            isComplete ? 'bg-emerald-600' : 'bg-slate-800'
+            isComplete ? 'bg-slate-900' : 'bg-slate-900'
           }`}
           style={{ width: `${progress}%` }}
           aria-label="Innovation progress bar"
