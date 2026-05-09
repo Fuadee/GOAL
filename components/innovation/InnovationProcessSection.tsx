@@ -29,9 +29,11 @@ export function InnovationProcessSection({ innovationId, steps }: InnovationProc
 
   return (
     <section className="space-y-5 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-      <h2 className="text-xl font-semibold text-white">Process Checklist</h2>
+      <h2 className="text-xl font-semibold text-white">Mission Steps</h2>
 
-      <form
+      <details className="rounded-xl border border-white/10 bg-slate-900/40 p-4" open={false}>
+        <summary className="cursor-pointer text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">+ Add Step</summary>
+        <form
         action={(formData) => {
           setError(null);
           startTransition(async () => {
@@ -43,9 +45,8 @@ export function InnovationProcessSection({ innovationId, steps }: InnovationProc
             router.refresh();
           });
         }}
-        className="grid gap-3 rounded-xl border border-white/10 bg-slate-900/40 p-4"
+        className="mt-3 grid gap-3"
       >
-        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Add process step</h3>
         <input
           name="title"
           type="text"
@@ -69,6 +70,7 @@ export function InnovationProcessSection({ innovationId, steps }: InnovationProc
           {isPending ? 'Saving...' : 'Add Step'}
         </button>
       </form>
+      </details>
 
       {steps.length === 0 ? (
         <p className="text-slate-300">No process steps yet. Define the real checklist first.</p>

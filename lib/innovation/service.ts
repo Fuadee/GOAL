@@ -20,7 +20,8 @@ import {
 import {
   deriveDiscoveryCandidateState,
   deriveInnovationState,
-  getCurrentInnovation,
+  getActiveMission,
+  getCurrentStep,
   getDiscoveryGap,
   getInnovationNextAction,
   getNextStep,
@@ -99,7 +100,7 @@ export async function getInnovationDashboardPageData(goal = 10): Promise<{
   nextAction: InnovationNextAction;
 }> {
   const [innovations, discoveryCandidates] = await Promise.all([getInnovationDashboardData(), getDiscoveryCandidates()]);
-  const currentMission = getCurrentInnovation(innovations);
+  const currentMission = getActiveMission(innovations);
   const sortedCandidates = discoveryCandidates.sort((a, b) => sortDiscoveryCandidatesByPipeline(a) - sortDiscoveryCandidatesByPipeline(b));
 
   return {
@@ -107,7 +108,7 @@ export async function getInnovationDashboardPageData(goal = 10): Promise<{
     currentMission,
     discoveryCandidates: sortedCandidates,
     discoveryGap: getDiscoveryGap(innovations, goal),
-    nextAction: getInnovationNextAction({ activeInnovation: currentMission, candidates: sortedCandidates })
+    nextAction: getInnovationNextAction({ activeInnovation: currentMission ? { ...currentMission, nextStep: getCurrentStep(currentMission) } : null, candidates: sortedCandidates })
   };
 }
 

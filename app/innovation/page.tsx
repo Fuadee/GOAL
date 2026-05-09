@@ -11,7 +11,7 @@ import { innovationUi } from '@/components/innovation/uiTokens';
 const TARGET_INNOVATIONS = 10;
 
 export default async function InnovationPage() {
-  const { innovations, currentMission, discoveryCandidates, discoveryGap, nextAction } = await getInnovationDashboardPageData(TARGET_INNOVATIONS);
+  const { innovations, currentMission, discoveryCandidates, discoveryGap } = await getInnovationDashboardPageData(TARGET_INNOVATIONS);
   const activeInnovations = innovations.filter((innovation) => deriveInnovationState(innovation) !== 'completed');
   const completedInnovations = innovations.filter((innovation) => deriveInnovationState(innovation) === 'completed');
 
@@ -29,7 +29,7 @@ export default async function InnovationPage() {
           goalCount={TARGET_INNOVATIONS}
           gap={discoveryGap}
           candidateCount={discoveryCandidates.length}
-          nextAction={nextAction}
+          activeMissionCount={currentMission ? 1 : 0}
         />
 
         {innovations.length === 0 ? (
@@ -38,13 +38,11 @@ export default async function InnovationPage() {
           <>
             <section className="space-y-3">
               <div>
-                <h2 className={innovationUi.sectionTitle}>Active Innovation</h2>
-                <p className={innovationUi.sectionSubtitle}>Workspace for missions currently in progress.</p>
+                <h2 className={innovationUi.sectionTitle}>Active Mission</h2>
+                <p className={innovationUi.sectionSubtitle}>Work currently in progress.</p>
               </div>
               <div className="grid gap-3">
-                {activeInnovations.map((innovation) => (
-                  <InnovationCard key={innovation.id} innovation={innovation} isCurrent={currentMission?.id === innovation.id} />
-                ))}
+                {currentMission ? <InnovationCard innovation={currentMission} isCurrent /> : <p className="text-sm text-slate-600">No active mission yet.</p>}
               </div>
             </section>
 
@@ -53,7 +51,7 @@ export default async function InnovationPage() {
             <ProgressBar current={innovations.length} total={TARGET_INNOVATIONS} activeCount={activeInnovations.length} completedCount={completedInnovations.length} />
 
             <details className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-slate-600">
-              <summary className="cursor-pointer text-sm font-semibold text-slate-700">Completed Innovations ({completedInnovations.length})</summary>
+              <summary className="cursor-pointer text-sm font-semibold text-slate-700">Completed Missions ({completedInnovations.length})</summary>
               <div className="mt-3 grid gap-2">
                 {completedInnovations.map((innovation) => (
                   <InnovationCard key={innovation.id} innovation={innovation} compactCompleted />

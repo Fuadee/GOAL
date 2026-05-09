@@ -4,7 +4,7 @@ import { AddInnovationLogForm } from '@/components/innovation/AddInnovationLogFo
 import { InnovationProcessSection } from '@/components/innovation/InnovationProcessSection';
 import { Navbar } from '@/components/navbar';
 import { getInnovationDetailData } from '@/lib/innovation/service';
-import { deriveInnovationState, getInnovationStateMeta } from '@/lib/innovation/helpers';
+import { deriveInnovationState, getCurrentStep, getInnovationStateMeta } from '@/lib/innovation/helpers';
 import { InnovationLogType } from '@/lib/innovation/types';
 
 type InnovationDetailPageProps = {
@@ -41,13 +41,15 @@ export default async function InnovationDetailPage({ params }: InnovationDetailP
   };
   const stateMeta = getInnovationStateMeta(innovationWithSteps);
   const derivedState = deriveInnovationState(innovationWithSteps);
+  const currentStep = getCurrentStep(innovationWithSteps);
+  const upcomingSteps = steps.filter((step) => step.status !== 'done' && step.id !== currentStep?.id);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <Navbar />
       <section className="mx-auto w-full max-w-6xl space-y-8 px-6 py-16 md:px-10 md:py-20">
         <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Innovation Detail</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Mission Detail</p>
           <h1 className="text-3xl font-semibold text-white">{innovation.title}</h1>
           <p className="text-slate-300">{innovation.description || 'No description provided.'}</p>
           <p className="text-slate-300">Goal: {innovation.goal || 'No goal provided.'}</p>
@@ -71,12 +73,25 @@ export default async function InnovationDetailPage({ params }: InnovationDetailP
           </section>
         </section>
 
-        <InnovationProcessSection innovationId={innovation.id} steps={steps} />
-
-        <AddInnovationLogForm innovationId={innovation.id} />
+        <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <h2 className="text-xl font-semibold text-white">Current Work</h2>
+          {currentStep ? <article className="rounded-xl border border-white/10 bg-slate-900/50 p-4"><p className="font-semibold text-white">{currentStep.title}</p></article> : <p className="text-slate-300">ยังไม่มี step ที่ต้องทำ</p>}
+        </section>
 
         <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-          <h2 className="text-xl font-semibold text-white">Execution Timeline</h2>
+          <h2 className="text-xl font-semibold text-white">Upcoming Steps</h2>
+          {upcomingSteps.length === 0 ? <p className="text-slate-300">No upcoming steps.</p> : <ul className="space-y-2">{upcomingSteps.map((step) => <li key={step.id} className="rounded-lg border border-white/10 p-3 text-slate-200">{step.title}</li>)}</ul>}
+        </section>
+
+        <InnovationProcessSection innovationId={innovation.id} steps={steps} />
+
+        <details className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <summary className="cursor-pointer text-xl font-semibold text-white">Execution Log</summary>
+          <AddInnovationLogForm innovationId={innovation.id} />
+        </details>
+
+        <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <h2 className="text-xl font-semibold text-white">Timeline</h2>
 
           {logs.length === 0 ? (
             <p className="text-slate-300">No logs yet. Start documenting your execution history.</p>
