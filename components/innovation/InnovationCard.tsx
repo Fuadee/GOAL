@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { deriveInnovationState, getInnovationStateMeta } from '@/lib/innovation/helpers';
+import { deriveInnovationState, getCurrentIncompleteStep, getInnovationStateMeta } from '@/lib/innovation/helpers';
 import { InnovationCardViewModel, InnovationDerivedState } from '@/lib/innovation/types';
 import { innovationUi, statusBadge } from './uiTokens';
 
@@ -24,6 +24,8 @@ function formatTimestamp(value: string): string {
 export function InnovationCard({ innovation, isCurrent = false, compactCompleted = false }: InnovationCardProps) {
   const derivedState = deriveInnovationState(innovation);
   const stateMeta = getInnovationStateMeta(innovation);
+  const currentStep = getCurrentIncompleteStep(innovation);
+  const hasCurrentStep = Boolean(currentStep);
 
   if (compactCompleted) {
     return (
@@ -51,29 +53,15 @@ export function InnovationCard({ innovation, isCurrent = false, compactCompleted
         <p className="line-clamp-2 text-sm text-slate-700">{innovation.description || 'No description yet.'}</p>
       </header>
 
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Goal / Next Milestone</p>
-        <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900">{innovation.nextStep?.title ?? 'ยังไม่มี step เริ่มจากเพิ่มขั้นตอนแรก'}</p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-lg border border-slate-200 p-2">
-          <p className="text-xs text-slate-500">Progress</p>
-          <p className="text-sm font-semibold text-slate-900">{innovation.progressPercent}%</p>
-        </div>
-        <div className="rounded-lg border border-slate-200 p-2">
-          <p className="text-xs text-slate-500">Steps</p>
-          <p className="text-sm font-semibold text-slate-900">{innovation.completedStepCount} / {innovation.stepTotal}</p>
-        </div>
-      </div>
-
       <div className="rounded-xl border border-slate-200 p-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Current Work</p>
-        <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900">{innovation.nextStep?.title ?? 'ยังไม่มี step ถัดไป'}</p>
+        <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900">{currentStep?.title ?? 'ยังไม่มีงานย่อยที่กำลังทำ'}</p>
       </div>
 
+      <p className="text-sm font-medium text-slate-700">{innovation.progressPercent}% · {innovation.completedStepCount}/{innovation.stepTotal} steps</p>
+
       <div className="grid grid-cols-2 gap-2">
-        <Link href={`/innovation/${innovation.id}`} className={innovationUi.primaryButton}>Continue Working</Link>
+        <Link href={hasCurrentStep ? `/innovation/${innovation.id}?focus=current-work` : `/innovation/${innovation.id}?focus=add-step`} className={innovationUi.primaryButton}>{hasCurrentStep ? 'Continue Working' : 'Add First Step'}</Link>
         <Link href={`/innovation/${innovation.id}`} className={innovationUi.secondaryButton}>Open Details</Link>
       </div>
     </article>

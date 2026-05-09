@@ -33,12 +33,16 @@ export function DiscoveryCandidatesSection({ candidates }: DiscoveryCandidatesSe
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
   return (
-    <section id="discovery-candidates" className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/90 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <details id="discovery-candidates" className="rounded-2xl border border-slate-200 bg-slate-50/90 p-4" open={false}>
+      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className={innovationUi.sectionTitle}>Candidate Queue</h2>
+          <h2 className={innovationUi.sectionTitle}>Candidate Queue ({candidates.length})</h2>
           <p className={innovationUi.sectionSubtitle}>Ideas waiting for execution.</p>
         </div>
+        <span className="text-sm font-semibold text-slate-600">Expand</span>
+      </summary>
+
+      <div className="mt-3 flex justify-end">
         <Link href="/innovation/discovery/new" className={innovationUi.headerOutlineButton}>
           + Add Candidate
         </Link>
@@ -93,6 +97,6 @@ export function DiscoveryCandidatesSection({ candidates }: DiscoveryCandidatesSe
           })}
         </div>
       )}
-    </section>
+    </details>
   );
 }
