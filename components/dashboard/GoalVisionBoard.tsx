@@ -182,13 +182,11 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
   return (
     <section className="hero-panel overflow-visible border-[color:var(--border-strong)]/45 p-5 md:p-7">
       <div className="relative z-10 space-y-6">
-        <div className="space-y-2 md:space-y-3">
-          <p className="mission-label text-cyan-200/90">GOAL VISION BOARD</p>
-          <h1 className="page-title text-3xl md:text-4xl">GOAL VISION BOARD</h1>
-          <p className="text-sm text-[color:var(--text-secondary)] md:text-base">ภาพแทนชีวิตที่คุณกำลังสร้าง</p>
+        <div className="mb-1">
+          <h1 className="text-base font-semibold tracking-[0.14em] text-white/95 sm:text-lg">GOAL VISION BOARD</h1>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 pt-1 sm:gap-4 md:grid-cols-2 xl:grid-cols-5">
           {GOAL_VISION_ITEMS.map((item) => (
             <div key={item.key} className="min-w-0">
               <GoalVisionCard
