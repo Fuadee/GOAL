@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
 
 type MenuItem = {
   label: string;
@@ -25,7 +24,6 @@ const isPathActive = (pathname: string, href: string) => {
 
 export function Navbar() {
   const pathname = usePathname();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const baseItemClass =
     'theme-focus relative whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium tracking-[0.01em] text-stone-400 transition-colors duration-200 hover:bg-stone-100/5 hover:text-stone-100';
@@ -44,16 +42,6 @@ export function Navbar() {
             Mission Control
           </span>
         </Link>
-
-        <button
-          type="button"
-          className="theme-button-secondary inline-flex items-center border-stone-400/30 bg-stone-900/80 text-xs uppercase tracking-[0.08em] text-stone-200 md:hidden"
-          onClick={() => setIsMenuOpen((prev) => !prev)}
-          aria-expanded={isMenuOpen}
-          aria-label="Toggle menu"
-        >
-          Menu
-        </button>
 
         <div className="hidden min-w-0 flex-1 items-center justify-center md:flex">
           <nav className="no-scrollbar flex min-w-0 max-w-full items-center gap-1.5 overflow-x-auto rounded-full border border-stone-400/25 bg-white/[0.015] p-1.5" aria-label="Main menu">
@@ -76,33 +64,30 @@ export function Navbar() {
         </div>
       </div>
 
-      {isMenuOpen ? (
-        <nav className="border-t border-stone-400/25 bg-[rgba(16,18,24,0.96)] px-4 py-3 md:hidden" aria-label="Mobile main menu">
-          <div className="mx-auto flex max-w-7xl flex-col gap-3">
-            <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-2">
-              {menuItems.map((item) => {
-                const isActive = isPathActive(pathname, item.href);
+      <nav className="border-t border-stone-400/25 bg-[rgba(16,18,24,0.96)] px-4 py-3 md:hidden" aria-label="Mobile main menu">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3">
+          <div className="grid grid-cols-2 gap-2">
+            {menuItems.map((item) => {
+              const isActive = isPathActive(pathname, item.href);
 
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className={`${baseItemClass} flex-shrink-0 ${isActive ? activeItemClass : ''}`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </div>
-            <div className="border-t border-stone-400/20 pt-2">
-              <span className="rounded-md border border-stone-400/30 bg-stone-900/70 px-3 py-1.5 text-[11px] font-medium tracking-[0.04em] text-stone-300">
-                Today&apos;s Focus
-              </span>
-            </div>
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`${baseItemClass} min-h-[44px] px-3 py-2.5 text-center text-[13px] leading-tight whitespace-normal ${isActive ? activeItemClass : ''}`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
-        </nav>
-      ) : null}
+          <div className="border-t border-stone-400/20 pt-2">
+            <span className="inline-flex min-h-[40px] items-center rounded-md border border-stone-400/30 bg-stone-900/70 px-3 py-1.5 text-[11px] font-medium tracking-[0.04em] text-stone-300">
+              Today&apos;s Focus
+            </span>
+          </div>
+        </div>
+      </nav>
     </header>
   );
 }
