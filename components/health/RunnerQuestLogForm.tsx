@@ -26,6 +26,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
   const [durationInput, setDurationInput] = useState('');
   const [noStop, setNoStop] = useState(false);
   const [isDurationTouched, setIsDurationTouched] = useState(false);
+  const [showMoreDetails, setShowMoreDetails] = useState(false);
 
   const durationValidation = useMemo(() => parseMinuteSecondDuration(durationInput), [durationInput]);
 
@@ -67,9 +68,9 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
   }
 
   return (
-    <section className="theme-card space-y-4 p-5">
+    <section className="theme-card space-y-4 p-4">
       <h3 className="card-title">Quick Log</h3>
-      <p className="text-sm text-slate-300">บันทึกทันทีหลังวิ่ง เพื่อให้ด่านอัปเดตทันที</p>
+      <p className="text-sm text-slate-300">บันทึกใน 10 วินาที แล้วระบบอัปเดตด่านทันที</p>
       <form
         action={(formData) => {
           setError(null);
@@ -92,7 +93,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
         className="grid gap-3"
       >
         <input type="hidden" name="no_stop" value={String(noStop)} />
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-2.5 md:grid-cols-2">
           <label className="space-y-1 label-text">
             <span>วันที่</span>
             <input
@@ -118,7 +119,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
           </label>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-2.5 md:grid-cols-2">
           <label className="space-y-1 label-text">
             <span>ระยะเวลา</span>
             <input
@@ -141,18 +142,15 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
               <p className="text-xs text-amber-300">{durationValidation.error}</p>
             ) : null}
           </label>
-          <label className="space-y-1 label-text">
-            <span>ความหนัก</span>
-            <select
-              name="effort"
-              defaultValue="normal"
-              className="theme-input"
+          <div className="flex items-end">
+            <button
+              type="button"
+              onClick={() => setShowMoreDetails((prev) => !prev)}
+              className="theme-button-secondary w-full"
             >
-              <option value="easy">เบา</option>
-              <option value="normal">ปกติ</option>
-              <option value="hard">หนัก</option>
-            </select>
-          </label>
+              {showMoreDetails ? 'ซ่อนรายละเอียด' : 'More details'}
+            </button>
+          </div>
         </div>
 
         <label className="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
@@ -160,14 +158,27 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
           วิ่งจบแบบไม่หยุด
         </label>
 
-        <label className="space-y-1 label-text">
-          <span>โน้ต</span>
-          <textarea
-            name="note"
-            rows={2}
-            className="theme-textarea"
-          />
-        </label>
+        {showMoreDetails ? (
+          <div className="grid gap-2.5 md:grid-cols-2">
+            <label className="space-y-1 label-text">
+              <span>ความหนัก</span>
+              <select name="effort" defaultValue="normal" className="theme-input">
+                <option value="easy">เบา</option>
+                <option value="normal">ปกติ</option>
+                <option value="hard">หนัก</option>
+              </select>
+            </label>
+            <label className="space-y-1 label-text">
+              <span>โน้ต</span>
+              <textarea name="note" rows={2} className="theme-textarea" />
+            </label>
+          </div>
+        ) : (
+          <>
+            <input type="hidden" name="effort" value="normal" />
+            <input type="hidden" name="note" value="" />
+          </>
+        )}
 
         {preview ? (
           <div className="action-surface p-3 text-sm text-[color:var(--text-primary)]">
@@ -184,7 +195,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="theme-button-primary w-fit disabled:opacity-60"
+          className="theme-button-primary w-full disabled:opacity-60"
         >
           {isPending ? 'กำลังบันทึก...' : 'บันทึกผลการวิ่ง'}
         </button>
