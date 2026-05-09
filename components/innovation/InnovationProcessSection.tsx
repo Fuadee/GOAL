@@ -21,13 +21,20 @@ const stepStatusStyles: Record<InnovationStepStatus, string> = {
 };
 const STATUS_ORDER: InnovationStepStatus[] = ['in_progress', 'blocked', 'waiting', 'todo', 'completed'];
 const STATUS_LABEL: Record<InnovationStepStatus, string> = { todo: 'TODO', waiting: 'WAITING', in_progress: 'IN PROGRESS', blocked: 'BLOCKED', completed: 'DONE' };
+const PRIMARY_ACTIONS: Record<InnovationStepStatus, { label: string; target: InnovationStepStatus }> = {
+  todo: { label: 'Start', target: 'in_progress' },
+  waiting: { label: 'Start', target: 'in_progress' },
+  in_progress: { label: 'Mark Done', target: 'completed' },
+  blocked: { label: 'Resolve', target: 'in_progress' },
+  completed: { label: 'Reopen', target: 'in_progress' }
+};
 
 export function InnovationProcessSection({ innovationId, currentFocus, steps }: InnovationProcessSectionProps) {
   const router = useRouter(); const [isPending, startTransition] = useTransition(); const [error, setError] = useState<string | null>(null);
   const groups = STATUS_ORDER.map((status) => ({ status, steps: steps.filter((s) => s.status === status) }));
 
   const setStatus = (stepId: string, status: InnovationStepStatus) => startTransition(async () => { await updateStepStatusAction(innovationId, stepId, status); router.refresh(); });
-  const primary = (status: InnovationStepStatus): { label: string; target: InnovationStepStatus } => ({ todo: { label: 'Start', target: 'in_progress' }, waiting: { label: 'Start', target: 'in_progress' }, in_progress: { label: 'Mark Done', target: 'completed' }, blocked: { label: 'Resolve', target: 'in_progress' }, completed: { label: 'Reopen', target: 'in_progress' } }[status]);
+  const primary = (status: InnovationStepStatus): { label: string; target: InnovationStepStatus } => PRIMARY_ACTIONS[status];
 
   return <section className="space-y-5 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
     <div className="space-y-4 rounded-2xl border border-cyan-200/30 bg-slate-900/80 p-5">
