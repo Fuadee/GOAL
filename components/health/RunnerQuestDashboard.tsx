@@ -54,24 +54,34 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
   const currentLevel = data.currentLevel;
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-4">
+      <section className="grid gap-3 sm:grid-cols-3">
+        {[
+          ['Today Status', data.todayStatus === 'ran' ? 'Done' : data.todayStatus === 'rest' ? 'Rest Day' : 'Pending'],
+          ['Current Level', currentLevel ? `L${currentLevel.level_number}` : 'Completed'],
+          ['Passed Levels', `${data.passedLevelsCount} / ${data.levels.length}`]
+        ].map(([label, value]) => (
+          <article key={label} className="rounded-2xl border border-white/10 bg-[#0F1B2E] px-3.5 py-3">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{label}</p>
+            <p className="mt-1 text-base font-semibold text-slate-50">{value}</p>
+          </article>
+        ))}
+      </section>
+
       <HealthTodayMissionCard todayStatus={data.todayStatus} currentLevel={currentLevel} latestAttempt={currentLevel?.latestAttempt ?? null} />
       <HealthExecutionStrip todayStatus={data.todayStatus} />
 
       <section className="grid gap-3 sm:grid-cols-2">
-        <article className="premium-card">
+        <article className="premium-card bg-[#111827]">
           <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Current Level</p>
           <p className="mt-2 text-xl font-semibold text-white">{currentLevel ? `Level ${currentLevel.level_number} · ${currentLevel.title}` : 'All levels passed'}</p>
         </article>
-        <article className="premium-card">
-          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Best Recent Attempt</p>
-          <p className="mt-2 text-xl font-semibold text-white">
-            {data.logs[0] ? `${data.logs[0].distance_km.toFixed(2)} km · ${formatPace(data.logs[0].pace_seconds_per_km)}` : 'No attempt yet'}
-          </p>
-        </article>
+        <div id="quick-log">
+          <RunnerQuestLogForm currentLevel={currentLevel} />
+        </div>
       </section>
 
-      <section className="premium-card">
+      <section className="premium-card bg-[#111827]">
         <h3 className="text-lg font-semibold text-white">Current Level Focus</h3>
         {currentLevel ? (
           <>
@@ -97,13 +107,9 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
         )}
       </section>
 
-      <div id="quick-log">
-        <RunnerQuestLogForm currentLevel={currentLevel} />
-      </div>
-
       <section>
         <h3 className="mb-3 text-lg font-semibold text-white">Level Progression</h3>
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           {data.levels.map((level) => {
             const evaluation = buildEvaluation(level);
             const isCurrent = currentLevel?.id === level.id;
@@ -111,7 +117,7 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
             return (
               <article
                 key={level.id}
-                className={`rounded-2xl border p-4 ${
+                className={`rounded-2xl border p-3 ${
                   isCurrent
                     ? 'border-sky-300/50 bg-sky-500/10 shadow-[0_0_30px_rgba(56,189,248,0.2)]'
                     : 'border-white/10 bg-slate-900/70'
@@ -123,7 +129,7 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
                     {statusLabel(level.progress?.status)}
                   </span>
                 </div>
-                <p className="mt-2 text-lg font-semibold text-white">{level.title}</p>
+                <p className="mt-1 text-base font-semibold text-white">{level.title}</p>
                 <p className="text-sm text-slate-300">Target {level.distance_target_km} km · {formatPace(level.pace_target_seconds_per_km)}</p>
                 <p className="mt-1 inline-flex rounded-full border border-violet-400/30 bg-violet-500/10 px-2 py-0.5 text-xs text-violet-200">No Stop Required</p>
 
@@ -180,19 +186,21 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
         )}
       </article>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          ['Total Attempts', String(data.totalAttempts)],
-          ['Passed Levels', `${data.passedLevelsCount} / ${data.levels.length}`],
-          ['Best Pace Ever', formatPace(data.bestPaceEver)],
-          ['Longest No-Stop Distance', data.longestNoStopDistance ? `${data.longestNoStopDistance.toFixed(2)} km` : '--']
-        ].map(([label, value]) => (
-          <article key={label} className="premium-card">
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
-            <p className="mt-2 text-xl font-semibold text-white">{value}</p>
-          </article>
-        ))}
-      </section>
+      <details className="rounded-2xl border border-white/10 bg-[#0F1B2E] p-4">
+        <summary className="cursor-pointer text-sm font-semibold text-slate-200">More Health Insights</summary>
+        <section className="mt-3 grid gap-3 sm:grid-cols-2">
+          {[
+            ['Total Attempts', String(data.totalAttempts)],
+            ['Best Pace Ever', formatPace(data.bestPaceEver)],
+            ['Longest No-Stop Distance', data.longestNoStopDistance ? `${data.longestNoStopDistance.toFixed(2)} km` : '--']
+          ].map(([label, value]) => (
+            <article key={label} className="rounded-xl border border-white/10 bg-[#111827] p-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
+              <p className="mt-1 text-base font-semibold text-white">{value}</p>
+            </article>
+          ))}
+        </section>
+      </details>
     </section>
   );
 }

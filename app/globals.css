@@ -58,7 +58,7 @@ h6 {
   @apply text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/80;
 }
 
-.page-title { @apply text-xl font-semibold leading-tight text-slate-900 md:text-2xl; }
+.page-title { @apply text-xl font-semibold leading-tight text-slate-50 md:text-2xl; }
 
 .section-title { @apply text-base font-semibold text-slate-900 md:text-lg; }
 
@@ -81,9 +81,9 @@ h6 {
 .theme-card,
 .mission-card {
   @apply rounded-2xl border p-4;
-  border-color: var(--border);
-  background: var(--surface);
-  box-shadow: 0 8px 18px rgba(2, 8, 20, 0.28);
+  border-color: rgba(255, 255, 255, 0.08);
+  background: #0f1b2e;
+  box-shadow: 0 8px 18px rgba(2, 8, 20, 0.4);
   transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
 }
 

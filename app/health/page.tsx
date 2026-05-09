@@ -11,6 +11,7 @@ export default async function HealthPage() {
       <Navbar />
       <section className="page-container space-y-5">
         <PageHeader
+          className="border-white/10 bg-gradient-to-br from-[#0F1B2E] to-[#07111F]"
           kicker="Health Performance"
           title="Fitness Mission Control"
           description="โฟกัสภารกิจวันนี้ให้ชัด แล้วเดินเกมฟิตเนสแบบมีวินัยและโมเมนตัม"
