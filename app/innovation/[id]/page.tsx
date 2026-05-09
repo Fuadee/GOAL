@@ -6,12 +6,10 @@ import { Navbar } from '@/components/navbar';
 import { getInnovationDetailData } from '@/lib/innovation/service';
 import {
   deriveInnovationState,
-  getCompletedSteps,
-  getCurrentStep,
+  getCurrentFocusStep,
+  getStepStatusSummary,
   getInnovationStateMeta,
-  getMissionProgress,
-  getNextTodoStep,
-  getUpcomingSteps
+  getMissionProgress
 } from '@/lib/innovation/helpers';
 import { InnovationLogType } from '@/lib/innovation/types';
 
@@ -40,6 +38,7 @@ export default async function InnovationDetailPage({ params }: InnovationDetailP
   const stateMeta = getInnovationStateMeta(mission);
   const derivedState = deriveInnovationState(mission);
   const { stepTotal } = getMissionProgress(mission);
+  const summary = getStepStatusSummary(mission);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
@@ -53,16 +52,15 @@ export default async function InnovationDetailPage({ params }: InnovationDetailP
           <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-3">
             <p>Status: <span className="font-semibold text-white">{stateMeta.label}</span> ({derivedState})</p>
             <p>Progress: <span className="font-semibold text-white">{progressPercent}%</span> ({completedStepCount}/{stepTotal})</p>
+            <p>Active: <span className="font-semibold text-cyan-200">{summary.active}</span> · Blocked: <span className="font-semibold text-rose-200">{summary.blocked}</span> · Waiting: <span className="font-semibold text-amber-200">{summary.waiting}</span> · Done: <span className="font-semibold text-emerald-200">{summary.done}/{summary.total}</span></p>
             <p>Updated: <span className="text-white">{formatTimestamp(innovation.updated_at)}</span></p>
           </div>
         </section>
 
         <InnovationProcessSection
           innovationId={innovation.id}
-          currentStep={getCurrentStep(mission)}
-          nextStep={getNextTodoStep(mission)}
-          upcomingSteps={getUpcomingSteps(mission)}
-          completedSteps={getCompletedSteps(mission)}
+          currentFocus={getCurrentFocusStep(mission)}
+          steps={steps}
         />
 
         <details className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
