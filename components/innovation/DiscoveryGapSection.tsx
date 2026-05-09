@@ -8,15 +8,24 @@ type DiscoveryGapSectionProps = {
 
 export function DiscoveryGapSection({ currentCount, goalCount, gap, candidateCount, nextAction }: DiscoveryGapSectionProps) {
   return (
-    <section className="space-y-3 rounded-2xl border border-cyan-300/30 bg-cyan-500/10 p-6 backdrop-blur">
-      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200">🚀 Discovery Gap</p>
-      <p className="text-white">คุณมี {currentCount} / {goalCount} innovations</p>
-      <p className="text-slate-200">ยังขาดอีก {gap}</p>
-      <p className="text-slate-200">discovery candidates ปัจจุบัน: {candidateCount}</p>
-      <p className="text-sm text-white">Next Action: <span className="font-semibold">→ {nextAction}</span></p>
-      <div className="flex flex-wrap gap-3">
-        <a href="#discovery-candidates" className="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20">+ Add Candidate</a>
-        <a href="#add-innovation" className="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20">+ Add Innovation</a>
+    <section className="space-y-3 rounded-2xl border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-4 shadow-[0_12px_30px_rgba(2,6,23,0.45)] sm:p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">🚀 DISCOVERY GAP</p>
+      <p className="text-sm text-slate-100 sm:text-base">คุณมี {currentCount} / {goalCount} innovations</p>
+      <p className="text-sm text-slate-300 sm:text-base">ยังขาดอีก {gap}</p>
+      <p className="text-sm text-slate-300 sm:text-base">discovery candidates ปัจจุบัน: {candidateCount}</p>
+
+      <div className="rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3">
+        <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Next Action</p>
+        <p className="mt-1 text-sm font-semibold text-white sm:text-base">→ {nextAction}</p>
+      </div>
+
+      <div className="flex flex-col gap-2.5 pt-1 sm:flex-row sm:flex-wrap sm:gap-3">
+        <a href="#discovery-candidates" className="inline-flex min-h-11 items-center justify-center rounded-full border border-cyan-300/25 bg-cyan-500/25 px-4 py-2 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] transition hover:bg-cyan-500/35">
+          + Add Candidate
+        </a>
+        <a href="#add-innovation" className="inline-flex min-h-11 items-center justify-center rounded-full border border-blue-300/25 bg-blue-500/25 px-4 py-2 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] transition hover:bg-blue-500/35">
+          + Add Innovation
+        </a>
       </div>
     </section>
   );
