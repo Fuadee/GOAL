@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 type MenuItem = {
   label: string;
@@ -9,8 +10,9 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
+  { label: 'Vision', href: '/' },
   { label: 'SMV', href: '/smv' },
-  { label: 'Money Management', href: '/money-management' },
+  { label: 'Money', href: '/money-management' },
   { label: 'Health', href: '/health' },
   { label: 'Innovation', href: '/innovation' },
   { label: 'Heal the World', href: '/heal-the-world' },
@@ -18,76 +20,90 @@ const menuItems: MenuItem[] = [
 ];
 
 const isPathActive = (pathname: string, href: string) => {
+  if (href === '/') return pathname === '/';
   if (pathname === href) return true;
   return pathname.startsWith(`${href}/`);
 };
 
 export function Navbar() {
   const pathname = usePathname();
-
-  const baseItemClass =
-    'theme-focus relative whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium tracking-[0.01em] text-stone-400 transition-colors duration-200 hover:bg-stone-100/5 hover:text-stone-100';
-
-  const activeItemClass =
-    'bg-[#b89a64]/15 text-[#e6d6b5] shadow-[inset_0_0_0_1px_rgba(184,154,100,0.35)]';
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-stone-500/30 bg-[linear-gradient(180deg,rgba(16,18,24,0.96),rgba(14,16,22,0.9))] shadow-[0_10px_24px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-      <div className="mx-auto flex h-[72px] w-full max-w-[90rem] items-center justify-between gap-4 px-4 md:px-7">
-        <Link href="/" className="theme-focus group rounded-md pr-2">
-          <span className="block text-[1.55rem] font-semibold tracking-[0.08em] text-stone-100 transition-colors duration-200 group-hover:text-[#efe4cd] md:text-[1.65rem]">
-            GOAL
-          </span>
-          <span className="mt-0.5 block text-[11px] font-medium uppercase tracking-[0.08em] text-stone-400">
-            Mission Control
-          </span>
+    <header className="sticky top-0 z-50 border-b border-slate-200/90 bg-stone-50/95 backdrop-blur-md">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 md:h-[74px] md:px-6">
+        <Link href="/" className="theme-focus rounded-lg">
+          <span className="block text-xl font-semibold tracking-[0.07em] text-slate-900 md:text-2xl">GOAL</span>
+          <span className="block text-[11px] font-medium text-slate-500">Personal Operating Space</span>
         </Link>
 
-        <div className="hidden min-w-0 flex-1 items-center justify-center md:flex">
-          <nav className="no-scrollbar flex min-w-0 max-w-full items-center gap-1.5 overflow-x-auto rounded-full border border-stone-400/25 bg-white/[0.015] p-1.5" aria-label="Main menu">
-            {menuItems.map((item) => {
-              const isActive = isPathActive(pathname, item.href);
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Main menu">
+          {menuItems.map((item) => {
+            const isActive = isPathActive(pathname, item.href);
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={`theme-focus rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-slate-900 text-slate-50 shadow-sm'
+                    : 'text-slate-600 hover:bg-white hover:text-slate-900'
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
 
-              return (
-                <Link key={item.label} href={item.href} className={`${baseItemClass} ${isActive ? activeItemClass : ''}`}>
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        <div className="hidden items-center lg:flex">
-          <span className="rounded-md border border-stone-400/30 bg-stone-900/70 px-3 py-1.5 text-[11px] font-medium tracking-[0.04em] text-stone-300">
-            Today&apos;s Focus
-          </span>
-        </div>
+        <button
+          type="button"
+          onClick={() => setIsMenuOpen((prev) => !prev)}
+          className="theme-focus inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm md:hidden"
+          aria-expanded={isMenuOpen}
+          aria-controls="mobile-menu"
+          aria-label="Toggle menu"
+        >
+          Menu
+        </button>
       </div>
 
-      <nav className="border-t border-stone-400/25 bg-[rgba(16,18,24,0.96)] px-4 py-3 md:hidden" aria-label="Mobile main menu">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3">
-          <div className="grid grid-cols-2 gap-2">
-            {menuItems.map((item) => {
-              const isActive = isPathActive(pathname, item.href);
-
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`${baseItemClass} min-h-[44px] px-3 py-2.5 text-center text-[13px] leading-tight whitespace-normal ${isActive ? activeItemClass : ''}`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-          <div className="border-t border-stone-400/20 pt-2">
-            <span className="inline-flex min-h-[40px] items-center rounded-md border border-stone-400/30 bg-stone-900/70 px-3 py-1.5 text-[11px] font-medium tracking-[0.04em] text-stone-300">
-              Today&apos;s Focus
-            </span>
-          </div>
+      {isMenuOpen && (
+        <div className="md:hidden" id="mobile-menu">
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-slate-900/20"
+            aria-label="Close menu"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          <nav
+            className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border border-slate-200 bg-stone-50 px-4 pb-6 pt-4 shadow-[0_-16px_50px_rgba(15,23,42,0.18)]"
+            aria-label="Mobile main menu"
+          >
+            <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-slate-300" />
+            <div className="grid gap-2">
+              {menuItems.map((item) => {
+                const isActive = isPathActive(pathname, item.href);
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`theme-focus inline-flex min-h-11 items-center justify-between rounded-2xl border px-4 py-3 text-sm font-medium ${
+                      isActive
+                        ? 'border-slate-900 bg-slate-900 text-slate-50'
+                        : 'border-slate-200 bg-white text-slate-700'
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    <span className="text-xs opacity-70">●</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
         </div>
-      </nav>
+      )}
     </header>
   );
 }
