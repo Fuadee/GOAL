@@ -6,9 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createInnovationLogAction } from '@/app/innovation/[id]/actions';
 import { INNOVATION_LOG_TYPES } from '@/lib/innovation/types';
 
-type AddInnovationLogFormProps = {
-  innovationId: string;
-};
+type AddInnovationLogFormProps = { innovationId: string };
 
 export function AddInnovationLogForm({ innovationId }: AddInnovationLogFormProps) {
   const router = useRouter();
@@ -17,61 +15,30 @@ export function AddInnovationLogForm({ innovationId }: AddInnovationLogFormProps
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-      <h2 className="text-lg font-semibold text-white">Add execution log</h2>
+    <details className="rounded-xl border border-white/10 bg-slate-900/40 p-4">
+      <summary className="cursor-pointer text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">+ Add Log</summary>
       <form
         action={(formData) => {
           setError(null);
           setMessage(null);
           startTransition(async () => {
             const result = await createInnovationLogAction(innovationId, formData);
-            if (!result.success) {
-              setError(result.message);
-              return;
-            }
+            if (!result.success) return setError(result.message);
             setMessage(result.message);
             router.refresh();
           });
         }}
-        className="grid gap-3"
+        className="mt-3 grid gap-3"
       >
-        <input
-          name="title"
-          type="text"
-          required
-          placeholder="What happened?"
-          className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300"
-        />
-        <select
-          name="log_type"
-          defaultValue="update"
-          className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300"
-        >
-          {INNOVATION_LOG_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
+        <input name="title" type="text" required placeholder="What happened?" className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300" />
+        <select name="log_type" defaultValue="update" className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300">
+          {INNOVATION_LOG_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
         </select>
-
         <textarea name="detail" rows={3} placeholder="Detail" className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300" />
-        <textarea name="problem" rows={2} placeholder="Problem" className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300" />
-        <textarea name="solution" rows={2} placeholder="Solution" className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300" />
-        <textarea name="result" rows={2} placeholder="Result" className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300" />
-        <textarea name="lesson_learned" rows={2} placeholder="Lesson learned" className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300" />
-        <textarea name="next_step" rows={2} placeholder="Next step" className="rounded-xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-300" />
-
         {error ? <p className="text-sm text-rose-300">{error}</p> : null}
         {message ? <p className="text-sm text-emerald-300">{message}</p> : null}
-
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-fit rounded-full bg-indigo-400/20 px-4 py-2 text-sm font-semibold text-indigo-200 transition hover:bg-indigo-400/30 disabled:opacity-50"
-        >
-          {isPending ? 'Saving...' : 'Save log'}
-        </button>
+        <button type="submit" disabled={isPending} className="w-fit rounded-full bg-indigo-400/20 px-4 py-2 text-sm font-semibold text-indigo-200 transition hover:bg-indigo-400/30 disabled:opacity-50">{isPending ? 'Saving...' : 'Save log'}</button>
       </form>
-    </section>
+    </details>
   );
 }

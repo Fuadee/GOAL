@@ -4,12 +4,19 @@ import { AddInnovationLogForm } from '@/components/innovation/AddInnovationLogFo
 import { InnovationProcessSection } from '@/components/innovation/InnovationProcessSection';
 import { Navbar } from '@/components/navbar';
 import { getInnovationDetailData } from '@/lib/innovation/service';
-import { deriveInnovationState, getCurrentIncompleteStep, getInnovationStateMeta } from '@/lib/innovation/helpers';
+import {
+  deriveInnovationState,
+  getCompletedSteps,
+  getCurrentStep,
+  getInnovationStateMeta,
+  getMissionProgress,
+  getNextTodoStep,
+  getUpcomingSteps
+} from '@/lib/innovation/helpers';
 import { InnovationLogType } from '@/lib/innovation/types';
 
 type InnovationDetailPageProps = {
   params: { id: string };
-  searchParams?: { focus?: string };
 };
 
 const logTypeStyles: Record<InnovationLogType, string> = {
@@ -24,71 +31,40 @@ function formatTimestamp(value: string): string {
   return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 }
 
-export default async function InnovationDetailPage({ params, searchParams }: InnovationDetailPageProps) {
+export default async function InnovationDetailPage({ params }: InnovationDetailPageProps) {
   const data = await getInnovationDetailData(params.id);
-
-  if (!data) {
-    notFound();
-  }
+  if (!data) notFound();
 
   const { innovation, logs, steps, completedStepCount, progressPercent } = data;
-  const innovationWithSteps = {
-    ...innovation,
-    stepTotal: steps.length,
-    completedStepCount,
-    progressPercent,
-    steps,
-    nextStep: steps.find((step) => step.status !== 'done') ?? null
-  };
-  const stateMeta = getInnovationStateMeta(innovationWithSteps);
-  const derivedState = deriveInnovationState(innovationWithSteps);
-  const currentStep = getCurrentIncompleteStep(innovationWithSteps);
-  const focus = searchParams?.focus;
-  const upcomingSteps = steps.filter((step) => step.status !== 'done' && step.id !== currentStep?.id);
+  const mission = { ...innovation, stepTotal: steps.length, completedStepCount, progressPercent, steps, nextStep: null };
+  const stateMeta = getInnovationStateMeta(mission);
+  const derivedState = deriveInnovationState(mission);
+  const { stepTotal } = getMissionProgress(mission);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <Navbar />
-      <section className="mx-auto w-full max-w-6xl space-y-8 px-6 py-16 md:px-10 md:py-20">
-        <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Mission Detail</p>
-          <h1 className="text-3xl font-semibold text-white">{innovation.title}</h1>
-          <p className="text-slate-300">{innovation.description || 'No description provided.'}</p>
-          <p className="text-slate-300">Goal: {innovation.goal || 'No goal provided.'}</p>
-          <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
-            <p>State: <span className="font-semibold text-white">{stateMeta.label}</span> ({derivedState})</p>
-            <p>Why: <span className="text-white">{stateMeta.description}</span></p>
-            <p>Progress: <span className="font-semibold text-white">{progressPercent}%</span></p>
-            <p>Created: <span className="text-white">{formatTimestamp(innovation.created_at)}</span></p>
+      <section className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10 md:px-8 md:py-14">
+        <section className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Mission Overview</p>
+          <h1 className="text-2xl font-semibold text-white md:text-3xl">{innovation.title}</h1>
+          <p className="text-sm text-slate-300">{innovation.description || 'No description provided.'}</p>
+          <p className="text-sm text-slate-300">Goal: {innovation.goal || 'No goal provided.'}</p>
+          <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-3">
+            <p>Status: <span className="font-semibold text-white">{stateMeta.label}</span> ({derivedState})</p>
+            <p>Progress: <span className="font-semibold text-white">{progressPercent}%</span> ({completedStepCount}/{stepTotal})</p>
             <p>Updated: <span className="text-white">{formatTimestamp(innovation.updated_at)}</span></p>
           </div>
-
-          {innovation.is_blocked && innovation.blocked_reason ? (
-            <p className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">Blocked reason: {innovation.blocked_reason}</p>
-          ) : null}
-
-          <section className="space-y-2">
-            <div className="h-2 overflow-hidden rounded-full bg-slate-800">
-              <div className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400" style={{ width: `${progressPercent}%` }} />
-            </div>
-            <p className="text-sm text-slate-200">{completedStepCount} / {steps.length} steps completed</p>
-          </section>
         </section>
 
-        <section id="current-work" className={`${focus === 'current-work' ? 'scroll-mt-10 ring-2 ring-cyan-300/50' : 'scroll-mt-10'} space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur`}>
-          <h2 className="text-xl font-semibold text-white">Current Work</h2>
-          {currentStep ? <article className="rounded-xl border border-white/10 bg-slate-900/50 p-4"><p className="font-semibold text-white">{currentStep.title}</p></article> : <p className="text-slate-300">ยังไม่มี step ที่ต้องทำ</p>}
-        </section>
+        <InnovationProcessSection
+          innovationId={innovation.id}
+          currentStep={getCurrentStep(mission)}
+          nextStep={getNextTodoStep(mission)}
+          upcomingSteps={getUpcomingSteps(mission)}
+          completedSteps={getCompletedSteps(mission)}
+        />
 
-        <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-          <h2 className="text-xl font-semibold text-white">Upcoming Steps</h2>
-          {upcomingSteps.length === 0 ? <p className="text-slate-300">No upcoming steps.</p> : <ul className="space-y-2">{upcomingSteps.map((step) => <li key={step.id} className="rounded-lg border border-white/10 p-3 text-slate-200">{step.title}</li>)}</ul>}
-        </section>
-
-        <section id="add-step" className={focus === 'add-step' ? 'scroll-mt-10 ring-2 ring-cyan-300/50 rounded-2xl' : 'scroll-mt-10'}>
-          <InnovationProcessSection innovationId={innovation.id} steps={steps} />
-        </section>
-      
         <details className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
           <summary className="cursor-pointer text-xl font-semibold text-white">Execution Log</summary>
           <AddInnovationLogForm innovationId={innovation.id} />
@@ -96,10 +72,7 @@ export default async function InnovationDetailPage({ params, searchParams }: Inn
 
         <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
           <h2 className="text-xl font-semibold text-white">Timeline</h2>
-
-          {logs.length === 0 ? (
-            <p className="text-slate-300">No logs yet. Start documenting your execution history.</p>
-          ) : (
+          {logs.length === 0 ? <p className="text-slate-300">No logs yet. Start documenting your execution history.</p> : (
             <ol className="relative space-y-6 border-l border-white/10 pl-6">
               {logs.map((log) => (
                 <li key={log.id} className="relative">
@@ -107,17 +80,9 @@ export default async function InnovationDetailPage({ params, searchParams }: Inn
                   <article className="space-y-2 rounded-xl border border-white/10 bg-slate-900/60 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <h3 className="text-lg font-semibold text-white">{log.title}</h3>
-                      <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${logTypeStyles[log.log_type]}`}>
-                        {log.log_type}
-                      </span>
+                      <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${logTypeStyles[log.log_type]}`}>{log.log_type}</span>
                     </div>
                     <p className="text-xs font-medium text-indigo-200">{formatTimestamp(log.created_at)}</p>
-                    {log.detail ? <p className="text-sm text-slate-200">{log.detail}</p> : null}
-                    {log.problem ? <p className="text-sm text-rose-200"><span className="font-semibold">Problem:</span> {log.problem}</p> : null}
-                    {log.solution ? <p className="text-sm text-emerald-200"><span className="font-semibold">Solution:</span> {log.solution}</p> : null}
-                    {log.result ? <p className="text-sm text-sky-200"><span className="font-semibold">Result:</span> {log.result}</p> : null}
-                    {log.lesson_learned ? <p className="text-sm text-amber-200"><span className="font-semibold">Lesson learned:</span> {log.lesson_learned}</p> : null}
-                    {log.next_step ? <p className="text-sm text-violet-200"><span className="font-semibold">Next step:</span> {log.next_step}</p> : null}
                   </article>
                 </li>
               ))}
