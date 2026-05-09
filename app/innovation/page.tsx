@@ -6,6 +6,7 @@ import { Navbar } from '@/components/navbar';
 import { PageShell } from '@/components/ui/mission';
 import { getInnovationDashboardPageData } from '@/lib/innovation/service';
 import { deriveInnovationState } from '@/lib/innovation/helpers';
+import { innovationUi } from '@/components/innovation/uiTokens';
 
 const TARGET_INNOVATIONS = 10;
 
@@ -36,7 +37,10 @@ export default async function InnovationPage() {
         ) : (
           <>
             <section className="space-y-3">
-              <h2 className="text-base font-semibold text-slate-900">Active Innovation</h2>
+              <div>
+                <h2 className={innovationUi.sectionTitle}>Active Innovation</h2>
+                <p className={innovationUi.sectionSubtitle}>Workspace for missions currently in progress.</p>
+              </div>
               <div className="grid gap-3">
                 {activeInnovations.map((innovation) => (
                   <InnovationCard key={innovation.id} innovation={innovation} isCurrent={currentMission?.id === innovation.id} />
@@ -48,7 +52,7 @@ export default async function InnovationPage() {
 
             <ProgressBar current={innovations.length} total={TARGET_INNOVATIONS} activeCount={activeInnovations.length} completedCount={completedInnovations.length} />
 
-            <details className="rounded-2xl border border-slate-200 bg-white p-3">
+            <details className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-slate-600">
               <summary className="cursor-pointer text-sm font-semibold text-slate-700">Completed Innovations ({completedInnovations.length})</summary>
               <div className="mt-3 grid gap-2">
                 {completedInnovations.map((innovation) => (
