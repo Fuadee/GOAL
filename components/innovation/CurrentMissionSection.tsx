@@ -26,27 +26,31 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
   const missionSummary = getInnovationMissionSummary(mission);
 
   return (
-    <section className="space-y-4 hero-panel space-y-4 border-amber-300/30">
-      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-200">🔥 Current Mission</p>
+    <section className="space-y-4 rounded-2xl border border-slate-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-4 shadow-[0_10px_30px_rgba(15,23,42,0.35)] md:p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-300">CURRENT MISSION</p>
       {!mission ? (
-        <p className="text-sm text-slate-200">{missionSummary.primaryText}</p>
+        <div className="space-y-2">
+          <p className="text-lg font-semibold text-white">No active mission yet.</p>
+          <p className="text-sm text-slate-300">Choose one candidate to start building.</p>
+        </div>
       ) : (
         <>
-          <h2 className="text-2xl font-semibold text-white">{missionSummary.primaryText}</h2>
-          <div className="space-y-2 text-sm text-slate-100">
-            <p>Next Step: <span className="font-semibold text-white">{missionSummary.secondaryText}</span></p>
-            <p>Progress: <span className="font-semibold text-white">{mission.progressPercent}%</span></p>
-            <p>Last updated: <span className="font-semibold text-white">{formatTimestamp(mission.updated_at)}</span></p>
+          <h2 className="text-xl font-semibold leading-tight text-white">{missionSummary.primaryText}</h2>
+          <div className="space-y-1.5 text-sm">
+            <p className="text-slate-300">NEXT ACTION</p>
+            <p className="font-semibold text-white">{missionSummary.secondaryText}</p>
+            <p className="text-slate-300">Progress <span className="font-semibold text-white">{mission.progressPercent}%</span></p>
+            <p className="text-xs text-slate-400">Updated {formatTimestamp(mission.updated_at)}</p>
           </div>
 
           {error ? <p className="text-sm text-rose-200">{error}</p> : null}
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             <Link
               href={`/innovation/${mission.id}`}
-              className="theme-button-secondary"
+              className="theme-button-primary"
             >
-              Open details
+              Continue Mission
             </Link>
             <button
               type="button"
@@ -66,9 +70,9 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
                   router.refresh();
                 });
               }}
-              className="theme-button-primary disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl border border-slate-500/60 px-3 py-2 text-sm font-semibold text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isPending ? 'Saving...' : 'Mark Next Step Done'}
+              {isPending ? 'Saving...' : 'Done'}
             </button>
           </div>
         </>

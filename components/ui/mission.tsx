@@ -22,11 +22,11 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cx('hero-panel space-y-3', className)}>
+    <header className={cx('hero-panel space-y-2', className)}>
       <div className="space-y-2">
         {kicker ? <p className="page-kicker">{kicker}</p> : null}
         <h1 className="page-title">{title}</h1>
-        {description ? <p className="max-w-3xl text-sm text-[color:var(--text-secondary)] md:text-[15px]">{description}</p> : null}
+        {description ? <p className="text-sm text-slate-200">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
     </header>
