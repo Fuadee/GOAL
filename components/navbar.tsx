@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type MenuItem = {
   label: string;
@@ -29,8 +29,23 @@ export function Navbar() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/90 bg-stone-50/95 backdrop-blur-md">
+    <header className="sticky top-0 z-[90] border-b border-slate-200/90 bg-stone-50/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 md:h-[74px] md:px-6">
         <Link href="/" className="theme-focus rounded-lg">
           <span className="block text-xl font-semibold tracking-[0.07em] text-slate-900 md:text-2xl">GOAL</span>
@@ -59,12 +74,12 @@ export function Navbar() {
         <button
           type="button"
           onClick={() => setIsMenuOpen((prev) => !prev)}
-          className="theme-focus inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm md:hidden"
+          className="theme-focus inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-100 md:hidden"
           aria-expanded={isMenuOpen}
           aria-controls="mobile-menu"
-          aria-label="Toggle menu"
+          aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
         >
-          Menu
+          {isMenuOpen ? 'Close' : 'Menu'}
         </button>
       </div>
 
@@ -72,16 +87,15 @@ export function Navbar() {
         <div className="md:hidden" id="mobile-menu">
           <button
             type="button"
-            className="fixed inset-0 z-40 bg-slate-900/20"
+            className="fixed inset-0 z-[85] bg-slate-900/25"
             aria-label="Close menu"
             onClick={() => setIsMenuOpen(false)}
           />
           <nav
-            className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border border-slate-200 bg-stone-50 px-4 pb-6 pt-4 shadow-[0_-16px_50px_rgba(15,23,42,0.18)]"
+            className="fixed inset-x-3 top-[4.5rem] z-[95] overflow-hidden rounded-2xl border border-slate-200/90 bg-stone-50 shadow-2xl"
             aria-label="Mobile main menu"
           >
-            <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-slate-300" />
-            <div className="grid gap-2">
+            <div className="grid gap-1 p-2">
               {menuItems.map((item) => {
                 const isActive = isPathActive(pathname, item.href);
                 return (
@@ -89,14 +103,15 @@ export function Navbar() {
                     key={item.label}
                     href={item.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className={`theme-focus inline-flex min-h-11 items-center justify-between rounded-2xl border px-4 py-3 text-sm font-medium ${
+                    className={`theme-focus inline-flex min-h-12 items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
                       isActive
-                        ? 'border-slate-900 bg-slate-900 text-slate-50'
-                        : 'border-slate-200 bg-white text-slate-700'
+                        ? 'bg-slate-900 text-slate-50 shadow-sm'
+                        : 'text-slate-700 hover:bg-white'
                     }`}
+                    aria-current={isActive ? 'page' : undefined}
                   >
                     <span>{item.label}</span>
-                    <span className="text-xs opacity-70">●</span>
+                    {isActive ? <span className="text-xs opacity-80">Current</span> : null}
                   </Link>
                 );
               })}
