@@ -354,50 +354,78 @@ function BloodDonationNextMissionCard({
   const missionSummary = getNextBloodDonationMissionSummary(currentPlan);
 
   return (
-    <article className="rounded-3xl border border-rose-300/30 bg-gradient-to-br from-rose-500/15 via-slate-900/90 to-purple-500/10 p-6 shadow-2xl shadow-rose-900/20">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-200">Next Mission</p>
-          <h3 className="mt-2 text-2xl font-semibold text-white">ภารกิจถัดไป</h3>
-          <p className="mt-1 text-sm text-slate-300">{missionSummary.primaryText}</p>
-        </div>
+    <article className="relative overflow-hidden rounded-[2rem] border border-indigo-200/20 bg-gradient-to-br from-[#020617] via-[#0b1631] to-[#15103a] p-5 shadow-[0_32px_70px_-30px_rgba(6,182,212,0.45)] sm:p-6">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-24 right-[-4.5rem] h-72 w-72 rounded-full bg-cyan-300/20 blur-3xl" />
+        <div className="absolute -bottom-24 left-[-3rem] h-64 w-64 rounded-full bg-indigo-400/20 blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_14%,rgba(255,255,255,0.14),transparent_55%)]" />
       </div>
+      <div className="pointer-events-none absolute inset-[1px] rounded-[calc(2rem-1px)] border border-white/10" />
+      <div className="pointer-events-none absolute inset-0 rounded-[2rem] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-40px_80px_rgba(2,6,23,0.7)]" />
 
-      {!currentPlan ? (
-        <div className="mt-5 rounded-2xl border border-dashed border-white/20 bg-slate-950/30 p-5">
-          <p className="text-lg font-medium text-white">ยังไม่มีแผนถัดไป</p>
-          <p className="mt-1 text-sm text-slate-400">ครบทุกแผนแล้ว หรือยังไม่ได้สร้างแผนใหม่</p>
-        </div>
-      ) : (
-        <div className="mt-5 space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-sm text-slate-300">บริจาคเลือดครั้งถัดไป</p>
-              <p className="mt-1 text-3xl font-semibold text-white">{formatDate(currentPlan.planned_date)}</p>
-              <p className="mt-1 text-sm text-slate-300">{missionSummary.secondaryText || 'ไม่ระบุสถานที่'}</p>
-              {currentPlan.note ? <p className="mt-2 text-sm text-slate-400">{currentPlan.note}</p> : null}
-            </div>
-
-            <div className="space-y-2 text-right">
-              <span className="inline-flex rounded-full px-3 py-1 text-xs font-medium bg-rose-500/20 text-rose-100 border border-rose-300/40">แผนปัจจุบัน</span>
-              <p className="text-2xl font-semibold text-rose-100">{getCountdownLabel(currentPlan.planned_date, now)}</p>
-              <p className="text-xs text-slate-300">{displayStatusMeta[getBloodDonationPlanDisplayStatus(currentPlan, currentPlan, now)].label}</p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 text-xs">
-            <button className="rounded-full bg-emerald-500/20 px-3 py-1 text-emerald-100" onClick={() => onMarkDone(currentPlan)}>
-              ทำจริงแล้ว
-            </button>
-            <button className="rounded-full bg-blue-500/20 px-3 py-1 text-blue-100" onClick={() => onReschedule(currentPlan)}>
-              เลื่อนแผน
-            </button>
-            <button className="rounded-full bg-slate-500/30 px-3 py-1 text-slate-200" onClick={() => onCancel(currentPlan)}>
-              ยกเลิก
-            </button>
+      <div className="relative">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-100/80">Next Mission</p>
+            <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-[1.72rem]">ภารกิจถัดไป</h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-200/90">{missionSummary.primaryText}</p>
           </div>
         </div>
-      )}
+
+        {!currentPlan ? (
+          <div className="mt-5 rounded-2xl border border-dashed border-white/20 bg-slate-950/40 p-5">
+            <p className="text-lg font-medium text-white">ยังไม่มีแผนถัดไป</p>
+            <p className="mt-1 text-sm text-slate-300">ครบทุกแผนแล้ว หรือยังไม่ได้สร้างแผนใหม่</p>
+          </div>
+        ) : (
+          <div className="mt-5 space-y-4 sm:space-y-5">
+            <div className="rounded-2xl border border-cyan-100/15 bg-gradient-to-b from-white/10 via-white/5 to-transparent p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] sm:p-5">
+              <div className="flex flex-col gap-4 sm:gap-5">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-cyan-100/80">Remaining</p>
+                  <p className="mt-1 text-[2rem] font-semibold leading-none tracking-tight text-cyan-50 sm:text-[2.5rem]">{getCountdownLabel(currentPlan.planned_date, now)}</p>
+                </div>
+                <div className="h-px w-full bg-gradient-to-r from-white/40 via-white/15 to-transparent" />
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-300">Mission Date</p>
+                  <p className="mt-2 text-[1.6rem] font-semibold leading-tight text-white sm:text-[1.8rem]">{formatDate(currentPlan.planned_date)}</p>
+                  <p className="mt-2 text-sm text-slate-200/90">{missionSummary.secondaryText || 'ไม่ระบุสถานที่'}</p>
+                  {currentPlan.note ? <p className="mt-2 text-sm leading-relaxed text-slate-300">{currentPlan.note}</p> : null}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-indigo-100/20 bg-[#0b132a]/80 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-indigo-100/70">Mission State</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="inline-flex rounded-full border border-amber-200/45 bg-amber-200/15 px-3 py-1 text-xs font-medium text-amber-50">แผนปัจจุบัน</span>
+                <p className="text-sm font-medium text-slate-100">{displayStatusMeta[getBloodDonationPlanDisplayStatus(currentPlan, currentPlan, now)].label}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2.5 text-sm sm:grid-cols-3">
+              <button
+                className="rounded-xl border border-emerald-300/45 bg-gradient-to-b from-emerald-300/30 to-emerald-400/20 px-4 py-2.5 font-medium text-emerald-50 shadow-[0_8px_24px_-14px_rgba(16,185,129,1)] transition hover:brightness-110 active:translate-y-px"
+                onClick={() => onMarkDone(currentPlan)}
+              >
+                ทำจริงแล้ว
+              </button>
+              <button
+                className="rounded-xl border border-cyan-200/30 bg-cyan-400/10 px-4 py-2.5 font-medium text-cyan-50 transition hover:bg-cyan-300/20 active:translate-y-px"
+                onClick={() => onReschedule(currentPlan)}
+              >
+                เลื่อนแผน
+              </button>
+              <button
+                className="rounded-xl border border-slate-200/20 bg-slate-300/10 px-4 py-2.5 font-medium text-slate-100 transition hover:bg-slate-300/20 active:translate-y-px"
+                onClick={() => onCancel(currentPlan)}
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </article>
   );
 }
