@@ -44,7 +44,7 @@ export function InnovationCard({ innovation, isCurrent = false, compactCompleted
         <div className="flex items-start justify-between gap-2">
           <h3 className="line-clamp-2 text-base font-semibold text-slate-950">{innovation.title}</h3>
           <div className="flex gap-1.5">
-            {isCurrent ? <span className={`${statusBadge.base} ${statusBadge.current}`}>CURRENT</span> : null}
+            {isCurrent ? <span className={`${statusBadge.base} ${statusBadge.current}`}>ACTIVE</span> : null}
             <span className={stateStyles[derivedState]}>{stateMeta.label}</span>
           </div>
         </div>
@@ -52,7 +52,7 @@ export function InnovationCard({ innovation, isCurrent = false, compactCompleted
       </header>
 
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Next Milestone</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Goal / Next Milestone</p>
         <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900">{innovation.nextStep?.title ?? 'ยังไม่มี step เริ่มจากเพิ่มขั้นตอนแรก'}</p>
       </div>
 
@@ -68,13 +68,13 @@ export function InnovationCard({ innovation, isCurrent = false, compactCompleted
       </div>
 
       <div className="rounded-xl border border-slate-200 p-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Current Step</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Current Work</p>
         <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900">{innovation.nextStep?.title ?? 'ยังไม่มี step ถัดไป'}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <Link href={`/innovation/${innovation.id}`} className={innovationUi.primaryButton}>Continue</Link>
-        <Link href={`/innovation/${innovation.id}`} className={innovationUi.secondaryButton}>Open details</Link>
+        <Link href={`/innovation/${innovation.id}`} className={innovationUi.primaryButton}>Continue Working</Link>
+        <Link href={`/innovation/${innovation.id}`} className={innovationUi.secondaryButton}>Open Details</Link>
       </div>
     </article>
   );

@@ -175,6 +175,24 @@ export function getCurrentInnovation(innovations: InnovationCardViewModel[]): In
   );
 }
 
+export function getActiveMission(innovations: InnovationCardViewModel[]): InnovationCardViewModel | null {
+  return getCurrentInnovation(innovations);
+}
+
+export function getCurrentStep(innovation: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
+  if (!innovation) return null;
+  return innovation.steps.find((step) => step.status === 'in_progress') ?? getNextStep(innovation);
+}
+
+export function getMissionProgress(innovation: InnovationCardViewModel | null): { progressPercent: number; completedStepCount: number; stepTotal: number } {
+  if (!innovation) return { progressPercent: 0, completedStepCount: 0, stepTotal: 0 };
+  return {
+    progressPercent: innovation.progressPercent,
+    completedStepCount: innovation.completedStepCount,
+    stepTotal: innovation.stepTotal
+  };
+}
+
 export function getDiscoveryGap(innovations: InnovationCardViewModel[], goal = 10): number {
   return Math.max(goal - innovations.length, 0);
 }

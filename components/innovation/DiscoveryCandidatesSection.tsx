@@ -1,8 +1,12 @@
+"use client";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
 
 import { getDiscoveryCandidateStateMeta } from '@/lib/innovation/helpers';
 import { DiscoveryCandidateRow, DiscoveryCandidateState } from '@/lib/innovation/types';
 import { innovationUi, statusBadge } from './uiTokens';
+import { convertDiscoveryCandidateAction } from '@/app/innovation/actions';
 
 const STATE_STYLES: Record<DiscoveryCandidateState, string> = {
   observed: `${statusBadge.base} ${statusBadge.neutral}`,
@@ -25,6 +29,9 @@ function getProblemPreview(candidate: DiscoveryCandidateRow): string {
 }
 
 export function DiscoveryCandidatesSection({ candidates }: DiscoveryCandidatesSectionProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [pendingId, setPendingId] = useState<string | null>(null);
   return (
     <section id="discovery-candidates" className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/90 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -59,9 +66,24 @@ export function DiscoveryCandidatesSection({ candidates }: DiscoveryCandidatesSe
                 <p className="line-clamp-1 text-xs text-slate-500">{stateMeta.description}</p>
 
                 <div className="flex flex-wrap gap-2 pt-1">
-                  <Link href={`/innovation/discovery/${candidate.id}`} className={innovationUi.primaryButton}>
-                    Start Mission
-                  </Link>
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    className={innovationUi.primaryButton}
+                    onClick={() => {
+                      setPendingId(candidate.id);
+                      startTransition(async () => {
+                        const result = await convertDiscoveryCandidateAction(candidate.id);
+                        if (result.success && result.innovationId) {
+                          router.push(`/innovation/${result.innovationId}`);
+                        }
+                        router.refresh();
+                        setPendingId(null);
+                      });
+                    }}
+                  >
+                    {isPending && pendingId === candidate.id ? 'Starting...' : 'Start Mission'}
+                  </button>
                   <Link href={`/innovation/discovery/${candidate.id}`} className={innovationUi.secondaryButton}>
                     Open
                   </Link>
