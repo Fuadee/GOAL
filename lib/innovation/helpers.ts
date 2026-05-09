@@ -25,7 +25,7 @@ function compareSteps(a: InnovationProcessStepSummary, b: InnovationProcessStepS
 }
 
 export function getNextStep(innovation: InnovationCardViewModel): InnovationProcessStepSummary | null {
-  return innovation.steps.filter((step) => step.status !== 'done').sort(compareSteps)[0] ?? null;
+  return innovation.steps.filter((step) => step.status !== 'completed').sort(compareSteps)[0] ?? null;
 }
 
 export function deriveDiscoveryCandidateState(candidate: DiscoveryCandidateRow): DiscoveryCandidateState {
@@ -200,7 +200,32 @@ export function getUpcomingSteps(mission: InnovationCardViewModel | null): Innov
 
 export function getCompletedSteps(mission: InnovationCardViewModel | null): InnovationProcessStepSummary[] {
   if (!mission) return [];
-  return mission.steps.filter((step) => step.status === 'done').sort(compareSteps);
+  return mission.steps.filter((step) => step.status === 'completed').sort(compareSteps);
+}
+
+export function getCurrentFocusStep(mission: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
+  if (!mission) return null;
+  const inProgress = mission.steps.filter((step) => step.status === 'in_progress').sort(compareSteps)[0];
+  if (inProgress) return inProgress;
+
+  const blocked = mission.steps.filter((step) => step.status === 'blocked').sort(compareSteps)[0];
+  if (blocked) return blocked;
+
+  const waiting = mission.steps.filter((step) => step.status === 'waiting').sort(compareSteps)[0];
+  if (waiting) return waiting;
+
+  return mission.steps.filter((step) => step.status === 'todo').sort(compareSteps)[0] ?? null;
+}
+
+export function getStepStatusSummary(mission: InnovationCardViewModel | null): {active:number; blocked:number; waiting:number; done:number; total:number} {
+  if (!mission) return { active: 0, blocked: 0, waiting: 0, done: 0, total: 0 };
+  return {
+    active: mission.steps.filter((step) => step.status === 'in_progress').length,
+    blocked: mission.steps.filter((step) => step.status === 'blocked').length,
+    waiting: mission.steps.filter((step) => step.status === 'waiting').length,
+    done: mission.steps.filter((step) => step.status === 'completed').length,
+    total: mission.steps.length
+  };
 }
 
 export function getMissionProgress(mission: InnovationCardViewModel | null): { progressPercent: number; completedStepCount: number; stepTotal: number } {
@@ -214,7 +239,7 @@ export function getMissionProgress(mission: InnovationCardViewModel | null): { p
 
 export function getCurrentIncompleteStep(mission: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
   if (!mission) return null;
-  return mission.steps.filter((step) => step.status !== 'done').sort(compareSteps)[0] ?? null;
+  return mission.steps.filter((step) => step.status !== 'completed').sort(compareSteps)[0] ?? null;
 }
 
 export function getDiscoveryGap(innovations: InnovationCardViewModel[], goal = 10): number {
@@ -239,7 +264,7 @@ export function getInnovationNextAction({
       };
     }
 
-    const nextIncompleteStep = activeInnovation.steps.filter((step) => step.status !== 'done').sort(compareSteps)[0] ?? null;
+    const nextIncompleteStep = activeInnovation.steps.filter((step) => step.status !== 'completed').sort(compareSteps)[0] ?? null;
     if (nextIncompleteStep) {
       return {
         label: nextIncompleteStep.title,
