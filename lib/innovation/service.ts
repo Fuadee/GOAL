@@ -43,7 +43,7 @@ import {
 
 function calculateProgress(steps: Pick<InnovationProcessStepRow, 'status'>[]): { completedStepCount: number; stepTotal: number; progressPercent: number } {
   const stepTotal = steps.length;
-  const completedStepCount = steps.filter((step) => step.status === 'done').length;
+  const completedStepCount = steps.filter((step) => step.status === 'completed').length;
 
   if (stepTotal === 0) {
     return { completedStepCount, stepTotal, progressPercent: 0 };
@@ -210,14 +210,14 @@ export async function addInnovationLog(payload: CreateInnovationLogPayload) {
 
 export async function markInnovationNextStepDone(innovationId: string) {
   const steps = await getInnovationProcessStepsByInnovationId(innovationId);
-  const nextStep = steps.find((step) => step.status !== 'done');
+  const nextStep = steps.find((step) => step.status !== 'completed');
 
   if (!nextStep) {
     return null;
   }
 
   await updateInnovationProcessStep(nextStep.id, {
-    status: 'done',
+    status: 'completed',
     completed_at: new Date().toISOString()
   });
 

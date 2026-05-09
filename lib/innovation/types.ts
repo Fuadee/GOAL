@@ -1,6 +1,6 @@
 export const INNOVATION_STATUS = ['idea', 'building', 'testing', 'blocked', 'completed'] as const;
 export const INNOVATION_LOG_TYPES = ['update', 'problem', 'solution', 'decision', 'lesson'] as const;
-export const INNOVATION_STEP_STATUS = ['todo', 'in_progress', 'done'] as const;
+export const INNOVATION_STEP_STATUS = ['todo', 'waiting', 'in_progress', 'blocked', 'completed'] as const;
 export const DISCOVERY_CANDIDATE_STATUS = ['observed', 'pain_point', 'concept', 'validated', 'converted'] as const;
 
 export type InnovationStatus = (typeof INNOVATION_STATUS)[number];
@@ -81,12 +81,13 @@ export type InnovationProcessStepRow = {
   description: string | null;
   step_order: number | null;
   status: InnovationStepStatus;
+  note: string | null;
   completed_at: string | null;
   created_at: string;
   updated_at: string;
 };
 
-export type InnovationProcessStepSummary = Pick<InnovationProcessStepRow, 'id' | 'title' | 'status' | 'step_order' | 'created_at'>;
+export type InnovationProcessStepSummary = Pick<InnovationProcessStepRow, 'id' | 'title' | 'status' | 'step_order' | 'created_at' | 'updated_at' | 'note'>;
 
 export type InnovationLogRow = {
   id: string;
@@ -150,6 +151,8 @@ export type CreateInnovationProcessStepPayload = {
   title: string;
   description?: string;
   step_order?: number;
+  status?: InnovationStepStatus;
+  note?: string;
 };
 
 export type UpdateInnovationPayload = {
@@ -161,6 +164,7 @@ export type UpdateInnovationPayload = {
 
 export type UpdateInnovationProcessStepPayload = {
   status?: InnovationStepStatus;
+  note?: string | null;
   completed_at?: string | null;
 };
 

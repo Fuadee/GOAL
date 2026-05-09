@@ -9,7 +9,7 @@ import {
 
 export async function getInnovationDashboardRows(): Promise<InnovationDashboardRow[]> {
   return supabaseRestRequest<InnovationDashboardRow[]>(
-    'innovations?select=*,innovation_process_steps(id,title,status,step_order,created_at)&order=updated_at.desc',
+    'innovations?select=*,innovation_process_steps(id,title,status,step_order,created_at,updated_at,note)&order=updated_at.desc',
     'GET'
   );
 }
