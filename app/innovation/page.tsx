@@ -1,10 +1,9 @@
-import { CurrentMissionSection } from '@/components/innovation/CurrentMissionSection';
 import { DiscoveryCandidatesSection } from '@/components/innovation/DiscoveryCandidatesSection';
 import { DiscoveryGapSection } from '@/components/innovation/DiscoveryGapSection';
 import { InnovationCard } from '@/components/innovation/InnovationCard';
 import { ProgressBar } from '@/components/innovation/ProgressBar';
 import { Navbar } from '@/components/navbar';
-import { PageHeader, PageShell } from '@/components/ui/mission';
+import { PageShell } from '@/components/ui/mission';
 import { getInnovationDashboardPageData } from '@/lib/innovation/service';
 import { deriveInnovationState } from '@/lib/innovation/helpers';
 
@@ -19,13 +18,6 @@ export default async function InnovationPage() {
     <PageShell>
       <Navbar />
       <section className="page-container space-y-5">
-        <PageHeader
-          kicker="INNOVATION LAB"
-          title="Founder Execution Workspace"
-          description="Build one useful system at a time."
-          className="min-h-[88px] px-4 py-3"
-        />
-        <CurrentMissionSection mission={currentMission} />
         <ProgressBar current={innovations.length} total={TARGET_INNOVATIONS} activeCount={activeInnovations.length} completedCount={completedInnovations.length} />
         <DiscoveryGapSection
           currentCount={innovations.length}
