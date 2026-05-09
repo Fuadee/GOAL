@@ -212,6 +212,11 @@ export function getMissionProgress(mission: InnovationCardViewModel | null): { p
   };
 }
 
+export function getCurrentIncompleteStep(mission: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
+  if (!mission) return null;
+  return mission.steps.filter((step) => step.status !== 'done').sort(compareSteps)[0] ?? null;
+}
+
 export function getDiscoveryGap(innovations: InnovationCardViewModel[], goal = 10): number {
   return Math.max(goal - innovations.length, 0);
 }
