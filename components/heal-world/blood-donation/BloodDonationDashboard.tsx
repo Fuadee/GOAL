@@ -93,47 +93,8 @@ export function BloodDonationDashboard({ initialData }: Props) {
   const nextPlanSummaryLabel = currentPlan ? formatDate(currentPlan.planned_date) : null;
 
   return (
-    <section className="space-y-6">
-      <article className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-black/30">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-semibold text-white">Blood Donation</h2>
-            <p className="mt-2 text-slate-300">ติดตามแผนบริจาค วันที่ไปจริง และโอกาสไปถึงเป้าหมาย</p>
-            {data.goal ? (
-              <p className="mt-2 text-sm text-slate-400">
-                ช่วงเป้าหมาย: {formatDate(data.goal.start_date)} - {formatDate(data.goal.end_date)}
-              </p>
-            ) : null}
-          </div>
+    <section className="space-y-4">
 
-          <div className="flex flex-wrap gap-2">
-            <button onClick={() => setModal('goal')} className="rounded-full bg-rose-500/20 px-4 py-2 text-sm font-medium text-rose-200">
-              {data.goal ? 'สร้าง Goal ใหม่' : 'สร้าง Goal แรก'}
-            </button>
-            <button
-              onClick={() => setModal('planned')}
-              disabled={!canManageEvents}
-              className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              + วางแผนบริจาค
-            </button>
-            <button
-              onClick={() => setModal('completed')}
-              disabled={!canManageEvents}
-              className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              + บันทึกว่าบริจาคแล้ว
-            </button>
-          </div>
-        </div>
-
-        {!data.goal ? (
-          <div className="mt-6 rounded-2xl border border-dashed border-white/20 bg-slate-950/40 p-6 text-center text-slate-200">
-            <p className="text-lg font-medium">ยังไม่มีเป้าหมายการบริจาคเลือด</p>
-            <p className="mt-2 text-sm text-slate-400">เริ่มต้นด้วยการตั้งเป้าหมาย 3 ครั้งในปีนี้</p>
-          </div>
-        ) : null}
-      </article>
 
       {summary && chance ? (
         <>
@@ -239,6 +200,47 @@ export function BloodDonationDashboard({ initialData }: Props) {
             </ul>
           )}
         </article>
+      </section>
+
+      <section className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-semibold text-white">จัดการแผนบริจาค</h3>
+            <p className="mt-1 text-sm text-slate-300">สร้าง Goal ใหม่ วางแผนบริจาค และบันทึกว่าบริจาคแล้ว</p>
+            {data.goal ? (
+              <p className="mt-2 text-xs text-slate-400">
+                ช่วงเป้าหมาย: {formatDate(data.goal.start_date)} - {formatDate(data.goal.end_date)}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => setModal('goal')} className="rounded-full bg-rose-500/20 px-4 py-2 text-sm font-medium text-rose-200">
+              {data.goal ? 'สร้าง Goal ใหม่' : 'สร้าง Goal แรก'}
+            </button>
+            <button
+              onClick={() => setModal('planned')}
+              disabled={!canManageEvents}
+              className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              + วางแผนบริจาค
+            </button>
+            <button
+              onClick={() => setModal('completed')}
+              disabled={!canManageEvents}
+              className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              + บันทึกว่าบริจาคแล้ว
+            </button>
+          </div>
+        </div>
+
+        {!data.goal ? (
+          <div className="mt-4 rounded-2xl border border-dashed border-white/20 bg-slate-950/40 p-5 text-center text-slate-200">
+            <p className="text-lg font-medium">ยังไม่มีเป้าหมายการบริจาคเลือด</p>
+            <p className="mt-2 text-sm text-slate-400">เริ่มต้นด้วยการตั้งเป้าหมาย 3 ครั้งในปีนี้</p>
+          </div>
+        ) : null}
       </section>
 
       {error ? <p className="rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
