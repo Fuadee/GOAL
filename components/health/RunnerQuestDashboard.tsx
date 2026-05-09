@@ -2,7 +2,6 @@ import { formatDuration, formatPace } from '@/lib/running/quest';
 import { RunAttemptEvaluation, RunnerDashboardData, RunnerDashboardLevel, RunnerProgressStatus, RunnerRunResult } from '@/lib/running/quest.types';
 import { RunnerQuestLogForm } from '@/components/health/RunnerQuestLogForm';
 import { HealthTodayMissionCard } from '@/components/health/HealthTodayMissionCard';
-import { HealthExecutionStrip } from '@/components/health/HealthExecutionStrip';
 
 const resultLabel: Record<RunnerRunResult, string> = {
   passed: 'ผ่านแล้ว',
@@ -66,7 +65,6 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
       </section>
 
       <HealthTodayMissionCard todayStatus={data.todayStatus} currentLevel={currentLevel} latestAttempt={currentLevel?.latestAttempt ?? null} />
-      <HealthExecutionStrip todayStatus={data.todayStatus} />
 
       <div id="quick-log">
         <RunnerQuestLogForm currentLevel={currentLevel} />
