@@ -179,22 +179,36 @@ export function getActiveMission(innovations: InnovationCardViewModel[]): Innova
   return getCurrentInnovation(innovations);
 }
 
-export function getCurrentStep(innovation: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
-  if (!innovation) return null;
-  return innovation.steps.find((step) => step.status === 'in_progress') ?? null;
+
+export function getCurrentStep(mission: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
+  if (!mission) return null;
+  return mission.steps.find((step) => step.status === 'in_progress') ?? null;
 }
 
-export function getCurrentIncompleteStep(innovation: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
-  if (!innovation) return null;
-  return innovation.steps.filter((step) => step.status !== 'done').sort(compareSteps)[0] ?? null;
+export function getNextTodoStep(mission: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
+  if (!mission) return null;
+  return mission.steps.filter((step) => step.status === 'todo').sort(compareSteps)[0] ?? null;
 }
 
-export function getMissionProgress(innovation: InnovationCardViewModel | null): { progressPercent: number; completedStepCount: number; stepTotal: number } {
-  if (!innovation) return { progressPercent: 0, completedStepCount: 0, stepTotal: 0 };
+export function getUpcomingSteps(mission: InnovationCardViewModel | null): InnovationProcessStepSummary[] {
+  if (!mission) return [];
+  const current = getCurrentStep(mission);
+  return mission.steps
+    .filter((step) => step.status === 'todo' && step.id !== current?.id)
+    .sort(compareSteps);
+}
+
+export function getCompletedSteps(mission: InnovationCardViewModel | null): InnovationProcessStepSummary[] {
+  if (!mission) return [];
+  return mission.steps.filter((step) => step.status === 'done').sort(compareSteps);
+}
+
+export function getMissionProgress(mission: InnovationCardViewModel | null): { progressPercent: number; completedStepCount: number; stepTotal: number } {
+  if (!mission) return { progressPercent: 0, completedStepCount: 0, stepTotal: 0 };
   return {
-    progressPercent: innovation.progressPercent,
-    completedStepCount: innovation.completedStepCount,
-    stepTotal: innovation.stepTotal
+    progressPercent: mission.progressPercent,
+    completedStepCount: mission.completedStepCount,
+    stepTotal: mission.stepTotal
   };
 }
 
