@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'GOAL Mission Control',
-  description: 'Premium mission control dashboard for life system execution'
+  title: 'GOAL Personal Operating Space',
+  description: 'Calm discipline dashboard for daily life execution'
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th" className="dark">
+    <html lang="th">
       <body className="mission-body">{children}</body>
     </html>
   );

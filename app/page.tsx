@@ -43,18 +43,18 @@ export default async function Home() {
   return (
     <PageShell>
       <Navbar />
-      <div className="page-container space-y-5 md:space-y-6">
+      <div className="page-container space-y-4 md:space-y-6">
         <MotionReveal>
           <GoalVisionBoard initialImages={initialVisionImages} initialTraits={personalTraits} />
         </MotionReveal>
 
         <MotionReveal>
-          <section className="mission-card space-y-4 border-white/10 bg-slate-950/45 p-5 md:p-6">
+          <section className="mission-card space-y-3 p-4 md:space-y-4 md:p-6">
             <SectionHeader
               title="Current Focus: วันนี้ต้องทำอะไรต่อ"
               subtitle="Command bar สำหรับ 5 ระบบหลัก — เลือก mission แล้วลงมือทันที"
-              titleClassName="text-lg md:text-xl text-white/95"
-              subtitleClassName="text-xs text-white/70"
+              titleClassName="text-base text-slate-900 md:text-xl"
+              subtitleClassName="text-xs text-slate-500"
             />
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
               {missionCards.map((card) => (
