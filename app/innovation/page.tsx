@@ -10,7 +10,7 @@ import { deriveInnovationState } from '@/lib/innovation/helpers';
 const TARGET_INNOVATIONS = 10;
 
 export default async function InnovationPage() {
-  const { innovations, currentMission, discoveryCandidates, discoveryGap, nextDiscoveryAction } = await getInnovationDashboardPageData(TARGET_INNOVATIONS);
+  const { innovations, currentMission, discoveryCandidates, discoveryGap, nextAction } = await getInnovationDashboardPageData(TARGET_INNOVATIONS);
   const activeInnovations = innovations.filter((innovation) => deriveInnovationState(innovation) !== 'completed');
   const completedInnovations = innovations.filter((innovation) => deriveInnovationState(innovation) === 'completed');
 
@@ -28,7 +28,7 @@ export default async function InnovationPage() {
           goalCount={TARGET_INNOVATIONS}
           gap={discoveryGap}
           candidateCount={discoveryCandidates.length}
-          nextAction={nextDiscoveryAction}
+          nextAction={nextAction}
         />
 
         {innovations.length === 0 ? (

@@ -22,7 +22,7 @@ import {
   deriveInnovationState,
   getCurrentInnovation,
   getDiscoveryGap,
-  getNextDiscoveryAction,
+  getInnovationNextAction,
   getNextStep,
   sortDiscoveryCandidatesByPipeline
 } from '@/lib/innovation/helpers';
@@ -36,7 +36,8 @@ import {
   InnovationDetailViewModel,
   InnovationProcessStepRow,
   UpdateInnovationProcessStepPayload,
-  InnovationStatus
+  InnovationStatus,
+  InnovationNextAction
 } from '@/lib/innovation/types';
 
 function calculateProgress(steps: Pick<InnovationProcessStepRow, 'status'>[]): { completedStepCount: number; stepTotal: number; progressPercent: number } {
@@ -95,16 +96,18 @@ export async function getInnovationDashboardPageData(goal = 10): Promise<{
   currentMission: InnovationCardViewModel | null;
   discoveryCandidates: DiscoveryCandidateRow[];
   discoveryGap: number;
-  nextDiscoveryAction: string;
+  nextAction: InnovationNextAction;
 }> {
   const [innovations, discoveryCandidates] = await Promise.all([getInnovationDashboardData(), getDiscoveryCandidates()]);
+  const currentMission = getCurrentInnovation(innovations);
+  const sortedCandidates = discoveryCandidates.sort((a, b) => sortDiscoveryCandidatesByPipeline(a) - sortDiscoveryCandidatesByPipeline(b));
 
   return {
     innovations,
-    currentMission: getCurrentInnovation(innovations),
-    discoveryCandidates: discoveryCandidates.sort((a, b) => sortDiscoveryCandidatesByPipeline(a) - sortDiscoveryCandidatesByPipeline(b)),
+    currentMission,
+    discoveryCandidates: sortedCandidates,
     discoveryGap: getDiscoveryGap(innovations, goal),
-    nextDiscoveryAction: getNextDiscoveryAction(getDiscoveryGap(innovations, goal))
+    nextAction: getInnovationNextAction({ activeInnovation: currentMission, candidates: sortedCandidates })
   };
 }
 
