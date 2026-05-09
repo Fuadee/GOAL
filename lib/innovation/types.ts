@@ -47,6 +47,20 @@ export type InnovationStateMeta = {
   allowedActions: InnovationStateAction[];
 };
 
+export type InnovationNextActionSource =
+  | 'current_step'
+  | 'next_step'
+  | 'next_milestone'
+  | 'candidate_queue'
+  | 'discovery_mode';
+
+export type InnovationNextAction = {
+  label: string;
+  source: InnovationNextActionSource;
+  ctaLabel: 'Continue Mission' | 'Review Candidate' | '+ Add Candidate';
+  href: string;
+};
+
 export type InnovationRow = {
   id: string;
   title: string;

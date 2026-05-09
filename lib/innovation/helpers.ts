@@ -7,7 +7,8 @@ import {
   InnovationDerivedState,
   InnovationProcessStepSummary,
   InnovationStateAction,
-  InnovationStateMeta
+  InnovationStateMeta,
+  InnovationNextAction
 } from '@/lib/innovation/types';
 
 const CURRENT_MISSION_STATUS_PRIORITY: InnovationDerivedState[] = ['building', 'idea', 'blocked', 'completed'];
@@ -178,12 +179,60 @@ export function getDiscoveryGap(innovations: InnovationCardViewModel[], goal = 1
   return Math.max(goal - innovations.length, 0);
 }
 
-export function getNextDiscoveryAction(gap: number): string {
-  if (gap > 0) {
-    return 'บันทึก pain point จากงานที่ทำซ้ำบ่อย';
+export function getInnovationNextAction({
+  activeInnovation,
+  candidates
+}: {
+  activeInnovation: InnovationCardViewModel | null;
+  candidates: DiscoveryCandidateRow[];
+}): InnovationNextAction {
+  if (activeInnovation) {
+    const currentStep = activeInnovation.steps.find((step) => step.status === 'in_progress');
+    if (currentStep) {
+      return {
+        label: currentStep.title,
+        source: 'current_step',
+        ctaLabel: 'Continue Mission',
+        href: `/innovation/${activeInnovation.id}`
+      };
+    }
+
+    const nextIncompleteStep = activeInnovation.steps.filter((step) => step.status !== 'done').sort(compareSteps)[0] ?? null;
+    if (nextIncompleteStep) {
+      return {
+        label: nextIncompleteStep.title,
+        source: 'next_step',
+        ctaLabel: 'Continue Mission',
+        href: `/innovation/${activeInnovation.id}`
+      };
+    }
+
+    if (activeInnovation.goal) {
+      return {
+        label: activeInnovation.goal,
+        source: 'next_milestone',
+        ctaLabel: 'Continue Mission',
+        href: `/innovation/${activeInnovation.id}`
+      };
+    }
   }
 
-  return 'review และ improve innovation ที่มี';
+  const nextCandidate = candidates.find((candidate) => !candidate.converted_at && !candidate.converted_innovation_id);
+  if (nextCandidate) {
+    return {
+      label: `ประเมินไอเดีย: ${nextCandidate.title}`,
+      source: 'candidate_queue',
+      ctaLabel: 'Review Candidate',
+      href: '#discovery-candidates'
+    };
+  }
+
+  return {
+    label: 'เพิ่ม candidate จากปัญหาจริงที่เจอวันนี้',
+    source: 'discovery_mode',
+    ctaLabel: '+ Add Candidate',
+    href: '#discovery-candidates'
+  };
 }
 
 const DISCOVERY_STATUS_ORDER: DiscoveryCandidateState[] = ['observed', 'pain_point', 'concept', 'validated', 'converted'];
