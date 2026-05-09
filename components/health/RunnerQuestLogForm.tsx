@@ -69,8 +69,8 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
 
   return (
     <section className="theme-card space-y-4 p-4">
-      <h3 className="card-title">Quick Log</h3>
-      <p className="text-sm text-slate-300">บันทึกใน 10 วินาที แล้วระบบอัปเดตด่านทันที</p>
+      <h3 className="card-title">บันทึกผลเร็ว</h3>
+      <p className="text-sm text-slate-300">บันทึกผลวิ่งวันนี้แบบเร็ว</p>
       <form
         action={(formData) => {
           setError(null);
@@ -121,7 +121,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
 
         <div className="grid gap-2.5 md:grid-cols-2">
           <label className="space-y-1 label-text">
-            <span>ระยะเวลา</span>
+            <span>ระยะเวลา / pace</span>
             <input
               type="text"
               name="duration_input"
@@ -148,7 +148,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
               onClick={() => setShowMoreDetails((prev) => !prev)}
               className="theme-button-secondary w-full"
             >
-              {showMoreDetails ? 'ซ่อนรายละเอียด' : 'More details'}
+              {showMoreDetails ? 'ซ่อนรายละเอียดเพิ่มเติม' : 'รายละเอียดเพิ่มเติม'}
             </button>
           </div>
         </div>
@@ -159,7 +159,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
         </label>
 
         {showMoreDetails ? (
-          <div className="grid gap-2.5 md:grid-cols-2">
+          <div className="grid gap-2">
             <label className="space-y-1 label-text">
               <span>ความหนัก</span>
               <select name="effort" defaultValue="normal" className="theme-input">
@@ -197,7 +197,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
           disabled={isPending}
           className="theme-button-primary w-full disabled:opacity-60"
         >
-          {isPending ? 'กำลังบันทึก...' : 'บันทึกผลการวิ่ง'}
+          {isPending ? 'กำลังบันทึก...' : 'บันทึกผลวิ่ง'}
         </button>
       </form>
     </section>
