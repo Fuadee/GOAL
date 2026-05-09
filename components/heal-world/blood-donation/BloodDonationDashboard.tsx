@@ -83,8 +83,6 @@ export function BloodDonationDashboard({ initialData }: Props) {
   };
 
   const summary = data.summary;
-  const chance = data.chance;
-
   const completedRatioLabel = useMemo(() => {
     if (!summary) return '0/0';
     return `${summary.completedCount}/${summary.targetCount}`;
@@ -96,7 +94,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
     <section className="space-y-4">
 
 
-      {summary && chance ? (
+      {summary ? (
         <>
           <BloodDonationNextMissionCard
             currentPlan={currentPlan}
@@ -146,15 +144,6 @@ export function BloodDonationDashboard({ initialData }: Props) {
               </div>
             </article>
 
-            <article className="rounded-xl border border-rose-300/20 bg-gradient-to-br from-rose-500/10 to-purple-500/10 p-3.5 shadow-[0_14px_30px_-24px_rgba(225,29,72,0.85)] sm:rounded-2xl sm:p-4">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300">Chance to Reach Goal</p>
-              <div className="mt-1.5 flex items-center justify-between gap-2">
-                <p className="text-3xl font-semibold leading-none text-white">{chance.score}%</p>
-                <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 text-xs text-slate-100">{chance.label}</p>
-              </div>
-              <p className="mt-1.5 text-xs text-slate-200">{chance.shortMessage}</p>
-              <p className="mt-1 text-[11px] text-slate-400">{chance.coachingMessage}</p>
-            </article>
           </section>
         </>
       ) : null}
