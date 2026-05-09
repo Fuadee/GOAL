@@ -181,7 +181,12 @@ export function getActiveMission(innovations: InnovationCardViewModel[]): Innova
 
 export function getCurrentStep(innovation: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
   if (!innovation) return null;
-  return innovation.steps.find((step) => step.status === 'in_progress') ?? getNextStep(innovation);
+  return innovation.steps.find((step) => step.status === 'in_progress') ?? null;
+}
+
+export function getCurrentIncompleteStep(innovation: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
+  if (!innovation) return null;
+  return innovation.steps.filter((step) => step.status !== 'done').sort(compareSteps)[0] ?? null;
 }
 
 export function getMissionProgress(innovation: InnovationCardViewModel | null): { progressPercent: number; completedStepCount: number; stepTotal: number } {

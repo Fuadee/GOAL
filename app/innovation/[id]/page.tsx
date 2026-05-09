@@ -4,11 +4,12 @@ import { AddInnovationLogForm } from '@/components/innovation/AddInnovationLogFo
 import { InnovationProcessSection } from '@/components/innovation/InnovationProcessSection';
 import { Navbar } from '@/components/navbar';
 import { getInnovationDetailData } from '@/lib/innovation/service';
-import { deriveInnovationState, getCurrentStep, getInnovationStateMeta } from '@/lib/innovation/helpers';
+import { deriveInnovationState, getCurrentIncompleteStep, getInnovationStateMeta } from '@/lib/innovation/helpers';
 import { InnovationLogType } from '@/lib/innovation/types';
 
 type InnovationDetailPageProps = {
   params: { id: string };
+  searchParams?: { focus?: string };
 };
 
 const logTypeStyles: Record<InnovationLogType, string> = {
@@ -23,7 +24,7 @@ function formatTimestamp(value: string): string {
   return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 }
 
-export default async function InnovationDetailPage({ params }: InnovationDetailPageProps) {
+export default async function InnovationDetailPage({ params, searchParams }: InnovationDetailPageProps) {
   const data = await getInnovationDetailData(params.id);
 
   if (!data) {
@@ -41,7 +42,8 @@ export default async function InnovationDetailPage({ params }: InnovationDetailP
   };
   const stateMeta = getInnovationStateMeta(innovationWithSteps);
   const derivedState = deriveInnovationState(innovationWithSteps);
-  const currentStep = getCurrentStep(innovationWithSteps);
+  const currentStep = getCurrentIncompleteStep(innovationWithSteps);
+  const focus = searchParams?.focus;
   const upcomingSteps = steps.filter((step) => step.status !== 'done' && step.id !== currentStep?.id);
 
   return (
@@ -73,7 +75,7 @@ export default async function InnovationDetailPage({ params }: InnovationDetailP
           </section>
         </section>
 
-        <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+        <section id="current-work" className={`${focus === 'current-work' ? 'scroll-mt-10 ring-2 ring-cyan-300/50' : 'scroll-mt-10'} space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur`}>
           <h2 className="text-xl font-semibold text-white">Current Work</h2>
           {currentStep ? <article className="rounded-xl border border-white/10 bg-slate-900/50 p-4"><p className="font-semibold text-white">{currentStep.title}</p></article> : <p className="text-slate-300">ยังไม่มี step ที่ต้องทำ</p>}
         </section>
@@ -83,8 +85,10 @@ export default async function InnovationDetailPage({ params }: InnovationDetailP
           {upcomingSteps.length === 0 ? <p className="text-slate-300">No upcoming steps.</p> : <ul className="space-y-2">{upcomingSteps.map((step) => <li key={step.id} className="rounded-lg border border-white/10 p-3 text-slate-200">{step.title}</li>)}</ul>}
         </section>
 
-        <InnovationProcessSection innovationId={innovation.id} steps={steps} />
-
+        <section id="add-step" className={focus === 'add-step' ? 'scroll-mt-10 ring-2 ring-cyan-300/50 rounded-2xl' : 'scroll-mt-10'}>
+          <InnovationProcessSection innovationId={innovation.id} steps={steps} />
+        </section>
+      
         <details className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
           <summary className="cursor-pointer text-xl font-semibold text-white">Execution Log</summary>
           <AddInnovationLogForm innovationId={innovation.id} />
