@@ -18,25 +18,28 @@ export default async function InnovationPage() {
   return (
     <PageShell>
       <Navbar />
-      <section className="page-container mx-auto max-w-4xl space-y-4">
+      <section className="page-container mx-auto max-w-4xl space-y-3 sm:space-y-4">
         <header className="space-y-1 pt-1">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">GOAL</p>
           <h1 className="text-base font-semibold text-slate-900">Founder Execution Workspace</h1>
         </header>
 
-        <DiscoveryGapSection
-          currentCount={innovations.length}
-          goalCount={TARGET_INNOVATIONS}
-          gap={discoveryGap}
-          candidateCount={discoveryCandidates.length}
-          activeMissionCount={currentMission ? 1 : 0}
-        />
-
         {innovations.length === 0 ? (
-          <section className="premium-card border-dashed p-10 text-center"><p className="text-[color:var(--text-secondary)]">No innovation yet. Start building your future.</p></section>
+          <>
+            <section className="premium-card border-dashed p-10 text-center"><p className="text-[color:var(--text-secondary)]">No innovation yet. Start building your future.</p></section>
+            <DiscoveryGapSection
+              currentCount={innovations.length}
+              goalCount={TARGET_INNOVATIONS}
+              gap={discoveryGap}
+              candidateCount={discoveryCandidates.length}
+              activeMissionCount={currentMission ? 1 : 0}
+            />
+            <DiscoveryCandidatesSection candidates={discoveryCandidates} />
+            <ProgressBar current={innovations.length} total={TARGET_INNOVATIONS} activeCount={activeInnovations.length} completedCount={completedInnovations.length} />
+          </>
         ) : (
           <>
-            <section className="space-y-3">
+            <section className="space-y-2">
               <div>
                 <h2 className={innovationUi.sectionTitle}>Active Mission</h2>
                 <p className={innovationUi.sectionSubtitle}>Work currently in progress.</p>
@@ -45,6 +48,14 @@ export default async function InnovationPage() {
                 {currentMission ? <InnovationCard innovation={currentMission} isCurrent /> : <p className="text-sm text-slate-600">No active mission yet.</p>}
               </div>
             </section>
+
+            <DiscoveryGapSection
+              currentCount={innovations.length}
+              goalCount={TARGET_INNOVATIONS}
+              gap={discoveryGap}
+              candidateCount={discoveryCandidates.length}
+              activeMissionCount={currentMission ? 1 : 0}
+            />
 
             <DiscoveryCandidatesSection candidates={discoveryCandidates} />
 

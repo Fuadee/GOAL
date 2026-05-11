@@ -13,13 +13,15 @@ type DiscoveryGapSectionProps = {
 export function DiscoveryGapSection({ currentCount, goalCount, gap, candidateCount, activeMissionCount }: DiscoveryGapSectionProps) {
 
   return (
-    <section className="space-y-3 rounded-2xl border border-cyan-900/40 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-900 p-4 shadow-[0_10px_35px_rgba(8,47,73,0.3)] sm:p-5">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">DISCOVERY GAP</p>
-      <p className="text-sm font-semibold text-white sm:text-base">คุณมี {currentCount} / {goalCount} innovations</p>
-      <p className="text-sm text-slate-100">ยังขาดอีก {gap}</p>
-      <p className="text-sm text-slate-100">{activeMissionCount} Active Mission</p>
-      <p className="text-sm text-slate-100">{candidateCount} Candidate Waiting</p>
-      <Link href="/innovation/discovery/new" className={innovationUi.secondaryButton}>+ Add Candidate</Link>
+    <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm sm:p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Discovery Gap</p>
+      <div className="grid grid-cols-2 gap-2 text-sm text-slate-700 sm:grid-cols-5">
+        <p className="col-span-2 font-semibold text-slate-900 sm:col-span-2">คุณมี {currentCount} / {goalCount} innovations</p>
+        <p>ยังขาดอีก {gap}</p>
+        <p>{activeMissionCount} Active Mission</p>
+        <p>{candidateCount} Candidate Waiting</p>
+      </div>
+      <Link href="/innovation/discovery/new" className={innovationUi.headerOutlineButton}>+ Add Candidate</Link>
     </section>
   );
 }

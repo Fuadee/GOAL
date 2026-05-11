@@ -41,8 +41,9 @@ export function InnovationCard({ innovation, isCurrent = false, compactCompleted
   }
 
   return (
-    <article className={`space-y-3 rounded-2xl border bg-white p-4 shadow-sm ${isCurrent ? 'border-slate-300 ring-1 ring-slate-900/5' : 'border-slate-200'}`}>
+    <article className={`space-y-3 rounded-2xl border bg-white p-4 shadow-sm ${isCurrent ? 'border-slate-900/20 bg-gradient-to-br from-white via-slate-50 to-cyan-50/40 shadow-[0_18px_45px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/10' : 'border-slate-200'}`}>
       <header className="space-y-2">
+        {isCurrent ? <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">Current Execution</p> : null}
         <div className="flex items-start justify-between gap-2">
           <h3 className="line-clamp-2 text-base font-semibold text-slate-950">{innovation.title}</h3>
           <div className="flex gap-1.5">
@@ -53,14 +54,23 @@ export function InnovationCard({ innovation, isCurrent = false, compactCompleted
         <p className="line-clamp-2 text-sm text-slate-700">{innovation.description || 'No description yet.'}</p>
       </header>
 
-      <div className="rounded-xl border border-slate-200 p-3">
+      <div className={`rounded-xl border p-3 ${isCurrent ? 'border-slate-900/20 bg-white' : 'border-slate-200'}`}>
         <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Current Work</p>
         <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900">{currentStep?.title ?? 'ยังไม่มีงานย่อยที่กำลังทำ'}</p>
       </div>
 
-      <p className="text-sm font-medium text-slate-700">{innovation.progressPercent}% · {innovation.completedStepCount}/{innovation.stepTotal} steps</p>
+      <div className="space-y-1">
+        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.1em] text-slate-600">
+          <span>Progress</span>
+          <span>{innovation.progressPercent}%</span>
+        </div>
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+          <div className="h-full rounded-full bg-slate-900 transition-all" style={{ width: `${innovation.progressPercent}%` }} />
+        </div>
+        <p className="text-sm font-medium text-slate-700">{innovation.completedStepCount}/{innovation.stepTotal} steps completed</p>
+      </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Link href={hasCurrentStep ? `/innovation/${innovation.id}?focus=current-work` : `/innovation/${innovation.id}?focus=add-step`} className={innovationUi.primaryButton}>{hasCurrentStep ? 'Continue Working' : 'Add First Step'}</Link>
         <Link href={`/innovation/${innovation.id}`} className={innovationUi.secondaryButton}>Open Details</Link>
       </div>
