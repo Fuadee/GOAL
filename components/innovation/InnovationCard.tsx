@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
-import { deriveInnovationState, getCurrentMissionFocus, getInnovationStateMeta } from '@/lib/innovation/helpers';
-import { InnovationCardViewModel, InnovationDerivedState } from '@/lib/innovation/types';
+import { getCurrentMissionFocus, getInnovationStateMeta } from '@/lib/innovation/helpers';
+import { InnovationCardViewModel } from '@/lib/innovation/types';
 import { innovationUi, statusBadge } from './uiTokens';
 
 type InnovationCardProps = {
@@ -10,19 +10,12 @@ type InnovationCardProps = {
   compactCompleted?: boolean;
 };
 
-const stateStyles: Record<InnovationDerivedState, string> = {
-  idea: `${statusBadge.base} ${statusBadge.concept}`,
-  building: `${statusBadge.base} ${statusBadge.building}`,
-  blocked: 'border border-rose-300 bg-rose-100 text-rose-800',
-  completed: `${statusBadge.base} ${statusBadge.completed}`
-};
 
 function formatTimestamp(value: string): string {
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(value));
 }
 
 export function InnovationCard({ innovation, isCurrent = false, compactCompleted = false }: InnovationCardProps) {
-  const derivedState = deriveInnovationState(innovation);
   const stateMeta = getInnovationStateMeta(innovation);
   const currentStep = getCurrentMissionFocus(innovation);
   const hasCurrentStep = Boolean(currentStep);
@@ -41,38 +34,32 @@ export function InnovationCard({ innovation, isCurrent = false, compactCompleted
   }
 
   return (
-    <article className={`space-y-3 rounded-2xl border bg-white p-4 shadow-sm ${isCurrent ? 'border-slate-900/20 bg-gradient-to-br from-white via-slate-50 to-cyan-50/40 shadow-[0_18px_45px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/10' : 'border-slate-200'}`}>
-      <header className="space-y-2">
-        {isCurrent ? <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">Current Execution</p> : null}
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-2 text-base font-semibold text-slate-950">{innovation.title}</h3>
-          <div className="flex gap-1.5">
-            {isCurrent ? <span className={`${statusBadge.base} ${statusBadge.current}`}>ACTIVE</span> : null}
-            <span className={stateStyles[derivedState]}>{stateMeta.label}</span>
-          </div>
+    <article className={`space-y-4 rounded-2xl border bg-white p-4 shadow-sm sm:space-y-3 ${isCurrent ? 'border-slate-900/15 bg-gradient-to-b from-white to-slate-50/80 shadow-[0_12px_30px_rgba(15,23,42,0.08)]' : 'border-slate-200'}`}>
+      <header className="space-y-2.5">
+        {isCurrent ? <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Current Execution</p> : null}
+        <h3 className="line-clamp-2 text-lg font-semibold leading-snug text-slate-950 sm:text-base">{innovation.title}</h3>
+        <p className="line-clamp-2 text-sm leading-relaxed text-slate-600">{innovation.description || 'No description yet.'}</p>
+        <div className="flex flex-wrap gap-1.5 pt-0.5">
+          {isCurrent ? <span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700">Active</span> : null}
+          <span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700">{stateMeta.label}</span>
         </div>
-        <p className="line-clamp-2 text-sm text-slate-700">{innovation.description || 'No description yet.'}</p>
       </header>
 
-      <div className={`rounded-xl border p-3 ${isCurrent ? 'border-slate-900/20 bg-white' : 'border-slate-200'}`}>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Current Focus</p>
-        <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900">{currentStep?.title ?? 'ยังไม่มีขั้นตอน'}</p>
+      <div className="space-y-1 rounded-lg bg-slate-100/70 p-3">
+        <p className="text-xs font-semibold text-slate-500">Next action</p>
+        <p className="line-clamp-2 text-sm font-medium text-slate-900">{currentStep?.title ?? 'ยังไม่มีขั้นตอน'}</p>
       </div>
 
-      <div className="space-y-1">
-        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.1em] text-slate-600">
-          <span>Progress</span>
-          <span>{innovation.progressPercent}%</span>
-        </div>
-        <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+      <div className="space-y-1.5">
+        <p className="text-sm font-medium text-slate-700">Progress {innovation.progressPercent}% · {innovation.completedStepCount}/{innovation.stepTotal} steps</p>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
           <div className="h-full rounded-full bg-slate-900 transition-all" style={{ width: `${innovation.progressPercent}%` }} />
         </div>
-        <p className="text-sm font-medium text-slate-700">{innovation.completedStepCount}/{innovation.stepTotal} steps completed</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <Link href={hasCurrentStep ? `/innovation/${innovation.id}?focus=current-work` : `/innovation/${innovation.id}?focus=add-step`} className={innovationUi.primaryButton}>{hasCurrentStep ? 'Continue Working' : 'Add First Step'}</Link>
-        <Link href={`/innovation/${innovation.id}`} className={innovationUi.secondaryButton}>Open Details</Link>
+      <div className="space-y-2">
+        <Link href={hasCurrentStep ? `/innovation/${innovation.id}?focus=current-work` : `/innovation/${innovation.id}?focus=add-step`} className={`${innovationUi.primaryButton} w-full`}>{hasCurrentStep ? 'Continue Working' : 'Add First Step'}</Link>
+        <Link href={`/innovation/${innovation.id}`} className="inline-flex text-sm font-medium text-slate-600 underline-offset-2 transition hover:text-slate-900 hover:underline">Open Details</Link>
       </div>
     </article>
   );
