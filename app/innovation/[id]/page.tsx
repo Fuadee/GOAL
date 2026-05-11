@@ -6,7 +6,7 @@ import { Navbar } from '@/components/navbar';
 import { getInnovationDetailData } from '@/lib/innovation/service';
 import {
   deriveInnovationState,
-  getCurrentFocusStep,
+  getCurrentMissionFocus,
   getStepStatusSummary,
   getInnovationStateMeta,
   getMissionProgress
@@ -59,7 +59,7 @@ export default async function InnovationDetailPage({ params }: InnovationDetailP
 
         <InnovationProcessSection
           innovationId={innovation.id}
-          currentFocus={getCurrentFocusStep(mission)}
+          currentFocus={getCurrentMissionFocus(mission)}
           steps={steps}
         />
 

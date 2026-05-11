@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { deriveInnovationState, getCurrentIncompleteStep, getInnovationStateMeta } from '@/lib/innovation/helpers';
+import { deriveInnovationState, getCurrentMissionFocus, getInnovationStateMeta } from '@/lib/innovation/helpers';
 import { InnovationCardViewModel, InnovationDerivedState } from '@/lib/innovation/types';
 import { innovationUi, statusBadge } from './uiTokens';
 
@@ -24,7 +24,7 @@ function formatTimestamp(value: string): string {
 export function InnovationCard({ innovation, isCurrent = false, compactCompleted = false }: InnovationCardProps) {
   const derivedState = deriveInnovationState(innovation);
   const stateMeta = getInnovationStateMeta(innovation);
-  const currentStep = getCurrentIncompleteStep(innovation);
+  const currentStep = getCurrentMissionFocus(innovation);
   const hasCurrentStep = Boolean(currentStep);
 
   if (compactCompleted) {
@@ -55,8 +55,8 @@ export function InnovationCard({ innovation, isCurrent = false, compactCompleted
       </header>
 
       <div className={`rounded-xl border p-3 ${isCurrent ? 'border-slate-900/20 bg-white' : 'border-slate-200'}`}>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Current Work</p>
-        <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900">{currentStep?.title ?? 'ยังไม่มีงานย่อยที่กำลังทำ'}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Current Focus</p>
+        <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900">{currentStep?.title ?? 'ยังไม่มีขั้นตอน'}</p>
       </div>
 
       <div className="space-y-1">

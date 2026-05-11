@@ -203,18 +203,20 @@ export function getCompletedSteps(mission: InnovationCardViewModel | null): Inno
   return mission.steps.filter((step) => step.status === 'completed').sort(compareSteps);
 }
 
-export function getCurrentFocusStep(mission: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
+export function getCurrentMissionFocus(mission: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
   if (!mission) return null;
+
   const inProgress = mission.steps.filter((step) => step.status === 'in_progress').sort(compareSteps)[0];
   if (inProgress) return inProgress;
-
-  const blocked = mission.steps.filter((step) => step.status === 'blocked').sort(compareSteps)[0];
-  if (blocked) return blocked;
 
   const waiting = mission.steps.filter((step) => step.status === 'waiting').sort(compareSteps)[0];
   if (waiting) return waiting;
 
-  return mission.steps.filter((step) => step.status === 'todo').sort(compareSteps)[0] ?? null;
+  return null;
+}
+
+export function getCurrentFocusStep(mission: InnovationCardViewModel | null): InnovationProcessStepSummary | null {
+  return getCurrentMissionFocus(mission);
 }
 
 export function getStepStatusSummary(mission: InnovationCardViewModel | null): {active:number; blocked:number; waiting:number; done:number; total:number} {
@@ -318,6 +320,6 @@ export function getInnovationMissionSummary(mission: InnovationCardViewModel | n
 
   return {
     primaryText: mission.title,
-    secondaryText: mission.nextStep?.title ?? 'No pending step'
+    secondaryText: getCurrentMissionFocus(mission)?.title ?? 'ยังไม่มีขั้นตอน'
   };
 }
