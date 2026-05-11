@@ -18,7 +18,6 @@ function formatTimestamp(value: string): string {
 export function InnovationCard({ innovation, isCurrent = false, compactCompleted = false }: InnovationCardProps) {
   const stateMeta = getInnovationStateMeta(innovation);
   const currentStep = getCurrentMissionFocus(innovation);
-  const hasCurrentStep = Boolean(currentStep);
 
   if (compactCompleted) {
     return (
@@ -57,9 +56,13 @@ export function InnovationCard({ innovation, isCurrent = false, compactCompleted
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Link href={hasCurrentStep ? `/innovation/${innovation.id}?focus=current-work` : `/innovation/${innovation.id}?focus=add-step`} className={`${innovationUi.primaryButton} w-full`}>{hasCurrentStep ? 'Continue Working' : 'Add First Step'}</Link>
-        <Link href={`/innovation/${innovation.id}`} className="inline-flex text-sm font-medium text-slate-600 underline-offset-2 transition hover:text-slate-900 hover:underline">Open Details</Link>
+      <div className="pt-1">
+        <Link
+          href={`/innovation/${innovation.id}`}
+          className={`${innovationUi.primaryButton} h-12 w-full rounded-xl shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.99]`}
+        >
+          Open Mission
+        </Link>
       </div>
     </article>
   );
