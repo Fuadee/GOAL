@@ -84,14 +84,12 @@ export function BloodDonationDashboard({ initialData }: Props) {
 
   const summary = data.summary;
   const completedRatioLabel = useMemo(() => {
-    if (!summary) return '0/0';
-    return `${summary.completedCount}/${summary.targetCount}`;
+    if (!summary) return '0 / 0';
+    return `${summary.completedCount} / ${summary.targetCount}`;
   }, [summary]);
 
-  const nextPlanSummaryLabel = currentPlan ? formatDate(currentPlan.planned_date) : null;
-
   return (
-    <section className="space-y-4">
+    <section className="space-y-3.5">
 
 
       {summary ? (
@@ -114,43 +112,66 @@ export function BloodDonationDashboard({ initialData }: Props) {
             }
           />
 
-          <section className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
-            {[
-              ['เป้าหมาย', `${summary.targetCount} ครั้ง`],
-              ['ทำสำเร็จแล้ว', `${summary.completedCount} ครั้ง`],
-              ['วางแผนไว้แล้ว', `${summary.plannedCount} ครั้ง`],
-              ['เหลืออีก', `${summary.remainingToTarget} ครั้ง`]
-            ].map(([label, value]) => (
-              <article
-                key={label}
-                className="rounded-xl border border-white/10 bg-slate-900/75 p-3 shadow-[0_10px_26px_-20px_rgba(15,23,42,0.9)] backdrop-blur-sm sm:rounded-2xl sm:p-3.5"
-              >
-                <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">{label}</p>
-                <p className="mt-1.5 text-xl font-semibold leading-tight text-white sm:text-2xl">{value}</p>
-                {label === 'เหลืออีก' && nextPlanSummaryLabel ? <p className="mt-0.5 text-[11px] text-slate-400">แผนถัดไป: {nextPlanSummaryLabel}</p> : null}
-              </article>
-            ))}
-          </section>
-
-          <section className="grid gap-2.5 sm:gap-3 lg:grid-cols-[1.05fr_1fr]">
-            <article className="rounded-xl border border-white/10 bg-slate-900/75 p-3.5 shadow-[0_14px_30px_-24px_rgba(15,23,42,1)] sm:rounded-2xl sm:p-4">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Progress</p>
-              <div className="mt-2 flex items-baseline justify-between gap-2">
-                <p className="text-xl font-semibold text-white sm:text-2xl">{completedRatioLabel}</p>
-                <p className="text-xs text-slate-400">{summary.progressPercent}%</p>
+          <section className="pt-0.5">
+            <article className="group relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-[#081227]/95 via-[#0e1a38]/92 to-[#11132d]/95 p-5 shadow-[0_26px_60px_-42px_rgba(14,116,255,0.65)] transition duration-500 hover:border-cyan-200/35 hover:shadow-[0_34px_72px_-44px_rgba(45,212,191,0.55)] md:p-6">
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute -top-28 right-[-5rem] h-72 w-72 rounded-full bg-cyan-300/12 blur-3xl transition duration-500 group-hover:bg-cyan-300/20" />
+                <div className="absolute -bottom-28 left-[-4rem] h-64 w-64 rounded-full bg-indigo-400/14 blur-3xl" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(255,255,255,0.13),transparent_52%)]" />
               </div>
-              <div className="mt-2 h-2 rounded-full bg-slate-800">
-                <div className="h-2 rounded-full bg-gradient-to-r from-rose-400 to-orange-300" style={{ width: `${summary.progressPercent}%` }} />
+              <div className="pointer-events-none absolute inset-[1px] rounded-[calc(1.5rem-1px)] border border-white/10" />
+
+              <div className="relative">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-100/75">Mission Progress</p>
+                    <h3 className="mt-1 text-2xl font-medium tracking-tight text-white sm:text-[1.7rem]">บริจาคเลือดปีนี้</h3>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium uppercase tracking-[0.17em] text-cyan-100/90">{completedRatioLabel} Completed</p>
+                    <p className="mt-1 text-xs text-slate-300/85">{summary.progressPercent}% complete</p>
+                  </div>
+                </div>
+
+                <div className="relative mt-4">
+                  <div className="h-5 rounded-full bg-white/10 p-[2px] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-8px_16px_rgba(15,23,42,0.65)]">
+                    <div
+                      className="relative h-full rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 transition-all duration-1000 ease-out"
+                      style={{ width: `${summary.progressPercent}%` }}
+                    >
+                      {summary.progressPercent > 0 ? (
+                        <div className="absolute inset-0 rounded-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.38),transparent_65%)] shadow-[0_0_18px_rgba(56,189,248,0.8),0_0_34px_rgba(59,130,246,0.45)] animate-pulse" />
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2.5">
+                  {Array.from({ length: 3 }, (_, index) => {
+                    const isCompleted = index < summary.completedCount;
+                    return (
+                      <span
+                        key={index}
+                        className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition ${
+                          isCompleted
+                            ? 'border-cyan-200/60 bg-cyan-300/20 text-cyan-50 shadow-[0_0_22px_-8px_rgba(34,211,238,0.95)]'
+                            : 'border-slate-300/20 bg-slate-800/55 text-slate-300'
+                        }`}
+                      >
+                        {isCompleted ? '✓' : '○'} ครั้งที่ {index + 1}
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
             </article>
-
           </section>
         </>
       ) : null}
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <article className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-          <h3 className="text-xl font-semibold text-white">Upcoming Plans</h3>
+        <article className="rounded-2xl border border-white/15 bg-slate-900/65 p-5 shadow-[0_20px_50px_-40px_rgba(15,23,42,1)] transition duration-300 hover:-translate-y-0.5 hover:border-cyan-200/30 hover:shadow-[0_24px_60px_-38px_rgba(56,189,248,0.35)]">
+          <h3 className="text-xl font-medium text-white">Upcoming Plans</h3>
           {!data.upcomingPlans.length ? (
             <p className="mt-4 text-sm text-slate-400">ยังไม่มีแผนการบริจาค ลองเพิ่มวันแรกของคุณ</p>
           ) : (
@@ -180,14 +201,14 @@ export function BloodDonationDashboard({ initialData }: Props) {
           )}
         </article>
 
-        <article className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-          <h3 className="text-xl font-semibold text-white">Donation History</h3>
+        <article className="rounded-2xl border border-white/15 bg-slate-900/65 p-5 shadow-[0_20px_50px_-40px_rgba(15,23,42,1)] transition duration-300 hover:-translate-y-0.5 hover:border-cyan-200/30 hover:shadow-[0_24px_60px_-38px_rgba(59,130,246,0.34)]">
+          <h3 className="text-xl font-medium text-white">Donation History</h3>
           {!data.history.length ? (
             <p className="mt-4 text-sm text-slate-400">ยังไม่มีประวัติ completed</p>
           ) : (
             <ul className="mt-4 space-y-3">
               {data.history.map((event) => (
-                <li key={event.id} className="rounded-xl border border-white/10 bg-slate-950/40 p-4">
+                <li key={event.id} className="rounded-xl border border-white/10 bg-slate-950/45 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition hover:border-white/20">
                   <p className="text-lg font-semibold text-white">{formatDate(event.actual_date)}</p>
                   {event.planned_date ? <p className="text-xs text-slate-500">จากแผน: {formatDate(event.planned_date)}</p> : null}
                   <p className="mt-1 text-xs text-slate-400">{event.location || 'ไม่ระบุสถานที่'}</p>
