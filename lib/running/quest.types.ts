@@ -46,7 +46,23 @@ export type RunnerLevelProgress = {
   best_pace_seconds_per_km: number | null;
   best_no_stop_distance_km: number | null;
   passed_at: string | null;
+  reward_title?: string | null;
+  reward_description?: string | null;
+  reward_emotional_copy?: string | null;
+  reward_image_url?: string | null;
+  reward_status?: 'locked' | 'unlocked' | 'claimed' | null;
+  reward_claimed_at?: string | null;
   updated_at: string;
+};
+
+export type HealthMissionRewardStatus = 'locked' | 'unlocked' | 'claimed';
+export type HealthMissionReward = {
+  title: string;
+  description: string;
+  emotionalCopy?: string;
+  imageUrl?: string;
+  status: HealthMissionRewardStatus;
+  claimedAt?: string | null;
 };
 
 export type RunAttemptInput = {
@@ -84,4 +100,5 @@ export type RunnerDashboardData = {
   bestPaceEver: number | null;
   longestNoStopDistance: number | null;
   completionPercent: number;
+  healthMissionReward: HealthMissionReward | null;
 };
