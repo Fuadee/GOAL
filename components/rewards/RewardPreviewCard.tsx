@@ -72,7 +72,9 @@ export function RewardPreviewCard({
               <div className="space-y-2">
                 <p className="text-2xl font-semibold leading-tight text-amber-50 sm:text-[1.75rem]">{reward?.title}</p>
                 <p className="text-sm text-amber-100/75">{missionTitle || 'ภารกิจปัจจุบัน'}</p>
-                <p className="text-sm italic leading-relaxed text-amber-100/90">{reward?.emotionalCopy || reward?.description || 'เพราะคุณทำ mission นี้สำเร็จ คุณจะได้ใช้ชีวิตในช่วงเวลาที่ตั้งใจไว้จริง ๆ'}</p>
+                <p className="text-sm italic leading-relaxed text-amber-100/90">
+                  {reward?.emotionalCopy || reward?.description || 'ทำภารกิจนี้ให้สำเร็จ แล้วปลดล็อกช่วงเวลาที่ตั้งใจไว้ให้ตัวเอง'}
+                </p>
               </div>
             </div>
             <button type="button" disabled={isLocked || isClaimed || isClaimingReward} onClick={onClaimReward} className="w-full rounded-xl border border-amber-100/40 bg-gradient-to-r from-amber-200 via-orange-200 to-amber-100 px-4 py-3 text-sm font-semibold text-[#2d1f10] shadow-[0_12px_24px_-14px_rgba(253,186,116,0.95)] disabled:cursor-not-allowed disabled:brightness-75">{isClaimed ? 'รับรางวัลนี้แล้ว' : isLocked ? lockedCta : isClaimingReward ? 'กำลังรับรางวัล...' : 'Mark Reward Claimed'}</button>

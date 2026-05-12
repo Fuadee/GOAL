@@ -66,8 +66,13 @@ export async function upsertHealthRewardAction(formData: FormData): Promise<{ su
   const description = String(formData.get('description') ?? '').trim();
   const emotionalCopy = String(formData.get('emotional_copy') ?? '').trim();
   const imageUrl = String(formData.get('image_url') ?? '').trim();
-  if (!levelId || !title || !description) return { success: false, message: 'กรอกข้อมูล reward ให้ครบ' };
-  await upsertHealthMissionReward(levelId, { title, description, emotionalCopy, imageUrl });
+  if (!levelId || !title) return { success: false, message: 'กรอกชื่อ reward ให้ครบ' };
+  await upsertHealthMissionReward(levelId, {
+    title,
+    description: description || 'รางวัลของคุณเมื่อทำภารกิจสำเร็จ',
+    emotionalCopy: emotionalCopy || 'ทำภารกิจนี้ให้สำเร็จ แล้วปลดล็อกช่วงเวลาที่ตั้งใจไว้ให้ตัวเอง',
+    imageUrl
+  });
   revalidatePath('/health');
   return { success: true, message: 'บันทึก reward แล้ว' };
 }
