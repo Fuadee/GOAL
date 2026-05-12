@@ -113,7 +113,11 @@ export function BloodDonationDashboard({ initialData }: Props) {
               })
             }
           />
-          <RewardPreviewCard reward={data.reward} isMissionCompleted={isCurrentMissionCompleted} />
+          <RewardPreviewCard
+            missionTitle={data.currentMission?.title}
+            reward={data.currentMission?.reward}
+            isMissionCompleted={isCurrentMissionCompleted}
+          />
 
           <section className="pt-0.5">
             <article className="group relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-[#081227]/95 via-[#0e1a38]/92 to-[#11132d]/95 p-5 shadow-[0_26px_60px_-42px_rgba(14,116,255,0.65)] transition duration-500 hover:border-cyan-200/35 hover:shadow-[0_34px_72px_-44px_rgba(45,212,191,0.55)] md:p-6">
@@ -540,6 +544,10 @@ function GoalForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event: F
       <Input name="target_count" label="Target Count" type="number" defaultValue="3" required />
       <Input name="start_date" label="Start Date" type="date" required />
       <Input name="end_date" label="End Date" type="date" required />
+      <Input name="reward_title" label="Reward Title" defaultValue="Japanese Solo Reward" />
+      <Input name="reward_description" label="Reward Description" defaultValue="หลังบริจาคเลือดสำเร็จ ให้รางวัลตัวเองด้วยมื้ออาหารญี่ปุ่นดี ๆ หนึ่งมื้อ" />
+      <Input name="reward_image_url" label="Reward Image URL" defaultValue="/rewards/japanese-solo-reward.jpg" />
+      <Input name="reward_emotional_copy" label="Emotional Copy" defaultValue="ไม่ใช่แค่กิน แต่คือการฉลองว่าฉันทำเรื่องดีสำเร็จแล้ว" />
       <button disabled={loading} className="rounded-full bg-rose-500/20 px-4 py-2 text-sm text-rose-100 disabled:opacity-60">
         {loading ? 'Saving...' : 'Save Goal'}
       </button>
