@@ -118,7 +118,7 @@ export type BloodDonationRewardStatus = 'locked' | 'unlocked' | 'claimed';
 export type BloodDonationReward = {
   title: string;
   thaiTitle?: string;
-  description: string;
+  description?: string;
   emotionalCopy?: string;
   imageUrl?: string;
   status: BloodDonationRewardStatus;

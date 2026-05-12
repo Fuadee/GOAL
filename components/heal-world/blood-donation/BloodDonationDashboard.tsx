@@ -33,6 +33,33 @@ const displayStatusMeta: Record<BloodDonationPlanDisplayStatus, { label: string;
   CANCELLED: { label: 'ยกเลิกแล้ว', className: 'bg-slate-500/30 text-slate-200 border border-slate-300/30' }
 };
 
+
+const isDev = process.env.NODE_ENV === 'development';
+
+async function apiRequest(input: RequestInfo | URL, init?: RequestInit) {
+  const response = await fetch(input, init);
+  let json: unknown = null;
+  try {
+    json = await response.json();
+  } catch {
+    json = null;
+  }
+
+  if (isDev) {
+    console.log('[blood-donation] API response', { input: String(input), status: response.status, ok: response.ok, json });
+  }
+
+  if (!response.ok) {
+    const errorMessage =
+      typeof json === 'object' && json !== null && 'error' in json && typeof (json as { error?: unknown }).error === 'string'
+        ? (json as { error: string }).error
+        : 'บันทึกข้อมูลไม่สำเร็จ';
+    throw new Error(errorMessage);
+  }
+
+  return json;
+}
+
 const getPlanCardTone = (status: BloodDonationPlanDisplayStatus, isCurrent: boolean) => {
   if (isCurrent || status === 'CURRENT') {
     return 'border-rose-300/60 bg-gradient-to-br from-rose-500/15 via-slate-900/80 to-purple-500/10 shadow-lg shadow-rose-900/30';
@@ -60,13 +87,10 @@ export function BloodDonationDashboard({ initialData }: Props) {
   const isCurrentMissionCompleted = currentPlan?.status === 'completed';
 
   const refreshDashboard = async () => {
-    const response = await fetch('/api/blood-donation', { cache: 'no-store' });
-    const json = await response.json();
-
-    if (!response.ok) {
-      throw new Error(json.error ?? 'โหลดข้อมูลไม่สำเร็จ');
+    const json = (await apiRequest('/api/blood-donation', { cache: 'no-store' })) as BloodDonationDashboardViewModel;
+    if (isDev) {
+      console.log('[blood-donation] updated mission reward', json.currentMission?.reward);
     }
-
     setData(json);
   };
 
@@ -110,7 +134,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
             }}
             onCancel={(event) =>
               submit(async () => {
-                await fetch(`/api/blood-donation/events/${event.id}/cancel`, { method: 'PATCH' });
+                await apiRequest(`/api/blood-donation/events/${event.id}/cancel`, { method: 'PATCH' });
               })
             }
           />
@@ -201,7 +225,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
                   }}
                   onCancel={() =>
                     submit(async () => {
-                      await fetch(`/api/blood-donation/events/${event.id}/cancel`, { method: 'PATCH' });
+                      await apiRequest(`/api/blood-donation/events/${event.id}/cancel`, { method: 'PATCH' });
                     })
                   }
                 />
@@ -280,7 +304,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
               submit(async () => {
                 event.preventDefault();
                 const formData = new FormData(event.currentTarget);
-                await fetch('/api/blood-donation/goals', {
+                await apiRequest('/api/blood-donation/goals', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(Object.fromEntries(formData.entries()))
@@ -297,7 +321,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
               submit(async () => {
                 event.preventDefault();
                 const formData = new FormData(event.currentTarget);
-                await fetch(`/api/blood-donation/goals/${data.goal?.id}/events`, {
+                await apiRequest(`/api/blood-donation/goals/${data.goal?.id}/events`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ ...Object.fromEntries(formData.entries()), mode: 'planned' })
@@ -314,7 +338,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
               submit(async () => {
                 event.preventDefault();
                 const formData = new FormData(event.currentTarget);
-                await fetch(`/api/blood-donation/goals/${data.goal?.id}/events`, {
+                await apiRequest(`/api/blood-donation/goals/${data.goal?.id}/events`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ ...Object.fromEntries(formData.entries()), mode: 'completed' })
@@ -331,7 +355,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
               submit(async () => {
                 event.preventDefault();
                 const formData = new FormData(event.currentTarget);
-                await fetch(`/api/blood-donation/events/${selectedEvent.id}/complete`, {
+                await apiRequest(`/api/blood-donation/events/${selectedEvent.id}/complete`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(Object.fromEntries(formData.entries()))
@@ -353,7 +377,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
               submit(async () => {
                 event.preventDefault();
                 const formData = new FormData(event.currentTarget);
-                await fetch(`/api/blood-donation/events/${selectedEvent.id}/reschedule`, {
+                await apiRequest(`/api/blood-donation/events/${selectedEvent.id}/reschedule`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(Object.fromEntries(formData.entries()))
@@ -372,16 +396,20 @@ export function BloodDonationDashboard({ initialData }: Props) {
               submit(async () => {
                 event.preventDefault();
                 const formData = new FormData(event.currentTarget);
-                await fetch(`/api/blood-donation/events/${currentPlan.id}/reschedule`, {
+                const payload = {
+                  planned_date: currentPlan.planned_date,
+                  location: currentPlan.location ?? '',
+                  note: currentPlan.note ?? '',
+                  reward_status: currentPlan.reward_status ?? 'locked',
+                  ...Object.fromEntries(formData.entries())
+                };
+                if (isDev) {
+                  console.log('[blood-donation] before save payload', payload);
+                }
+                await apiRequest(`/api/blood-donation/events/${currentPlan.id}/reschedule`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    planned_date: currentPlan.planned_date,
-                    location: currentPlan.location ?? '',
-                    note: currentPlan.note ?? '',
-                    reward_status: currentPlan.reward_status ?? 'locked',
-                    ...Object.fromEntries(formData.entries())
-                  })
+                  body: JSON.stringify(payload)
                 });
               })
             }

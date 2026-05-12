@@ -10,6 +10,9 @@ type Props = {
 };
 
 export function RewardPreviewCard({ missionTitle, reward, isMissionCompleted = false, onAddReward }: Props) {
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[blood-donation] render RewardPreviewCard reward value', reward);
+  }
   if (!reward) {
     return (
       <section className="space-y-3 pt-0.5">
