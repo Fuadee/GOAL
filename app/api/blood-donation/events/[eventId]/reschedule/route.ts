@@ -10,6 +10,8 @@ export async function PATCH(request: Request, { params }: { params: { eventId: s
       return NextResponse.json({ error: 'planned_date is required' }, { status: 400 });
     }
 
+    console.log('[blood-donation] reschedule route payload', { eventId: params.eventId, body });
+
     const updated = await rescheduleBloodDonationEvent(params.eventId, {
       planned_date: body.planned_date,
       location: body.location,
@@ -20,6 +22,13 @@ export async function PATCH(request: Request, { params }: { params: { eventId: s
       reward_emotional_copy: body.reward_emotional_copy,
       reward_image_url: body.reward_image_url,
       reward_status: body.reward_status || 'locked'
+    });
+
+    console.log('[blood-donation] reschedule route updated reward fields', {
+      id: updated.id,
+      reward_title: updated.reward_title,
+      reward_image_url: updated.reward_image_url,
+      reward_status: updated.reward_status
     });
 
     return NextResponse.json(updated);

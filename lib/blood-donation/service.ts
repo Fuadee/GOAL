@@ -32,8 +32,9 @@ export async function getBloodDonationDashboardData(today = new Date()): Promise
   const events = await getBloodDonationEventsByGoalId(goal.id);
   const upcomingPlans = getUpcomingBloodDonationPlans(events, today);
   const currentPlan = getCurrentBloodDonationPlan(upcomingPlans);
+  const hasPersistedReward = Boolean(currentPlan?.reward_title || currentPlan?.reward_image_url);
   const persistedReward =
-    currentPlan?.reward_title
+    hasPersistedReward
       ? {
           title: currentPlan.reward_title,
           thaiTitle: currentPlan.reward_thai_title ?? undefined,
