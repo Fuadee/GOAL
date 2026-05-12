@@ -16,7 +16,7 @@ type Props = {
   initialData: BloodDonationDashboardViewModel;
 };
 
-type ModalState = 'goal' | 'planned' | 'completed' | 'convert' | 'reschedule' | null;
+type ModalState = 'goal' | 'planned' | 'completed' | 'convert' | 'reschedule' | 'reward' | null;
 
 const dateFormatter = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -117,6 +117,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
             missionTitle={data.currentMission?.title}
             reward={data.currentMission?.reward}
             isMissionCompleted={isCurrentMissionCompleted}
+            onAddReward={() => setModal('reward')}
           />
 
           <section className="pt-0.5">
@@ -358,6 +359,34 @@ export function BloodDonationDashboard({ initialData }: Props) {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(Object.fromEntries(formData.entries()))
+                });
+              })
+            }
+          />
+        ) : null}
+
+        {modal === 'reward' && currentPlan ? (
+          <RewardOnlyForm
+            loading={loading}
+            defaultTitle={currentPlan.reward_title ?? ''}
+            defaultThaiTitle={currentPlan.reward_thai_title ?? ''}
+            defaultDescription={currentPlan.reward_description ?? ''}
+            defaultEmotionalCopy={currentPlan.reward_emotional_copy ?? ''}
+            defaultImageUrl={currentPlan.reward_image_url ?? ''}
+            onSubmit={(event) =>
+              submit(async () => {
+                event.preventDefault();
+                const formData = new FormData(event.currentTarget);
+                await fetch(`/api/blood-donation/events/${currentPlan.id}/reschedule`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    planned_date: currentPlan.planned_date,
+                    location: currentPlan.location ?? '',
+                    note: currentPlan.note ?? '',
+                    reward_status: currentPlan.reward_status ?? 'locked',
+                    ...Object.fromEntries(formData.entries())
+                  })
                 });
               })
             }
@@ -651,19 +680,21 @@ function RewardFields({
   defaultThaiTitle,
   defaultDescription,
   defaultEmotionalCopy,
-  defaultImageUrl
+  defaultImageUrl,
+  showAddButton = false
 }: {
   defaultTitle?: string;
   defaultThaiTitle?: string;
   defaultDescription?: string;
   defaultEmotionalCopy?: string;
   defaultImageUrl?: string;
+  showAddButton?: boolean;
 }) {
   return (
     <section className="space-y-3 rounded-xl border border-dashed border-cyan-300/35 bg-cyan-500/5 p-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-cyan-100">เพิ่ม Reward (Mission เฉพาะครั้งนี้)</p>
-        <button type="button" className="rounded-lg border border-cyan-200/35 px-3 py-1 text-xs text-cyan-100">+ เพิ่ม Reward</button>
+        {showAddButton ? <button type="button" className="rounded-lg border border-cyan-200/35 px-3 py-1 text-xs text-cyan-100">+ เพิ่ม Reward</button> : null}
       </div>
       <Input name="reward_title" label="Reward Title" defaultValue={defaultTitle} />
       <Input name="reward_thai_title" label="Reward Thai Title" defaultValue={defaultThaiTitle} />
@@ -677,5 +708,40 @@ function RewardFields({
       </label>
       <p className="rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2 text-xs text-slate-300">Preview Card: เมื่อทำ mission สำเร็จ คุณจะได้ชีวิตแบบในภาพนี้</p>
     </section>
+  );
+}
+
+function RewardOnlyForm({
+  loading,
+  onSubmit,
+  defaultTitle,
+  defaultThaiTitle,
+  defaultDescription,
+  defaultEmotionalCopy,
+  defaultImageUrl
+}: {
+  loading: boolean;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  defaultTitle: string;
+  defaultThaiTitle: string;
+  defaultDescription: string;
+  defaultEmotionalCopy: string;
+  defaultImageUrl: string;
+}) {
+  return (
+    <form className="w-full max-w-md space-y-3" onSubmit={onSubmit}>
+      <h4 className="text-lg font-semibold text-white">เพิ่ม/แก้ไข Reward</h4>
+      <p className="text-xs text-slate-300">อัปเดตรางวัลของ mission ปัจจุบัน</p>
+      <RewardFields
+        defaultTitle={defaultTitle}
+        defaultThaiTitle={defaultThaiTitle}
+        defaultDescription={defaultDescription}
+        defaultEmotionalCopy={defaultEmotionalCopy}
+        defaultImageUrl={defaultImageUrl}
+      />
+      <button disabled={loading} className="w-full rounded-full bg-cyan-500/20 px-4 py-2 text-sm text-cyan-100 disabled:opacity-60">
+        {loading ? 'Saving...' : 'Save Reward'}
+      </button>
+    </form>
   );
 }
