@@ -53,8 +53,8 @@ export function RewardPreviewCard({
         <div className="relative flex flex-col md:grid md:max-h-[380px] md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <RewardImage imageUrl={displayReward.imageUrl} title={displayReward.title} missionTitle={missionTitle} isLocked={isLocked} />
 
-          <div className="relative flex flex-col justify-between gap-4 p-5 sm:p-6">
-            <div className="space-y-4">
+          <div className="relative flex flex-col gap-5 p-5 sm:p-6">
+            <div className="space-y-5">
               <div className="flex items-start justify-between gap-3">
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${
@@ -80,25 +80,9 @@ export function RewardPreviewCard({
                   เพราะคุณทำ mission นี้สำเร็จ คุณจะได้ใช้ชีวิตในช่วงเวลาที่ตั้งใจไว้จริง ๆ
                 </p>
               </div>
-
-              <div className="rounded-2xl border border-white/15 bg-white/5 p-3 backdrop-blur-sm">
-                <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.15em] text-amber-100/75">
-                  <span>Unlock Progress</span>
-                  <span>{isClaimed ? '100%' : isLocked ? 'Pending' : 'Ready'}</span>
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      isClaimed
-                        ? 'w-full bg-gradient-to-r from-emerald-300 via-emerald-400 to-emerald-300'
-                        : isLocked
-                          ? 'w-1/3 bg-gradient-to-r from-amber-300/75 to-orange-300/70'
-                          : 'w-4/5 bg-gradient-to-r from-amber-200 to-orange-300'
-                    }`}
-                  />
-                </div>
-              </div>
             </div>
+
+            <div className="pt-1" />
 
             <button
               type="button"
