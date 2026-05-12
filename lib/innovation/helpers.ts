@@ -209,9 +209,6 @@ export function getCurrentMissionFocus(mission: InnovationCardViewModel | null):
   const inProgress = mission.steps.filter((step) => step.status === 'in_progress').sort(compareSteps)[0];
   if (inProgress) return inProgress;
 
-  const waiting = mission.steps.filter((step) => step.status === 'waiting').sort(compareSteps)[0];
-  if (waiting) return waiting;
-
   return null;
 }
 
