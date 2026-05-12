@@ -77,6 +77,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState>(null);
   const [selectedEvent, setSelectedEvent] = useState<BloodDonationEventViewModel | null>(null);
 
@@ -98,6 +99,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
     try {
       setLoading(true);
       setError(null);
+      setSuccessMessage(null);
       await handler();
       await refreshDashboard();
       setModal(null);
@@ -143,6 +145,14 @@ export function BloodDonationDashboard({ initialData }: Props) {
             reward={data.currentMission?.reward}
             isMissionCompleted={isCurrentMissionCompleted}
             onAddReward={() => setModal('reward')}
+            isClaimingReward={loading}
+            onClaimReward={() =>
+              submit(async () => {
+                if (!currentPlan) return;
+                await apiRequest(`/api/blood-donation/events/${currentPlan.id}/claim-reward`, { method: 'PATCH' });
+                setSuccessMessage('รับรางวัลสำเร็จ! ภารกิจนี้ถูกบันทึกว่า claimed แล้ว');
+              })
+            }
           />
 
           <section className="pt-0.5">
@@ -294,6 +304,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
         ) : null}
       </section>
 
+      {successMessage ? <p className="rounded-xl border border-emerald-400/35 bg-emerald-500/10 p-3 text-sm text-emerald-100">{successMessage}</p> : null}
       {error ? <p className="rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
 
       <ModalShell open={modal !== null} onClose={() => setModal(null)}>
