@@ -6,6 +6,8 @@ import { RunAttemptEvaluation, RunnerDashboardData, RunnerDashboardLevel, Runner
 import { RunnerQuestLogForm } from '@/components/health/RunnerQuestLogForm';
 import { HealthTodayMissionCard } from '@/components/health/HealthTodayMissionCard';
 import { claimHealthRewardAction, deleteHealthRewardAction, upsertHealthRewardAction } from '@/app/health/actions';
+import { RewardPreviewCard } from '@/components/rewards/RewardPreviewCard';
+import { RewardFormModal } from '@/components/rewards/RewardFormModal';
 
 // ...existing constants
 const resultLabel: Record<RunnerRunResult, string> = { passed:'ผ่านแล้ว', failed_distance:'ไม่ผ่าน: ระยะทาง', failed_pace:'ไม่ผ่าน: Pace', failed_stopped:'ไม่ผ่าน: หยุดวิ่ง', failed_multiple:'ไม่ผ่าน: หลายเงื่อนไข' };
@@ -20,20 +22,56 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
   const [open, setOpen] = useState(false);
   const reward = data.healthMissionReward;
   const missionDone = currentLevel?.progress?.status === 'passed';
-  const status = reward?.status === 'claimed' ? 'claimed' : missionDone ? 'unlocked' : 'locked';
   return (<section className="space-y-4 px-1">
     <HealthTodayMissionCard todayStatus={data.todayStatus} currentLevel={currentLevel} latestAttempt={currentLevel?.latestAttempt ?? null} />
 
-    <section className="pt-2 sm:pt-3">
-      {!reward ? <article className="rounded-3xl border border-dashed border-amber-200/35 bg-gradient-to-br from-[#2a1f12]/95 via-[#1f1710]/95 to-[#140f09]/95 p-5"><p className="text-xl font-semibold text-amber-50">ด่านนี้ยังไม่มีรางวัล</p><p className="mt-2 text-sm text-amber-100/85">ตั้งรางวัลเพื่อสร้างแรงจูงใจให้ตัวเอง</p><button onClick={()=>setOpen(true)} className="mt-3 rounded-xl border border-amber-300/40 px-4 py-2 text-amber-100">+ เพิ่ม Reward</button></article> :
-      <article className="rounded-3xl border border-amber-300/25 bg-gradient-to-br from-[#1c1410] via-[#251912] to-[#120f0c] p-5">
-        <div className="flex justify-between"><span className="rounded-full border px-3 py-1 text-xs text-amber-50">{status==='claimed'?'รับรางวัลแล้ว':status==='locked'?'ปลดล็อกเมื่อผ่านด่านนี้':'Reward Unlocked'}</span><div className="space-x-2"><button onClick={()=>setOpen(true)} className="text-xs text-amber-100">แก้ไข reward</button><form action={deleteHealthRewardAction} className="inline"><input type="hidden" name="level_id" value={currentLevel?.id ?? ''}/><button className="text-xs text-rose-200">ลบ reward</button></form></div></div>
-        <p className="mt-3 text-2xl font-semibold text-amber-50">{reward.title}</p><p className="text-sm text-amber-100/75">{reward.description}</p><p className="mt-2 text-sm italic text-amber-100/90">{reward.emotionalCopy}</p>
-        <form action={claimHealthRewardAction}><input type="hidden" name="level_id" value={currentLevel?.id ?? ''}/><button disabled={status!=='unlocked'||isPending} className="mt-4 w-full rounded-xl bg-amber-200 px-4 py-3 font-semibold text-[#2d1f10]">{status==='locked'?'ผ่านด่านนี้เพื่อปลดล็อก':status==='claimed'?'รับรางวัลนี้แล้ว':'Mark Reward Claimed'}</button></form>
-      </article>}
-    </section>
+    <RewardPreviewCard
+      missionTitle={currentLevel ? `Level ${currentLevel.level_number} · ${currentLevel.distance_target_km} km` : 'ภารกิจปัจจุบัน'}
+      emptyTitle="ด่านนี้ยังไม่มีรางวัล"
+      emptyDescription="ตั้งรางวัลเพื่อสร้างแรงจูงใจให้ตัวเอง"
+      lockedCta="ผ่านด่านนี้เพื่อปลดล็อก"
+      reward={reward ?? undefined}
+      isMissionCompleted={missionDone}
+      onAddReward={() => setOpen(true)}
+      onDeleteReward={() => {
+        if (!currentLevel) return;
+        const fd = new FormData();
+        fd.set('level_id', currentLevel.id);
+        start(async () => {
+          await deleteHealthRewardAction(fd);
+        });
+      }}
+      onClaimReward={() => {
+        if (!currentLevel) return;
+        const fd = new FormData();
+        fd.set('level_id', currentLevel.id);
+        start(async () => {
+          await claimHealthRewardAction(fd);
+        });
+      }}
+      isClaimingReward={isPending}
+    />
 
-    {open && currentLevel ? <form action={(fd)=>{start(async()=>{await upsertHealthRewardAction(fd);setOpen(false);});}} className="rounded-2xl border border-white/10 bg-slate-900 p-4"><input type="hidden" name="level_id" value={currentLevel.id}/><p className="mb-3 text-white">เพิ่ม/แก้ไข Reward</p><input name="title" defaultValue={reward?.title ?? 'Running Reward'} placeholder="reward title" className="mb-2 w-full rounded bg-slate-800 p-2 text-white"/><input name="description" defaultValue={reward?.description ?? 'รางวัลของคนที่ผ่านด่านวิ่งนี้ได้'} placeholder="short description" className="mb-2 w-full rounded bg-slate-800 p-2 text-white"/><input name="emotional_copy" defaultValue={reward?.emotionalCopy ?? 'เมื่อคุณผ่านด่านนี้ คุณไม่ได้แค่วิ่งครบ แต่คุณกำลังกลายเป็นคนที่แข็งแรงขึ้นจริง ๆ'} className="mb-2 w-full rounded bg-slate-800 p-2 text-white"/><input name="image_url" defaultValue={reward?.imageUrl ?? ''} placeholder="reward image URL" className="mb-2 w-full rounded bg-slate-800 p-2 text-white"/><div className="flex gap-2"><button type="submit" className="theme-button-primary">บันทึก</button><button type="button" onClick={()=>setOpen(false)} className="theme-button-secondary">ยกเลิก</button></div></form> : null}
+    {currentLevel ? (
+      <RewardFormModal
+        open={open}
+        levelId={currentLevel.id}
+        defaultValues={{
+          title: reward?.title,
+          description: reward?.description,
+          emotionalCopy: reward?.emotionalCopy,
+          imageUrl: reward?.imageUrl
+        }}
+        onClose={() => setOpen(false)}
+        onSubmit={(fd) => {
+          start(async () => {
+            await upsertHealthRewardAction(fd);
+            setOpen(false);
+          });
+        }}
+      />
+    ) : null}
+
 
     <div id="quick-log"><RunnerQuestLogForm currentLevel={currentLevel} /></div>
     <section><h3 className="mb-3 text-lg font-semibold text-white">ความคืบหน้าแต่ละระดับ</h3><section className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-5">{data.levels.map((level)=>{const evaluation=buildEvaluation(level); const isCurrent=currentLevel?.id===level.id; const isPassed=level.progress?.status==='passed'; const isLocked=level.progress?.status==='locked'; return <article key={level.id} className={`rounded-xl border p-3 ${isCurrent?'border-cyan-300/50 bg-[#0B2239]':isPassed?'border-emerald-400/30 bg-emerald-950/30':isLocked?'border-slate-600 bg-slate-900/90':'border-white/10 bg-[#111827]'}`}><div className="flex items-center justify-between gap-2"><p className="text-sm font-semibold text-white">Level {level.level_number}</p><span className={`rounded-full border px-2 py-0.5 text-xs ${statusBadge(level.progress?.status)}`}>{statusLabel(level.progress?.status)}</span></div><p className="mt-1 text-sm font-medium text-slate-100">{level.distance_target_km} km · {formatPace(level.pace_target_seconds_per_km)}</p><div className="mt-2 space-y-1 text-xs text-slate-200"><p>{evaluation && evaluation.distanceRemainingKm===0?'✅':'⬜'} ระยะถึงเป้า</p></div></article>;})}</section></section>
