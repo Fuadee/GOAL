@@ -24,11 +24,11 @@ const dateFormatter = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 
 const formatDate = (value: string | null) => (value ? dateFormatter.format(new Date(`${value}T00:00:00`)) : '-');
 
 const displayStatusMeta: Record<BloodDonationPlanDisplayStatus, { label: string; className: string }> = {
-  CURRENT: { label: 'แผนปัจจุบัน', className: 'bg-rose-500/20 text-rose-100 border border-rose-300/40' },
-  TODAY: { label: 'วันนี้', className: 'bg-orange-500/20 text-orange-100 border border-orange-300/40' },
-  SOON: { label: 'ใกล้ถึงกำหนด', className: 'bg-sky-500/20 text-sky-100 border border-sky-300/40' },
-  UPCOMING: { label: 'วางแผนไว้แล้ว', className: 'bg-blue-500/20 text-blue-100 border border-blue-300/40' },
-  OVERDUE: { label: 'เลยกำหนด', className: 'bg-amber-500/20 text-amber-100 border border-amber-300/40' },
+  CURRENT: { label: 'แผนปัจจุบัน', className: 'bg-cyan-400/12 text-cyan-100 border border-cyan-300/25' },
+  TODAY: { label: 'วันนี้', className: 'bg-cyan-400/10 text-cyan-100 border border-cyan-300/20' },
+  SOON: { label: 'ใกล้ถึงกำหนด', className: 'bg-cyan-400/10 text-cyan-100 border border-cyan-300/20' },
+  UPCOMING: { label: 'วางแผนไว้แล้ว', className: 'bg-slate-800/80 text-slate-200 border border-white/10' },
+  OVERDUE: { label: 'เลยกำหนด', className: 'bg-red-500/12 text-red-100 border border-red-300/20' },
   COMPLETED: { label: 'ทำแล้ว', className: 'bg-emerald-500/20 text-emerald-100 border border-emerald-300/40' },
   CANCELLED: { label: 'ยกเลิกแล้ว', className: 'bg-slate-500/30 text-slate-200 border border-slate-300/30' }
 };
@@ -62,13 +62,13 @@ async function apiRequest(input: RequestInfo | URL, init?: RequestInit) {
 
 const getPlanCardTone = (status: BloodDonationPlanDisplayStatus, isCurrent: boolean) => {
   if (isCurrent || status === 'CURRENT') {
-    return 'border-rose-300/60 bg-gradient-to-br from-rose-500/15 via-slate-900/80 to-purple-500/10 shadow-lg shadow-rose-900/30';
+    return 'border-cyan-400/20 bg-gradient-to-br from-[#0b1724] via-[#0b1522] to-[#111b2c] shadow-[0_10px_30px_-24px_rgba(45,212,191,0.35)]';
   }
 
-  if (status === 'OVERDUE') return 'border-amber-400/40 bg-amber-500/5';
-  if (status === 'TODAY') return 'border-orange-400/40 bg-orange-500/5';
+  if (status === 'OVERDUE') return 'border-red-300/20 bg-red-500/5';
+  if (status === 'TODAY') return 'border-cyan-400/20 bg-cyan-500/5';
   if (status === 'CANCELLED') return 'border-slate-500/40 bg-slate-900/50 opacity-80';
-  if (status === 'COMPLETED') return 'border-emerald-400/40 bg-emerald-500/5';
+  if (status === 'COMPLETED') return 'border-cyan-400/20 bg-cyan-500/5';
 
   return 'border-white/10 bg-slate-950/40';
 };
@@ -156,10 +156,10 @@ export function BloodDonationDashboard({ initialData }: Props) {
           />
 
           <section className="pt-0.5">
-            <article className="group relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-[#081227]/95 via-[#0e1a38]/92 to-[#11132d]/95 p-5 shadow-[0_26px_60px_-42px_rgba(14,116,255,0.65)] transition duration-500 hover:border-cyan-200/35 hover:shadow-[0_34px_72px_-44px_rgba(45,212,191,0.55)] md:p-6">
+            <article className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a1422]/95 via-[#0f1b2c]/95 to-[#121c2f]/95 p-5 shadow-[0_20px_44px_-38px_rgba(15,23,42,0.75)] transition duration-500 hover:border-cyan-300/20 hover:shadow-[0_24px_48px_-40px_rgba(45,212,191,0.25)] md:p-6">
               <div className="pointer-events-none absolute inset-0">
-                <div className="absolute -top-28 right-[-5rem] h-72 w-72 rounded-full bg-cyan-300/12 blur-3xl transition duration-500 group-hover:bg-cyan-300/20" />
-                <div className="absolute -bottom-28 left-[-4rem] h-64 w-64 rounded-full bg-indigo-400/14 blur-3xl" />
+                <div className="absolute -top-28 right-[-5rem] h-72 w-72 rounded-full bg-cyan-300/6 blur-3xl transition duration-500 group-hover:bg-cyan-300/10" />
+                <div className="absolute -bottom-28 left-[-4rem] h-64 w-64 rounded-full bg-slate-500/10 blur-3xl" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(255,255,255,0.13),transparent_52%)]" />
               </div>
               <div className="pointer-events-none absolute inset-[1px] rounded-[calc(1.5rem-1px)] border border-white/10" />
@@ -167,11 +167,11 @@ export function BloodDonationDashboard({ initialData }: Props) {
               <div className="relative">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-100/75">Mission Progress</p>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-100/75">Mission Progress</p>
                     <h3 className="mt-1 text-2xl font-medium tracking-tight text-white sm:text-[1.7rem]">บริจาคเลือดปีนี้</h3>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium uppercase tracking-[0.17em] text-cyan-100/90">{completedRatioLabel} Completed</p>
+                    <p className="text-sm font-medium uppercase tracking-[0.12em] text-cyan-100/90">{completedRatioLabel} Completed</p>
                     <p className="mt-1 text-xs text-slate-300/85">{summary.progressPercent}% complete</p>
                   </div>
                 </div>
@@ -179,11 +179,11 @@ export function BloodDonationDashboard({ initialData }: Props) {
                 <div className="relative mt-4">
                   <div className="h-5 rounded-full bg-white/10 p-[2px] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-8px_16px_rgba(15,23,42,0.65)]">
                     <div
-                      className="relative h-full rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 transition-all duration-1000 ease-out"
+                      className="relative h-full rounded-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-1000 ease-out"
                       style={{ width: `${summary.progressPercent}%` }}
                     >
                       {summary.progressPercent > 0 ? (
-                        <div className="absolute inset-0 rounded-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.38),transparent_65%)] shadow-[0_0_18px_rgba(56,189,248,0.8),0_0_34px_rgba(59,130,246,0.45)] animate-pulse" />
+                        <div className="absolute inset-0 rounded-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.38),transparent_65%)] shadow-[0_0_10px_rgba(45,212,191,0.45)]" />
                       ) : null}
                     </div>
                   </div>
@@ -197,7 +197,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
                         key={index}
                         className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition ${
                           isCompleted
-                            ? 'border-cyan-200/60 bg-cyan-300/20 text-cyan-50 shadow-[0_0_22px_-8px_rgba(34,211,238,0.95)]'
+                            ? 'border-cyan-300/25 bg-cyan-400/10 text-cyan-100'
                             : 'border-slate-300/20 bg-slate-800/55 text-slate-300'
                         }`}
                       >
@@ -213,7 +213,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
       ) : null}
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <article className="rounded-2xl border border-white/15 bg-slate-900/65 p-5 shadow-[0_20px_50px_-40px_rgba(15,23,42,1)] transition duration-300 hover:-translate-y-0.5 hover:border-cyan-200/30 hover:shadow-[0_24px_60px_-38px_rgba(56,189,248,0.35)]">
+        <article className="rounded-2xl border border-white/10 bg-[#121c2b]/88 p-5 shadow-[0_16px_36px_-32px_rgba(2,6,23,0.9)] transition duration-300 hover:border-cyan-300/15">
           <h3 className="text-xl font-medium text-white">Upcoming Plans</h3>
           {!data.upcomingPlans.length ? (
             <p className="mt-4 text-sm text-slate-400">ยังไม่มีแผนการบริจาค ลองเพิ่มวันแรกของคุณ</p>
@@ -244,7 +244,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
           )}
         </article>
 
-        <article className="rounded-2xl border border-white/15 bg-slate-900/65 p-5 shadow-[0_20px_50px_-40px_rgba(15,23,42,1)] transition duration-300 hover:-translate-y-0.5 hover:border-cyan-200/30 hover:shadow-[0_24px_60px_-38px_rgba(59,130,246,0.34)]">
+        <article className="rounded-2xl border border-white/15 bg-slate-900/65 p-5 shadow-[0_20px_50px_-40px_rgba(15,23,42,1)] transition duration-300 hover:-translate-y-0.5 hover:border-cyan-200/30 hover:border-cyan-300/15">
           <h3 className="text-xl font-medium text-white">Donation History</h3>
           {!data.history.length ? (
             <p className="mt-4 text-sm text-slate-400">ยังไม่มีประวัติ completed</p>
@@ -276,20 +276,20 @@ export function BloodDonationDashboard({ initialData }: Props) {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => setModal('goal')} className="rounded-full bg-rose-500/20 px-4 py-2 text-sm font-medium text-rose-200">
+            <button onClick={() => setModal('goal')} className="rounded-full border border-cyan-400/25 bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">
               {data.goal ? 'สร้าง Goal ใหม่' : 'สร้าง Goal แรก'}
             </button>
             <button
               onClick={() => setModal('planned')}
               disabled={!canManageEvents}
-              className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-full border border-white/10 bg-slate-800/85 px-4 py-2 text-sm font-medium text-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
               + วางแผนบริจาค
             </button>
             <button
               onClick={() => setModal('completed')}
               disabled={!canManageEvents}
-              className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-full border border-white/10 bg-slate-800/85 px-4 py-2 text-sm font-medium text-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
               + บันทึกว่าบริจาคแล้ว
             </button>
@@ -454,10 +454,10 @@ function BloodDonationNextMissionCard({
   const missionSummary = getNextBloodDonationMissionSummary(currentPlan);
 
   return (
-    <article className="relative overflow-hidden rounded-[1.75rem] border border-indigo-100/20 bg-gradient-to-br from-[#040816] via-[#0b1630] to-[#120f2c] p-4 shadow-[0_20px_50px_-34px_rgba(34,211,238,0.5)] sm:p-5">
+    <article className="relative overflow-hidden rounded-[1.75rem] border border-cyan-400/15 bg-gradient-to-br from-[#081321] via-[#0d1828] to-[#121f31] p-4 shadow-[0_14px_36px_-30px_rgba(45,212,191,0.35)] sm:p-5">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-20 right-[-4rem] h-56 w-56 rounded-full bg-cyan-300/15 blur-3xl" />
-        <div className="absolute -bottom-24 left-[-3rem] h-52 w-52 rounded-full bg-indigo-400/15 blur-3xl" />
+        <div className="absolute -top-20 right-[-4rem] h-56 w-56 rounded-full bg-cyan-300/8 blur-3xl" />
+        <div className="absolute -bottom-24 left-[-3rem] h-52 w-52 rounded-full bg-slate-500/10 blur-3xl" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_12%,rgba(255,255,255,0.11),transparent_52%)]" />
       </div>
       <div className="pointer-events-none absolute inset-[1px] rounded-[calc(1.75rem-1px)] border border-white/10" />
@@ -466,7 +466,7 @@ function BloodDonationNextMissionCard({
       <div className="relative">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-100/80">Next Mission</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-100/80">Next Mission</p>
             <h3 className="mt-1.5 text-[1.6rem] font-semibold tracking-tight text-white sm:text-[1.72rem]">ภารกิจถัดไป</h3>
             <p className="mt-1.5 text-[13px] leading-relaxed text-slate-200/85">{missionSummary.primaryText}</p>
           </div>
@@ -481,8 +481,8 @@ function BloodDonationNextMissionCard({
           <div className="mt-4 space-y-3.5">
             <div className="flex items-end justify-between gap-3">
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-cyan-100/75">Remaining</p>
-                <p className="mt-0.5 text-[2rem] font-semibold leading-none tracking-tight text-cyan-50 sm:text-[2.2rem]">{getCountdownLabel(currentPlan.planned_date, now)}</p>
+                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-cyan-100/70">Remaining</p>
+                <p className="mt-0.5 text-[2rem] font-semibold leading-none tracking-tight text-cyan-100 sm:text-[2.2rem]">{getCountdownLabel(currentPlan.planned_date, now)}</p>
               </div>
               <p className="pb-1 text-right text-base font-semibold leading-tight text-white sm:text-lg">{formatDate(currentPlan.planned_date)}</p>
             </div>
@@ -500,14 +500,14 @@ function BloodDonationNextMissionCard({
 
             <div className="space-y-2 pt-1 text-sm">
               <button
-                className="w-full rounded-xl border border-emerald-300/45 bg-gradient-to-b from-emerald-300/30 to-emerald-400/18 px-4 py-2.5 font-medium text-emerald-50 shadow-[0_10px_22px_-16px_rgba(16,185,129,0.95)] transition hover:brightness-110 active:translate-y-px"
+                className="w-full rounded-xl border border-cyan-400/25 bg-cyan-500 px-4 py-2.5 font-medium text-slate-950 shadow-[0_8px_18px_-14px_rgba(45,212,191,0.5)] transition hover:brightness-105 active:translate-y-px"
                 onClick={() => onMarkDone(currentPlan)}
               >
                 ทำจริงแล้ว
               </button>
               <div className="grid grid-cols-2 gap-2">
                 <button
-                  className="rounded-lg border border-cyan-200/30 bg-cyan-400/10 px-3 py-2 text-[13px] font-medium text-cyan-50 transition hover:bg-cyan-300/20 active:translate-y-px"
+                  className="rounded-lg border border-white/10 bg-slate-800/80 px-3 py-2 text-[13px] font-medium text-slate-200 transition hover:bg-slate-700/80 active:translate-y-px"
                   onClick={() => onReschedule(currentPlan)}
                 >
                   เลื่อนแผน
@@ -551,14 +551,14 @@ function BloodDonationPlanCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-lg font-semibold text-white">{formatDate(event.planned_date)}</p>
-          <p className="text-sm font-medium text-rose-100">{getCountdownLabel(event.planned_date, now)}</p>
+          <p className="text-sm font-medium text-cyan-100/85">{getCountdownLabel(event.planned_date, now)}</p>
           <p className="text-xs text-slate-400">{event.location || 'ไม่ระบุสถานที่'}</p>
           {event.note ? <p className="mt-1 text-sm text-slate-300">{event.note}</p> : null}
         </div>
 
         <div className="flex flex-col items-end gap-1">
           <span className={`rounded-full px-3 py-1 text-xs ${statusMeta.className}`}>{statusMeta.label}</span>
-          {isCurrent ? <span className="text-[11px] text-rose-200">โฟกัสตอนนี้</span> : null}
+          {isCurrent ? <span className="text-[11px] text-cyan-200/80">โฟกัสตอนนี้</span> : null}
         </div>
       </div>
 
