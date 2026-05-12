@@ -13,7 +13,9 @@ export function RewardPreviewCard({ missionTitle, reward, isMissionCompleted = f
   if (process.env.NODE_ENV === 'development') {
     console.log('[blood-donation] render RewardPreviewCard reward value', reward);
   }
-  if (!reward) {
+  const hasRewardContent = Boolean(reward?.title || reward?.imageUrl);
+
+  if (!hasRewardContent) {
     return (
       <section className="space-y-3 pt-0.5">
         <article className="rounded-2xl border border-dashed border-white/20 bg-slate-900/60 p-5">
@@ -32,7 +34,7 @@ export function RewardPreviewCard({ missionTitle, reward, isMissionCompleted = f
     );
   }
 
-  const displayReward = reward;
+  const displayReward = reward as BloodDonationReward;
   const rewardStatus = displayReward.status === 'claimed' ? 'claimed' : isMissionCompleted ? 'unlocked' : displayReward.status;
   const isUnlocked = rewardStatus !== 'locked';
 

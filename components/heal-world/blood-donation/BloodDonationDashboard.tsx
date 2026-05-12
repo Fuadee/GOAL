@@ -403,13 +403,20 @@ export function BloodDonationDashboard({ initialData }: Props) {
                   reward_status: currentPlan.reward_status ?? 'locked',
                   ...Object.fromEntries(formData.entries())
                 };
-                if (isDev) {
-                  console.log('[blood-donation] before save payload', payload);
-                }
-                await apiRequest(`/api/blood-donation/events/${currentPlan.id}/reschedule`, {
+                console.log('[blood-donation] save reward mission id', data.currentMission?.id);
+                console.log('[blood-donation] save reward payload', payload);
+                const response = await apiRequest(`/api/blood-donation/events/${currentPlan.id}/reschedule`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(payload)
+                }) as BloodDonationEventViewModel;
+                console.log('[blood-donation] save reward response fields', {
+                  reward_title: response?.reward_title,
+                  reward_thai_title: response?.reward_thai_title,
+                  reward_description: response?.reward_description,
+                  reward_emotional_copy: response?.reward_emotional_copy,
+                  reward_image_url: response?.reward_image_url,
+                  reward_status: response?.reward_status
                 });
               })
             }

@@ -59,14 +59,32 @@ export async function rescheduleBloodDonationEvent(
   id: string,
   payload: RescheduleBloodDonationEventPayload
 ): Promise<BloodDonationEventRow> {
-  const rows = await supabaseRestRequest<BloodDonationEventRow[]>(`blood_donation_events?id=eq.${id}`, 'PATCH', {
+  const updatePayload = {
     status: 'planned',
     planned_date: payload.planned_date,
     location: payload.location,
-    note: payload.note
+    note: payload.note,
+    reward_title: payload.reward_title,
+    reward_thai_title: payload.reward_thai_title,
+    reward_description: payload.reward_description,
+    reward_emotional_copy: payload.reward_emotional_copy,
+    reward_image_url: payload.reward_image_url,
+    reward_status: payload.reward_status
+  };
+
+  console.log('[blood-donation] update table blood_donation_events', {
+    where: `id=eq.${id}`,
+    fields: Object.keys(updatePayload)
   });
 
-  return rows[0];
+  await supabaseRestRequest<BloodDonationEventRow[]>(`blood_donation_events?id=eq.${id}`, 'PATCH', updatePayload);
+
+  const updatedRows = await supabaseRestRequest<BloodDonationEventRow[]>(`blood_donation_events?id=eq.${id}&limit=1`, 'GET');
+  const updatedRow = updatedRows[0];
+
+  console.log('[blood-donation] updated row from database', updatedRow);
+
+  return updatedRow;
 }
 
 export async function cancelBloodDonationEvent(id: string): Promise<BloodDonationEventRow> {
