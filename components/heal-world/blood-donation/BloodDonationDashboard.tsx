@@ -2,6 +2,7 @@
 
 import { FormEvent, ReactNode, useMemo, useState } from 'react';
 
+import { RewardPreviewCard } from '@/components/heal-the-world/RewardPreviewCard';
 import {
   BloodDonationPlanDisplayStatus,
   getBloodDonationPlanDisplayStatus,
@@ -55,6 +56,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
 
   const now = new Date();
   const currentPlan = useMemo(() => getCurrentBloodDonationPlan(data.upcomingPlans), [data.upcomingPlans]);
+  const isCurrentMissionCompleted = currentPlan?.status === 'completed';
 
   const refreshDashboard = async () => {
     const response = await fetch('/api/blood-donation', { cache: 'no-store' });
@@ -111,6 +113,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
               })
             }
           />
+          <RewardPreviewCard reward={data.reward} isMissionCompleted={isCurrentMissionCompleted} />
 
           <section className="pt-0.5">
             <article className="group relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-[#081227]/95 via-[#0e1a38]/92 to-[#11132d]/95 p-5 shadow-[0_26px_60px_-42px_rgba(14,116,255,0.65)] transition duration-500 hover:border-cyan-200/35 hover:shadow-[0_34px_72px_-44px_rgba(45,212,191,0.55)] md:p-6">

@@ -89,6 +89,17 @@ export type BloodDonationEventViewModel = BloodDonationEventRow & {
   isOverdue: boolean;
 };
 
+export type BloodDonationRewardStatus = 'locked' | 'unlocked' | 'claimed';
+
+export type BloodDonationReward = {
+  title: string;
+  thaiTitle: string;
+  description: string;
+  emotionalCopy: string;
+  imageUrl: string;
+  status: BloodDonationRewardStatus;
+};
+
 export type BloodDonationDashboardViewModel = {
   goal: BloodDonationGoalRow | null;
   events: BloodDonationEventRow[];
@@ -96,4 +107,5 @@ export type BloodDonationDashboardViewModel = {
   chance: BloodDonationChanceResult | null;
   upcomingPlans: BloodDonationEventViewModel[];
   history: BloodDonationEventViewModel[];
+  reward: BloodDonationReward | null;
 };
