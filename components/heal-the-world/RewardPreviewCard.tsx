@@ -1,6 +1,4 @@
 import Image from 'next/image';
-import { CheckCircle2, Gift, Lock } from 'lucide-react';
-
 import { BloodDonationReward } from '@/lib/blood-donation/types';
 
 type Props = {
@@ -56,7 +54,7 @@ export function RewardPreviewCard({
           <div className="p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
               <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${isClaimed ? 'border-emerald-300/40 bg-emerald-400/20 text-emerald-100' : isLocked ? 'border-amber-300/40 bg-amber-400/20 text-amber-100' : 'border-cyan-300/45 bg-cyan-400/20 text-cyan-100'}`}>
-                {isClaimed ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Gift className="h-3.5 w-3.5" />}
+                <span aria-hidden="true">{isClaimed ? '✅' : '🎁'}</span>
                 {isClaimed ? 'รับรางวัลแล้ว' : isLocked ? 'ทำภารกิจให้สำเร็จก่อน' : 'รางวัลของคุณ'}
               </span>
               <button type="button" onClick={onAddReward} className="text-xs text-cyan-100/80 hover:text-cyan-50">
@@ -108,7 +106,7 @@ function RewardImage({ imageUrl, title, missionTitle, isLocked }: { imageUrl?: s
       </span>
       {isLocked ? (
         <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-amber-200/40 bg-amber-500/25 px-3 py-1 text-xs font-medium text-amber-100">
-          <Lock className="h-3.5 w-3.5" /> ทำภารกิจให้สำเร็จก่อน
+          🔒 ทำภารกิจให้สำเร็จก่อน
         </span>
       ) : null}
       <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
