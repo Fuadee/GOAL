@@ -1,8 +1,8 @@
 'use client';
 
-import { ChangeEvent, FormEvent, ReactNode, useMemo, useState } from 'react';
-import Image from 'next/image';
+import { FormEvent, ReactNode, useMemo, useState } from 'react';
 
+import { RewardFormModal } from '@/components/rewards/RewardFormModal';
 import { RewardPreviewCard } from '@/components/heal-the-world/RewardPreviewCard';
 import {
   BloodDonationPlanDisplayStatus,
@@ -382,8 +382,6 @@ export function BloodDonationDashboard({ initialData }: Props) {
             defaultDate={selectedEvent.planned_date ?? ''}
             defaultLocation={selectedEvent.location ?? ''}
             defaultNote={selectedEvent.note ?? ''}
-            defaultRewardTitle={selectedEvent.reward_title ?? ''}
-            defaultRewardImageUrl={selectedEvent.reward_image_url ?? ''}
             loading={loading}
             onSubmit={(event) =>
               submit(async () => {
@@ -428,35 +426,32 @@ export function BloodDonationDashboard({ initialData }: Props) {
           />
         ) : null}
         {modal === 'reward' && currentPlan ? (
-          <RewardOnlyForm
-            loading={loading}
-            defaultTitle={currentPlan.reward_title ?? ''}
-            defaultImageUrl={currentPlan.reward_image_url ?? ''}
-            onSubmit={(event) =>
+          <RewardFormModal
+            open
+            levelId={currentPlan.id}
+            defaultValues={{
+              title: currentPlan.reward_title,
+              description: currentPlan.reward_description,
+              emotionalCopy: currentPlan.reward_emotional_copy,
+              imageUrl: currentPlan.reward_image_url
+            }}
+            onClose={() => setModal(null)}
+            onSubmit={(fd) =>
               submit(async () => {
-                event.preventDefault();
-                const formData = new FormData(event.currentTarget);
                 const payload = {
                   planned_date: currentPlan.planned_date,
                   location: currentPlan.location ?? '',
                   note: currentPlan.note ?? '',
-                  reward_status: currentPlan.reward_status ?? 'locked',
-                  ...Object.fromEntries(formData.entries())
+                  reward_title: String(fd.get('title') ?? ''),
+                  reward_description: String(fd.get('description') ?? ''),
+                  reward_emotional_copy: String(fd.get('emotional_copy') ?? ''),
+                  reward_image_url: String(fd.get('image_url') ?? ''),
+                  reward_status: String(currentPlan.reward_status ?? 'locked')
                 };
-                console.log('[blood-donation] save reward mission id', data.currentMission?.id);
-                console.log('[blood-donation] save reward payload', payload);
-                const response = await apiRequest(`/api/blood-donation/events/${currentPlan.id}/reschedule`, {
+                await apiRequest(`/api/blood-donation/events/${currentPlan.id}/reschedule`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(payload)
-                }) as BloodDonationEventViewModel;
-                console.log('[blood-donation] save reward response fields', {
-                  reward_title: response?.reward_title,
-                  reward_thai_title: response?.reward_thai_title,
-                  reward_description: response?.reward_description,
-                  reward_emotional_copy: response?.reward_emotional_copy,
-                  reward_image_url: response?.reward_image_url,
-                  reward_status: response?.reward_status
                 });
               })
             }
@@ -677,7 +672,6 @@ function GoalForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event: F
       <Input name="target_count" label="Target Count" type="number" defaultValue="3" required />
       <Input name="start_date" label="Start Date" type="date" required />
       <Input name="end_date" label="End Date" type="date" required />
-      <RewardFields />
       <button disabled={loading} className="rounded-full bg-rose-500/20 px-4 py-2 text-sm text-rose-100 disabled:opacity-60">
         {loading ? 'Saving...' : 'Save Goal'}
       </button>
@@ -693,7 +687,6 @@ function PlannedForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event
       <Input name="planned_date" label="Planned Date" type="date" required />
       <Input name="location" label="Location" />
       <Input name="note" label="Note" />
-      <RewardFields />
       <button disabled={loading} className="rounded-full bg-rose-500/20 px-4 py-2 text-sm text-rose-100 disabled:opacity-60">
         {loading ? 'Saving...' : 'Save Plan'}
       </button>
@@ -734,16 +727,12 @@ function RescheduleForm({
   defaultDate,
   defaultLocation,
   defaultNote,
-  defaultRewardTitle,
-  defaultRewardImageUrl,
   loading,
   onSubmit
 }: {
   defaultDate: string;
   defaultLocation: string;
   defaultNote: string;
-  defaultRewardTitle: string;
-  defaultRewardImageUrl: string;
   loading: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
@@ -754,10 +743,6 @@ function RescheduleForm({
       <Input name="planned_date" label="Planned Date" type="date" defaultValue={defaultDate} required />
       <Input name="location" label="Location" defaultValue={defaultLocation} />
       <Input name="note" label="Note" defaultValue={defaultNote} />
-      <RewardFields
-        defaultTitle={defaultRewardTitle}
-        defaultImageUrl={defaultRewardImageUrl}
-      />
       <button disabled={loading} className="rounded-full bg-blue-500/20 px-4 py-2 text-sm text-blue-100 disabled:opacity-60">
         {loading ? 'Saving...' : 'Save Changes'}
       </button>
@@ -765,69 +750,3 @@ function RescheduleForm({
   );
 }
 
-function RewardFields({
-  defaultTitle,
-  defaultImageUrl,
-  showAddButton = false
-}: {
-  defaultTitle?: string;
-  defaultImageUrl?: string;
-  showAddButton?: boolean;
-}) {
-  const [previewImageUrl, setPreviewImageUrl] = useState(defaultImageUrl ?? '');
-
-  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setPreviewImageUrl(typeof reader.result === 'string' ? reader.result : '');
-    reader.readAsDataURL(file);
-  };
-
-  return (
-    <section className="space-y-2.5 rounded-xl border border-dashed border-cyan-300/35 bg-cyan-500/5 p-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-cyan-100">เพิ่ม Reward (Mission เฉพาะครั้งนี้)</p>
-        {showAddButton ? <button type="button" className="rounded-lg border border-cyan-200/35 px-3 py-1 text-xs text-cyan-100">+ เพิ่ม Reward</button> : null}
-      </div>
-      <Input name="reward_title" label="Reward Title" defaultValue={defaultTitle} />
-      <input type="hidden" name="reward_image_url" value={previewImageUrl} />
-      <input type="hidden" name="reward_status" value="locked" />
-      <label className="space-y-1 text-sm text-slate-200">
-        <span>Reward Image Upload</span>
-        <input name="reward_image_upload" type="file" accept="image/*" onChange={handleImageUpload} className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 text-white outline-none file:mr-3 file:rounded-md file:border-0 file:bg-cyan-500/20 file:px-2.5 file:py-1 file:text-xs file:text-cyan-100" />
-      </label>
-      {previewImageUrl ? (
-        <div className="relative h-28 w-full overflow-hidden rounded-lg">
-          <Image src={previewImageUrl} alt="Reward preview" fill className="object-cover" sizes="100vw" />
-        </div>
-      ) : null}
-    </section>
-  );
-}
-
-function RewardOnlyForm({
-  loading,
-  onSubmit,
-  defaultTitle,
-  defaultImageUrl
-}: {
-  loading: boolean;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  defaultTitle: string;
-  defaultImageUrl: string;
-}) {
-  return (
-    <form className="w-full max-w-md space-y-3" onSubmit={onSubmit}>
-      <h4 className="text-lg font-semibold text-white">เพิ่ม/แก้ไข Reward</h4>
-      <p className="text-xs text-slate-300">อัปเดตรางวัลของ mission ปัจจุบัน</p>
-      <RewardFields
-        defaultTitle={defaultTitle}
-        defaultImageUrl={defaultImageUrl}
-      />
-      <button disabled={loading} className="w-full rounded-full bg-cyan-500/20 px-4 py-2 text-sm text-cyan-100 disabled:opacity-60">
-        {loading ? 'Saving...' : 'บันทึกรางวัล'}
-      </button>
-    </form>
-  );
-}
