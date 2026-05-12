@@ -48,10 +48,10 @@ export function RewardPreviewCard({
     <section className="space-y-3 pt-0.5">
       <article className="group relative overflow-hidden rounded-3xl border border-cyan-200/15 bg-gradient-to-br from-[#040816] via-[#0c1834] to-[#130f2f] shadow-[0_28px_60px_-40px_rgba(34,211,238,0.48)]">
         <div className="pointer-events-none absolute inset-[1px] rounded-[calc(1.5rem-1px)] border border-white/10" />
-        <div className="relative">
+        <div className="relative md:grid md:max-h-[340px] md:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
           <RewardImage imageUrl={displayReward.imageUrl} title={displayReward.title} missionTitle={missionTitle} isLocked={isLocked} />
 
-          <div className="p-4 sm:p-5">
+          <div className="flex flex-col p-4 sm:p-5 md:justify-between md:gap-4">
             <div className="flex items-center justify-between gap-3">
               <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${isClaimed ? 'border-emerald-300/40 bg-emerald-400/20 text-emerald-100' : isLocked ? 'border-amber-300/40 bg-amber-400/20 text-amber-100' : 'border-cyan-300/45 bg-cyan-400/20 text-cyan-100'}`}>
                 <span aria-hidden="true">{isClaimed ? '✅' : '🎁'}</span>
@@ -61,12 +61,11 @@ export function RewardPreviewCard({
                 แก้ไข reward
               </button>
             </div>
-
             <button
               type="button"
               disabled={isLocked || isClaimed || isClaimingReward}
               onClick={onClaimReward}
-              className="mt-4 w-full rounded-xl border border-cyan-300/45 bg-cyan-500/20 px-4 py-3 text-sm font-semibold text-cyan-50 transition hover:bg-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-4 w-full rounded-xl border border-cyan-300/45 bg-cyan-500/20 px-4 py-3 text-sm font-semibold text-cyan-50 transition hover:bg-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60 md:mt-0"
             >
               {isClaimed ? 'รับรางวัลแล้ว' : isLocked ? 'ปลดล็อกเมื่อภารกิจสำเร็จ' : isClaimingReward ? 'กำลังรับรางวัล...' : 'รับรางวัลเลย!'}
             </button>
@@ -80,20 +79,20 @@ export function RewardPreviewCard({
 function RewardImage({ imageUrl, title, missionTitle, isLocked }: { imageUrl?: string; title: string; missionTitle?: string; isLocked: boolean }) {
   if (!imageUrl) {
     return (
-      <div className="relative flex aspect-[16/9] items-center justify-center border-b border-white/10 bg-slate-950">
+      <div className="relative flex h-[220px] max-h-[240px] items-center justify-center border-b border-white/10 bg-slate-950 md:h-full md:max-h-[340px] md:min-h-[280px] md:border-b-0 md:border-r">
         <p className="text-sm text-slate-300">ยังไม่มีรูปภาพรางวัล</p>
       </div>
     );
   }
 
   return (
-    <div className="relative aspect-[16/9] overflow-hidden border-b border-white/10 bg-slate-950">
+    <div className="relative h-[220px] max-h-[240px] overflow-hidden border-b border-white/10 bg-slate-950 md:h-full md:max-h-[340px] md:min-h-[280px] md:border-b-0 md:border-r">
       <Image
         src={imageUrl}
         alt="Mission reward image"
         fill
-        className="object-cover"
-        sizes="100vw"
+        className="object-cover object-center"
+        sizes="(min-width: 768px) 45vw, 100vw"
         onError={(event) => {
           event.currentTarget.style.display = 'none';
           const placeholder = event.currentTarget.parentElement?.querySelector<HTMLElement>('[data-placeholder]');
@@ -110,8 +109,8 @@ function RewardImage({ imageUrl, title, missionTitle, isLocked }: { imageUrl?: s
         </span>
       ) : null}
       <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-        <p className="text-2xl font-semibold text-white sm:text-3xl">{title}</p>
-        <p className="mt-1 text-sm text-slate-200">รางวัลของคุณเมื่อทำภารกิจสำเร็จ · {missionTitle || 'ภารกิจปัจจุบัน'}</p>
+        <p className="line-clamp-2 text-xl font-semibold text-white sm:text-2xl">{title}</p>
+        <p className="mt-1 line-clamp-2 text-sm text-slate-200">รางวัลของคุณเมื่อทำภารกิจสำเร็จ · {missionTitle || 'ภารกิจปัจจุบัน'}</p>
       </div>
 
       <div
