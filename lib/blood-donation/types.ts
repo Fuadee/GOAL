@@ -93,11 +93,17 @@ export type BloodDonationRewardStatus = 'locked' | 'unlocked' | 'claimed';
 
 export type BloodDonationReward = {
   title: string;
-  thaiTitle: string;
+  thaiTitle?: string;
   description: string;
-  emotionalCopy: string;
-  imageUrl: string;
+  emotionalCopy?: string;
+  imageUrl?: string;
   status: BloodDonationRewardStatus;
+};
+
+export type BloodDonationMission = {
+  id: string;
+  title: string;
+  reward?: BloodDonationReward | null;
 };
 
 export type BloodDonationDashboardViewModel = {
@@ -107,5 +113,5 @@ export type BloodDonationDashboardViewModel = {
   chance: BloodDonationChanceResult | null;
   upcomingPlans: BloodDonationEventViewModel[];
   history: BloodDonationEventViewModel[];
-  reward: BloodDonationReward | null;
+  currentMission: BloodDonationMission | null;
 };

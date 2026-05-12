@@ -5,7 +5,8 @@ import {
   getUpcomingBloodDonationPlans
 } from '@/lib/blood-donation/logic';
 import { getActiveBloodDonationGoal, getBloodDonationEventsByGoalId } from '@/lib/blood-donation/queries';
-import { BloodDonationDashboardViewModel, BloodDonationReward } from '@/lib/blood-donation/types';
+import { BloodDonationDashboardViewModel, BloodDonationMission, BloodDonationReward } from '@/lib/blood-donation/types';
+import { getCurrentBloodDonationPlan } from '@/lib/blood-donation/plan-display';
 
 const defaultReward = (status: BloodDonationReward['status']): BloodDonationReward => ({
   title: 'Japanese Solo Reward',
@@ -14,6 +15,12 @@ const defaultReward = (status: BloodDonationReward['status']): BloodDonationRewa
   emotionalCopy: 'ไม่ใช่แค่กิน แต่คือการฉลองว่าฉันทำเรื่องดีสำเร็จแล้ว',
   imageUrl: '/rewards/japanese-solo-reward.jpg',
   status
+});
+
+const createCurrentMission = (status: BloodDonationReward['status']): BloodDonationMission => ({
+  id: 'blood-donation',
+  title: 'บริจาคเลือดปีนี้',
+  reward: defaultReward(status)
 });
 
 export async function getBloodDonationDashboardData(today = new Date()): Promise<BloodDonationDashboardViewModel> {
@@ -27,20 +34,22 @@ export async function getBloodDonationDashboardData(today = new Date()): Promise
       chance: null,
       upcomingPlans: [],
       history: [],
-      reward: defaultReward('locked')
+      currentMission: null
     };
   }
 
   const events = await getBloodDonationEventsByGoalId(goal.id);
-  const hasCompleted = events.some((event) => event.status === 'completed');
+  const upcomingPlans = getUpcomingBloodDonationPlans(events, today);
+  const currentPlan = getCurrentBloodDonationPlan(upcomingPlans);
+  const missionRewardStatus: BloodDonationReward['status'] = currentPlan?.status === 'completed' ? 'unlocked' : 'locked';
 
   return {
     goal,
     events,
     summary: getBloodDonationSummary(goal, events, today),
     chance: getChanceToReachBloodDonationGoal(goal, events, today),
-    upcomingPlans: getUpcomingBloodDonationPlans(events, today),
+    upcomingPlans,
     history: getBloodDonationHistory(events),
-    reward: defaultReward(hasCompleted ? 'unlocked' : 'locked')
+    currentMission: createCurrentMission(missionRewardStatus)
   };
 }
