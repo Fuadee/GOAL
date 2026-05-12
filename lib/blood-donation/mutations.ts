@@ -94,3 +94,11 @@ export async function cancelBloodDonationEvent(id: string): Promise<BloodDonatio
 
   return rows[0];
 }
+
+export async function updateBloodDonationRewardStatus(id: string, rewardStatus: 'locked' | 'unlocked' | 'claimed'): Promise<BloodDonationEventRow> {
+  const rows = await supabaseRestRequest<BloodDonationEventRow[]>(`blood_donation_events?id=eq.${id}`, 'PATCH', {
+    reward_status: rewardStatus
+  });
+
+  return rows[0];
+}
