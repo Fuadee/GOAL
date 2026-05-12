@@ -6,9 +6,10 @@ type Props = {
   missionTitle?: string;
   reward?: BloodDonationReward | null;
   isMissionCompleted?: boolean;
+  onAddReward?: () => void;
 };
 
-export function RewardPreviewCard({ missionTitle, reward, isMissionCompleted = false }: Props) {
+export function RewardPreviewCard({ missionTitle, reward, isMissionCompleted = false, onAddReward }: Props) {
   if (!reward) {
     return (
       <section className="space-y-3 pt-0.5">
@@ -16,7 +17,11 @@ export function RewardPreviewCard({ missionTitle, reward, isMissionCompleted = f
           <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-100/75">Reward Preview · Current Mission</p>
           <h3 className="mt-2 text-lg font-medium text-white">{missionTitle || 'ภารกิจปัจจุบัน'}</h3>
           <p className="mt-3 text-sm text-slate-300">ภารกิจนี้ยังไม่มีรางวัล</p>
-          <button type="button" className="mt-4 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/15">
+          <button
+            type="button"
+            onClick={onAddReward}
+            className="mt-4 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/15"
+          >
             + เพิ่ม Reward
           </button>
         </article>
