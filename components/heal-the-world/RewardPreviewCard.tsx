@@ -36,16 +36,15 @@ export function RewardPreviewCard({ missionTitle, reward, isMissionCompleted = f
   return (
     <section className="space-y-3 pt-0.5">
       <article className="overflow-hidden rounded-2xl border border-white/15 bg-slate-900/70 shadow-[0_22px_52px_-40px_rgba(15,23,42,1)]">
-        <div className="grid md:grid-cols-[1.1fr,1.4fr]">
+        <div className="grid gap-0 md:grid-cols-[1fr,1.1fr]">
           <RewardImage imageUrl={displayReward.imageUrl} />
 
-          <div className="space-y-3 p-4 sm:p-5 md:p-6">
+          <div className="space-y-2 p-3.5 sm:p-4">
             <div className="flex flex-wrap items-start justify-between gap-2.5">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-100/75">Reward Preview · Current Mission</p>
                 <p className="mt-1 text-xs text-cyan-100/75">ภารกิจ: {missionTitle || 'ภารกิจปัจจุบัน'}</p>
-                <h3 className="mt-1 text-2xl font-medium tracking-tight text-white">{displayReward.title}</h3>
-                <p className="mt-1 text-sm text-slate-200">{displayReward.thaiTitle}</p>
+                <h3 className="mt-1 text-xl font-medium tracking-tight text-white">{displayReward.title}</h3>
               </div>
               <span
                 className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${
@@ -57,27 +56,9 @@ export function RewardPreviewCard({ missionTitle, reward, isMissionCompleted = f
                 {isUnlocked ? 'Reward Unlocked' : 'ปลดล็อกเมื่อทำสำเร็จ'}
               </span>
             </div>
-
-            <p className="text-sm leading-relaxed text-slate-200">{displayReward.description}</p>
-            {displayReward.emotionalCopy ? <p className="text-sm italic leading-relaxed text-cyan-100/90">“{displayReward.emotionalCopy}”</p> : null}
-
-            <button
-              type="button"
-              className={`w-full rounded-xl px-4 py-2.5 text-sm font-medium transition sm:w-auto ${
-                isUnlocked
-                  ? 'bg-emerald-500/20 text-emerald-100 hover:bg-emerald-500/30'
-                  : 'bg-white/10 text-white hover:bg-white/15'
-              }`}
-            >
-              {isUnlocked ? 'บันทึกความทรงจำรางวัลนี้' : 'ทำภารกิจให้สำเร็จเพื่อปลดล็อก'}
-            </button>
           </div>
         </div>
       </article>
-
-      <p className="px-1 text-xs leading-relaxed text-slate-400 sm:text-sm">
-        ตั้งรางวัลเพื่อสร้างแรงจูงใจให้ตัวเอง แล้วใช้ภาพนี้พาตัวเองไปถึงวันที่ภารกิจสำเร็จ
-      </p>
     </section>
   );
 }
