@@ -1,6 +1,7 @@
 'use client';
 
-import { FormEvent, ReactNode, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, ReactNode, useMemo, useState } from 'react';
+import Image from 'next/image';
 
 import { RewardPreviewCard } from '@/components/heal-the-world/RewardPreviewCard';
 import {
@@ -346,9 +347,6 @@ export function BloodDonationDashboard({ initialData }: Props) {
             defaultLocation={selectedEvent.location ?? ''}
             defaultNote={selectedEvent.note ?? ''}
             defaultRewardTitle={selectedEvent.reward_title ?? ''}
-            defaultRewardThaiTitle={selectedEvent.reward_thai_title ?? ''}
-            defaultRewardDescription={selectedEvent.reward_description ?? ''}
-            defaultRewardEmotionalCopy={selectedEvent.reward_emotional_copy ?? ''}
             defaultRewardImageUrl={selectedEvent.reward_image_url ?? ''}
             loading={loading}
             onSubmit={(event) =>
@@ -369,9 +367,6 @@ export function BloodDonationDashboard({ initialData }: Props) {
           <RewardOnlyForm
             loading={loading}
             defaultTitle={currentPlan.reward_title ?? ''}
-            defaultThaiTitle={currentPlan.reward_thai_title ?? ''}
-            defaultDescription={currentPlan.reward_description ?? ''}
-            defaultEmotionalCopy={currentPlan.reward_emotional_copy ?? ''}
             defaultImageUrl={currentPlan.reward_image_url ?? ''}
             onSubmit={(event) =>
               submit(async () => {
@@ -636,9 +631,6 @@ function RescheduleForm({
   defaultLocation,
   defaultNote,
   defaultRewardTitle,
-  defaultRewardThaiTitle,
-  defaultRewardDescription,
-  defaultRewardEmotionalCopy,
   defaultRewardImageUrl,
   loading,
   onSubmit
@@ -647,9 +639,6 @@ function RescheduleForm({
   defaultLocation: string;
   defaultNote: string;
   defaultRewardTitle: string;
-  defaultRewardThaiTitle: string;
-  defaultRewardDescription: string;
-  defaultRewardEmotionalCopy: string;
   defaultRewardImageUrl: string;
   loading: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -663,9 +652,6 @@ function RescheduleForm({
       <Input name="note" label="Note" defaultValue={defaultNote} />
       <RewardFields
         defaultTitle={defaultRewardTitle}
-        defaultThaiTitle={defaultRewardThaiTitle}
-        defaultDescription={defaultRewardDescription}
-        defaultEmotionalCopy={defaultRewardEmotionalCopy}
         defaultImageUrl={defaultRewardImageUrl}
       />
       <button disabled={loading} className="rounded-full bg-blue-500/20 px-4 py-2 text-sm text-blue-100 disabled:opacity-60">
@@ -677,36 +663,41 @@ function RescheduleForm({
 
 function RewardFields({
   defaultTitle,
-  defaultThaiTitle,
-  defaultDescription,
-  defaultEmotionalCopy,
   defaultImageUrl,
   showAddButton = false
 }: {
   defaultTitle?: string;
-  defaultThaiTitle?: string;
-  defaultDescription?: string;
-  defaultEmotionalCopy?: string;
   defaultImageUrl?: string;
   showAddButton?: boolean;
 }) {
+  const [previewImageUrl, setPreviewImageUrl] = useState(defaultImageUrl ?? '');
+
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setPreviewImageUrl(typeof reader.result === 'string' ? reader.result : '');
+    reader.readAsDataURL(file);
+  };
+
   return (
-    <section className="space-y-3 rounded-xl border border-dashed border-cyan-300/35 bg-cyan-500/5 p-3">
+    <section className="space-y-2.5 rounded-xl border border-dashed border-cyan-300/35 bg-cyan-500/5 p-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-cyan-100">เพิ่ม Reward (Mission เฉพาะครั้งนี้)</p>
         {showAddButton ? <button type="button" className="rounded-lg border border-cyan-200/35 px-3 py-1 text-xs text-cyan-100">+ เพิ่ม Reward</button> : null}
       </div>
       <Input name="reward_title" label="Reward Title" defaultValue={defaultTitle} />
-      <Input name="reward_thai_title" label="Reward Thai Title" defaultValue={defaultThaiTitle} />
-      <Input name="reward_description" label="Reward Short Description" defaultValue={defaultDescription} />
-      <Input name="reward_emotional_copy" label="Emotional Copy" defaultValue={defaultEmotionalCopy} />
-      <Input name="reward_image_url" label="Reward Image URL" defaultValue={defaultImageUrl} />
-      <Input name="reward_status" label="Reward Status (locked/unlocked/claimed)" defaultValue="locked" />
+      <input type="hidden" name="reward_image_url" value={previewImageUrl} />
+      <input type="hidden" name="reward_status" value="locked" />
       <label className="space-y-1 text-sm text-slate-200">
         <span>Reward Image Upload</span>
-        <input name="reward_image_upload" type="file" accept="image/*" className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 text-white outline-none file:mr-3 file:rounded-md file:border-0 file:bg-cyan-500/20 file:px-2.5 file:py-1 file:text-xs file:text-cyan-100" />
+        <input name="reward_image_upload" type="file" accept="image/*" onChange={handleImageUpload} className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 text-white outline-none file:mr-3 file:rounded-md file:border-0 file:bg-cyan-500/20 file:px-2.5 file:py-1 file:text-xs file:text-cyan-100" />
       </label>
-      <p className="rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2 text-xs text-slate-300">Preview Card: เมื่อทำ mission สำเร็จ คุณจะได้ชีวิตแบบในภาพนี้</p>
+      {previewImageUrl ? (
+        <div className="relative h-28 w-full overflow-hidden rounded-lg">
+          <Image src={previewImageUrl} alt="Reward preview" fill className="object-cover" sizes="100vw" />
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -715,17 +706,11 @@ function RewardOnlyForm({
   loading,
   onSubmit,
   defaultTitle,
-  defaultThaiTitle,
-  defaultDescription,
-  defaultEmotionalCopy,
   defaultImageUrl
 }: {
   loading: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   defaultTitle: string;
-  defaultThaiTitle: string;
-  defaultDescription: string;
-  defaultEmotionalCopy: string;
   defaultImageUrl: string;
 }) {
   return (
@@ -734,13 +719,10 @@ function RewardOnlyForm({
       <p className="text-xs text-slate-300">อัปเดตรางวัลของ mission ปัจจุบัน</p>
       <RewardFields
         defaultTitle={defaultTitle}
-        defaultThaiTitle={defaultThaiTitle}
-        defaultDescription={defaultDescription}
-        defaultEmotionalCopy={defaultEmotionalCopy}
         defaultImageUrl={defaultImageUrl}
       />
       <button disabled={loading} className="w-full rounded-full bg-cyan-500/20 px-4 py-2 text-sm text-cyan-100 disabled:opacity-60">
-        {loading ? 'Saving...' : 'Save Reward'}
+        {loading ? 'Saving...' : 'บันทึกรางวัล'}
       </button>
     </form>
   );
