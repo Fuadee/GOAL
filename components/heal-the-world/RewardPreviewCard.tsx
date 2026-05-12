@@ -92,7 +92,7 @@ export function RewardPreviewCard({
                 <p className="text-2xl font-semibold leading-tight text-amber-50 sm:text-[1.75rem]">{displayReward.title}</p>
                 <p className="text-sm text-amber-100/75">{missionTitle || 'ภารกิจปัจจุบัน'}</p>
                 <p className="text-sm italic leading-relaxed text-amber-100/90">
-                  เพราะคุณทำ mission นี้สำเร็จ คุณจะได้ใช้ชีวิตในช่วงเวลาที่ตั้งใจไว้จริง ๆ
+                  {displayReward.emotionalCopy || displayReward.description || 'ทำภารกิจนี้ให้สำเร็จ แล้วปลดล็อกช่วงเวลาที่ตั้งใจไว้ให้ตัวเอง'}
                 </p>
               </div>
             </div>
