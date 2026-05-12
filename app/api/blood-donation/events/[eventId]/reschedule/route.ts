@@ -21,7 +21,7 @@ export async function PATCH(request: Request, { params }: { params: { eventId: s
       reward_description: body.reward_description,
       reward_emotional_copy: body.reward_emotional_copy,
       reward_image_url: body.reward_image_url,
-      reward_status: body.reward_status || 'locked'
+      reward_status: body.reward_status
     });
 
     console.log('[blood-donation] reschedule route updated reward fields', {

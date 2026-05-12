@@ -6,6 +6,7 @@ type Props = {
   reward?: BloodDonationReward | null;
   isMissionCompleted?: boolean;
   onAddReward?: () => void;
+  onDeleteReward?: () => void;
   onClaimReward?: () => void;
   isClaimingReward?: boolean;
 };
@@ -15,6 +16,7 @@ export function RewardPreviewCard({
   reward,
   isMissionCompleted = false,
   onAddReward,
+  onDeleteReward,
   onClaimReward,
   isClaimingReward = false
 }: Props) {
@@ -68,9 +70,22 @@ export function RewardPreviewCard({
                   <span aria-hidden="true">{isClaimed ? '✅' : isLocked ? '🔒' : '🏆'}</span>
                   {isClaimed ? 'รับรางวัลแล้ว' : isLocked ? 'Locked Reward' : 'Unlocked Reward'}
                 </span>
-                <button type="button" onClick={onAddReward} className="text-xs text-amber-100/75 transition hover:text-amber-50">
-                  แก้ไข reward
-                </button>
+                <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-2.5">
+                  <button
+                    type="button"
+                    onClick={onDeleteReward}
+                    className="min-h-9 rounded-lg border border-rose-300/20 bg-rose-400/5 px-3 py-1.5 text-xs font-medium text-rose-100/75 transition hover:border-rose-300/35 hover:bg-rose-400/15 hover:text-rose-50"
+                  >
+                    ลบ reward
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onAddReward}
+                    className="min-h-9 rounded-lg border border-amber-200/20 bg-amber-300/5 px-3 py-1.5 text-xs font-medium text-amber-100/80 transition hover:border-amber-200/35 hover:bg-amber-300/15 hover:text-amber-50"
+                  >
+                    แก้ไข reward
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">

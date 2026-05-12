@@ -17,7 +17,7 @@ type Props = {
   initialData: BloodDonationDashboardViewModel;
 };
 
-type ModalState = 'goal' | 'planned' | 'completed' | 'convert' | 'reschedule' | 'reward' | null;
+type ModalState = 'goal' | 'planned' | 'completed' | 'convert' | 'reschedule' | 'reward' | 'deleteReward' | null;
 
 const dateFormatter = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -145,6 +145,7 @@ export function BloodDonationDashboard({ initialData }: Props) {
             reward={data.currentMission?.reward}
             isMissionCompleted={isCurrentMissionCompleted}
             onAddReward={() => setModal('reward')}
+            onDeleteReward={() => setModal('deleteReward')}
             isClaimingReward={loading}
             onClaimReward={() =>
               submit(async () => {
@@ -398,6 +399,34 @@ export function BloodDonationDashboard({ initialData }: Props) {
           />
         ) : null}
 
+
+        {modal === 'deleteReward' && currentPlan ? (
+          <DeleteRewardConfirm
+            loading={loading}
+            onCancel={() => setModal(null)}
+            onConfirm={() =>
+              submit(async () => {
+                const payload = {
+                  planned_date: currentPlan.planned_date,
+                  location: currentPlan.location ?? '',
+                  note: currentPlan.note ?? '',
+                  reward_title: null,
+                  reward_thai_title: null,
+                  reward_description: null,
+                  reward_emotional_copy: null,
+                  reward_image_url: null,
+                  reward_status: null
+                };
+                await apiRequest(`/api/blood-donation/events/${currentPlan.id}/reschedule`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+                });
+                setSuccessMessage('ลบ reward ออกจากภารกิจเรียบร้อยแล้ว');
+              })
+            }
+          />
+        ) : null}
         {modal === 'reward' && currentPlan ? (
           <RewardOnlyForm
             loading={loading}
@@ -435,6 +464,35 @@ export function BloodDonationDashboard({ initialData }: Props) {
         ) : null}
       </ModalShell>
     </section>
+  );
+}
+
+
+function DeleteRewardConfirm({ loading, onCancel, onConfirm }: { loading: boolean; onCancel: () => void; onConfirm: () => void }) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <h4 className="text-lg font-semibold text-white">ลบรางวัลนี้ออกจากภารกิจ?</h4>
+        <p className="mt-1 text-sm text-slate-300">คุณสามารถเพิ่ม reward ใหม่ภายหลังได้</p>
+      </div>
+      <div className="flex flex-wrap justify-end gap-2.5">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="min-h-10 rounded-xl border border-white/15 bg-slate-800/85 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-700/85"
+        >
+          ยกเลิก
+        </button>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={onConfirm}
+          className="min-h-10 rounded-xl border border-rose-300/30 bg-rose-500/12 px-4 py-2 text-sm font-medium text-rose-100 transition hover:bg-rose-500/22 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {loading ? 'กำลังลบ...' : 'ลบ reward'}
+        </button>
+      </div>
+    </div>
   );
 }
 
