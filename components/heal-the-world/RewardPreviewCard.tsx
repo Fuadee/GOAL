@@ -23,14 +23,15 @@ export function RewardPreviewCard({
   if (!hasRewardContent) {
     return (
       <section className="space-y-3 pt-0.5">
-        <article className="rounded-2xl border border-dashed border-white/15 bg-[#121c2b]/85 p-5">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-cyan-100/75">Reward Preview · Current Mission</p>
-          <h3 className="mt-2 text-lg font-medium text-white">{missionTitle || 'ภารกิจปัจจุบัน'}</h3>
-          <p className="mt-3 text-sm text-slate-300">ภารกิจนี้ยังไม่มีรางวัล</p>
+        <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-amber-200/70">Reward Preview</p>
+        <article className="rounded-3xl border border-dashed border-amber-200/35 bg-gradient-to-br from-[#2a1f12]/95 via-[#1f1710]/95 to-[#140f09]/95 p-5 shadow-[0_18px_36px_-30px_rgba(251,191,36,0.45)]">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-amber-100/80">Current Mission</p>
+          <h3 className="mt-2 text-xl font-semibold text-amber-50">{missionTitle || 'ภารกิจปัจจุบัน'}</h3>
+          <p className="mt-3 text-sm text-amber-100/85">ภารกิจนี้ยังไม่มีรางวัล ลองเพิ่มภาพ Moment ที่คุณอยากได้เมื่อทำสำเร็จ</p>
           <button
             type="button"
             onClick={onAddReward}
-            className="mt-4 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/15"
+            className="mt-4 rounded-xl border border-amber-300/40 bg-amber-300/10 px-4 py-2.5 text-sm font-medium text-amber-100 transition hover:bg-amber-300/20"
           >
             + เพิ่ม Reward
           </button>
@@ -46,28 +47,74 @@ export function RewardPreviewCard({
 
   return (
     <section className="space-y-3 pt-0.5">
-      <article className="group relative overflow-hidden rounded-3xl border border-cyan-400/15 bg-gradient-to-br from-[#0a1422] via-[#0f1b2c] to-[#132238] shadow-[0_18px_42px_-34px_rgba(45,212,191,0.28)]">
+      <p className="pl-1 text-[10px] font-medium uppercase tracking-[0.35em] text-amber-200/75">Reward Preview</p>
+      <article className="group relative overflow-hidden rounded-3xl border border-amber-300/25 bg-gradient-to-br from-[#1c1410] via-[#251912] to-[#120f0c] shadow-[0_28px_70px_-38px_rgba(251,146,60,0.65)] transition duration-500 hover:shadow-[0_32px_85px_-35px_rgba(251,146,60,0.75)]">
+        <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.17),transparent_50%)]" />
         <div className="pointer-events-none absolute inset-[1px] rounded-[calc(1.5rem-1px)] border border-white/10" />
-        <div className="relative md:grid md:max-h-[340px] md:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+
+        <div className="relative flex flex-col md:grid md:max-h-[380px] md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <RewardImage imageUrl={displayReward.imageUrl} title={displayReward.title} missionTitle={missionTitle} isLocked={isLocked} />
 
-          <div className="flex flex-col p-4 sm:p-5 md:justify-between md:gap-4">
-            <div className="flex items-center justify-between gap-3">
-              <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${isClaimed ? 'border-cyan-300/25 bg-cyan-400/12 text-cyan-100' : isLocked ? 'border-white/15 bg-slate-800/80 text-slate-200' : 'border-cyan-300/30 bg-cyan-400/15 text-cyan-100'}`}>
-                <span aria-hidden="true">{isClaimed ? '✅' : '🎁'}</span>
-                {isClaimed ? 'รับรางวัลแล้ว' : isLocked ? 'ทำภารกิจให้สำเร็จก่อน' : 'รางวัลของคุณ'}
-              </span>
-              <button type="button" onClick={onAddReward} className="text-xs text-slate-300 hover:text-slate-100">
-                แก้ไข reward
-              </button>
+          <div className="relative flex flex-col justify-between gap-4 p-5 sm:p-6">
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${
+                    isClaimed
+                      ? 'border-emerald-300/40 bg-emerald-300/20 text-emerald-100'
+                      : isLocked
+                        ? 'border-amber-300/35 bg-amber-300/20 text-amber-100'
+                        : 'border-amber-200/45 bg-amber-300/30 text-amber-50'
+                  }`}
+                >
+                  <span aria-hidden="true">{isClaimed ? '✅' : isLocked ? '🔒' : '🏆'}</span>
+                  {isClaimed ? 'รับรางวัลแล้ว' : isLocked ? 'Locked Reward' : 'Unlocked Reward'}
+                </span>
+                <button type="button" onClick={onAddReward} className="text-xs text-amber-100/75 transition hover:text-amber-50">
+                  แก้ไข reward
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-2xl font-semibold leading-tight text-amber-50 sm:text-[1.75rem]">{displayReward.title}</p>
+                <p className="text-sm text-amber-100/75">{missionTitle || 'ภารกิจปัจจุบัน'}</p>
+                <p className="text-sm italic leading-relaxed text-amber-100/90">
+                  เพราะคุณทำ mission นี้สำเร็จ คุณจะได้ใช้ชีวิตในช่วงเวลาที่ตั้งใจไว้จริง ๆ
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/15 bg-white/5 p-3 backdrop-blur-sm">
+                <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.15em] text-amber-100/75">
+                  <span>Unlock Progress</span>
+                  <span>{isClaimed ? '100%' : isLocked ? 'Pending' : 'Ready'}</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      isClaimed
+                        ? 'w-full bg-gradient-to-r from-emerald-300 via-emerald-400 to-emerald-300'
+                        : isLocked
+                          ? 'w-1/3 bg-gradient-to-r from-amber-300/75 to-orange-300/70'
+                          : 'w-4/5 bg-gradient-to-r from-amber-200 to-orange-300'
+                    }`}
+                  />
+                </div>
+              </div>
             </div>
+
             <button
               type="button"
               disabled={isLocked || isClaimed || isClaimingReward}
               onClick={onClaimReward}
-              className="mt-4 w-full rounded-xl border border-cyan-400/25 bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 md:mt-0"
+              className="w-full rounded-xl border border-amber-100/40 bg-gradient-to-r from-amber-200 via-orange-200 to-amber-100 px-4 py-3 text-sm font-semibold text-[#2d1f10] shadow-[0_12px_24px_-14px_rgba(253,186,116,0.95)] transition duration-300 hover:scale-[1.01] hover:shadow-[0_16px_28px_-12px_rgba(253,186,116,0.95)] disabled:cursor-not-allowed disabled:brightness-75"
             >
-              {isClaimed ? 'รับรางวัลแล้ว' : isLocked ? 'ปลดล็อกเมื่อภารกิจสำเร็จ' : isClaimingReward ? 'กำลังรับรางวัล...' : 'รับรางวัลเลย!'}
+              {isClaimed
+                ? 'รับรางวัลนี้แล้ว'
+                : isLocked
+                  ? 'ทำภารกิจเพื่อปลดล็อก'
+                  : isClaimingReward
+                    ? 'กำลังรับรางวัล...'
+                    : 'Mark Reward Claimed'}
             </button>
           </div>
         </div>
@@ -79,48 +126,52 @@ export function RewardPreviewCard({
 function RewardImage({ imageUrl, title, missionTitle, isLocked }: { imageUrl?: string; title: string; missionTitle?: string; isLocked: boolean }) {
   if (!imageUrl) {
     return (
-      <div className="relative flex h-[220px] max-h-[240px] items-center justify-center border-b border-white/10 bg-slate-950 md:h-full md:max-h-[340px] md:min-h-[280px] md:border-b-0 md:border-r">
-        <p className="text-sm text-slate-300">ยังไม่มีรูปภาพรางวัล</p>
+      <div className="relative flex h-[240px] items-center justify-center border-b border-white/10 bg-[#1a120b] md:h-full md:min-h-[300px] md:border-b-0 md:border-r md:border-white/10">
+        <p className="text-sm text-amber-100/70">ยังไม่มีรูปภาพรางวัล</p>
       </div>
     );
   }
 
   return (
-    <div className="relative h-[220px] max-h-[240px] overflow-hidden border-b border-white/10 bg-slate-950 md:h-full md:max-h-[340px] md:min-h-[280px] md:border-b-0 md:border-r">
+    <div className="relative h-[250px] overflow-hidden border-b border-white/10 bg-black md:h-full md:min-h-[320px] md:border-b-0 md:border-r md:border-white/10">
       <Image
         src={imageUrl}
         alt="Mission reward image"
         fill
-        className="object-cover object-center"
-        sizes="(min-width: 768px) 45vw, 100vw"
+        className="object-cover object-center saturate-[1.22] contrast-[1.12] brightness-[1.03] transition duration-700 group-hover:scale-105"
+        sizes="(min-width: 768px) 60vw, 100vw"
         onError={(event) => {
           event.currentTarget.style.display = 'none';
           const placeholder = event.currentTarget.parentElement?.querySelector<HTMLElement>('[data-placeholder]');
           if (placeholder) placeholder.style.display = 'flex';
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-      <span className="absolute left-4 top-4 rounded-full border border-white/15 bg-black/30 px-3 py-1 text-xs font-medium text-white backdrop-blur">
-        รางวัลของคุณ
+
+      <div className="absolute inset-0 bg-gradient-to-t from-[#1c1209]/55 via-[#1f140d]/15 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#0f0a07]/22" />
+
+      <span className="absolute left-4 top-4 rounded-full border border-amber-200/40 bg-amber-200/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-50 backdrop-blur-sm">
+        🎁 Reward Moment
       </span>
       {isLocked ? (
-        <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-white/15 bg-black/45 px-3 py-1 text-xs font-medium text-slate-100">
-          🔒 ทำภารกิจให้สำเร็จก่อน
+        <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-amber-100/35 bg-black/35 px-3 py-1 text-xs font-medium text-amber-50 backdrop-blur-sm">
+          🔒 Locked
         </span>
       ) : null}
+
       <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-        <p className="line-clamp-2 text-xl font-semibold text-white sm:text-2xl">{title}</p>
-        <p className="mt-1 line-clamp-2 text-sm text-slate-200">รางวัลของคุณเมื่อทำภารกิจสำเร็จ · {missionTitle || 'ภารกิจปัจจุบัน'}</p>
+        <p className="line-clamp-2 text-2xl font-semibold text-white drop-shadow-[0_8px_24px_rgba(0,0,0,0.65)] sm:text-3xl">{title}</p>
+        <p className="mt-1 line-clamp-2 text-sm text-amber-50/90">Mission สำเร็จแล้ว ช่วงเวลานี้จะกลายเป็นของคุณ · {missionTitle || 'ภารกิจปัจจุบัน'}</p>
       </div>
 
       <div
         data-placeholder
         style={{ display: 'none' }}
-        className="absolute inset-0 items-center justify-center bg-gradient-to-br from-cyan-400/20 via-slate-500/20 to-slate-700/30"
+        className="absolute inset-0 items-center justify-center bg-gradient-to-br from-amber-400/35 via-orange-300/25 to-[#20140c]"
       >
-        <div className="rounded-2xl border border-white/20 bg-black/25 px-5 py-4 text-center backdrop-blur">
+        <div className="rounded-2xl border border-amber-100/50 bg-black/20 px-5 py-4 text-center backdrop-blur-sm">
           <p className="text-3xl">🍣</p>
-          <p className="mt-1 text-sm font-medium text-white">Japanese Reward</p>
+          <p className="mt-1 text-sm font-medium text-amber-50">Japanese Reward</p>
         </div>
       </div>
     </div>
