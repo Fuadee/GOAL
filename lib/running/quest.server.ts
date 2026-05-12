@@ -8,6 +8,7 @@ import {
   getTodayRunStatus
 } from '@/lib/running/quest';
 import {
+  HealthMissionReward,
   RunAttemptInput,
   RunnerDashboardData,
   RunnerLevel,
@@ -98,6 +99,23 @@ export async function getRunnerDashboardData(): Promise<RunnerDashboardData> {
 
   const todayStatus = getTodayRunStatus(logs, restDays, todayDate());
   const todayLog = logs.find((log) => log.run_date === todayDate()) ?? null;
+  const rewardSource = currentLevel?.progress ?? null;
+  const hasReward = Boolean(rewardSource?.reward_title || rewardSource?.reward_image_url || rewardSource?.reward_description);
+  const healthMissionReward: HealthMissionReward | null = hasReward
+    ? {
+        title: rewardSource?.reward_title ?? 'Running Reward',
+        description: rewardSource?.reward_description ?? 'รางวัลของคนที่ผ่านด่านวิ่งนี้ได้',
+        emotionalCopy: rewardSource?.reward_emotional_copy ?? 'เมื่อคุณผ่านด่านนี้ คุณไม่ได้แค่วิ่งครบ แต่คุณกำลังกลายเป็นคนที่แข็งแรงขึ้นจริง ๆ',
+        imageUrl: rewardSource?.reward_image_url ?? undefined,
+        status:
+          rewardSource?.reward_status === 'claimed'
+            ? 'claimed'
+            : currentLevel?.progress?.status === 'passed'
+              ? 'unlocked'
+              : 'locked',
+        claimedAt: rewardSource?.reward_claimed_at ?? null
+      }
+    : null;
 
   return {
     levels: dashboardLevels,
@@ -110,7 +128,8 @@ export async function getRunnerDashboardData(): Promise<RunnerDashboardData> {
     totalAttempts: logs.length,
     bestPaceEver,
     longestNoStopDistance: longestNoStopDistance && longestNoStopDistance > 0 ? longestNoStopDistance : null,
-    completionPercent: Math.round((passedLevelsCount / Math.max(levels.length, 1)) * 100)
+    completionPercent: Math.round((passedLevelsCount / Math.max(levels.length, 1)) * 100),
+    healthMissionReward
   };
 }
 
@@ -196,6 +215,9 @@ export async function createRunLog(input: {
   });
 
   if (evaluation.passed) {
+    await supabaseRestRequest<RunnerLevelProgressRow[]>(`runner_level_progress?level_id=eq.${currentLevel.id}`, 'PATCH', {
+      reward_status: 'unlocked'
+    });
     const currentIndex = levels.findIndex((level) => level.id === currentLevel.id);
     const nextLevel = currentIndex >= 0 ? levels[currentIndex + 1] : null;
 
@@ -218,4 +240,36 @@ export async function createRunLog(input: {
   }
 
   return { success: true, message: 'Attempt saved. Keep pushing on this level.' };
+}
+
+export async function upsertHealthMissionReward(
+  levelId: string,
+  payload: { title: string; description: string; emotionalCopy?: string; imageUrl?: string }
+): Promise<void> {
+  await supabaseRestRequest<RunnerLevelProgressRow[]>(`runner_level_progress?level_id=eq.${levelId}`, 'PATCH', {
+    reward_title: payload.title,
+    reward_description: payload.description,
+    reward_emotional_copy: payload.emotionalCopy || null,
+    reward_image_url: payload.imageUrl || null,
+    reward_status: 'locked',
+    reward_claimed_at: null
+  });
+}
+
+export async function deleteHealthMissionReward(levelId: string): Promise<void> {
+  await supabaseRestRequest<RunnerLevelProgressRow[]>(`runner_level_progress?level_id=eq.${levelId}`, 'PATCH', {
+    reward_title: null,
+    reward_description: null,
+    reward_emotional_copy: null,
+    reward_image_url: null,
+    reward_status: null,
+    reward_claimed_at: null
+  });
+}
+
+export async function claimHealthMissionReward(levelId: string): Promise<void> {
+  await supabaseRestRequest<RunnerLevelProgressRow[]>(`runner_level_progress?level_id=eq.${levelId}&status=eq.passed`, 'PATCH', {
+    reward_status: 'claimed',
+    reward_claimed_at: new Date().toISOString()
+  });
 }
