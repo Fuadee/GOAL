@@ -197,6 +197,13 @@ export async function addInnovationProcessStep(payload: CreateInnovationProcessS
 }
 
 export async function updateInnovationStepStatus(stepId: string, innovationId: string, payload: UpdateInnovationProcessStepPayload) {
+  if (payload.status === 'in_progress') {
+    const steps = await getInnovationProcessStepsByInnovationId(innovationId);
+    const activeSteps = steps.filter((step) => step.status === 'in_progress' && step.id !== stepId);
+
+    await Promise.all(activeSteps.map((step) => updateInnovationProcessStep(step.id, { status: 'todo', completed_at: null })));
+  }
+
   const updated = await updateInnovationProcessStep(stepId, payload);
   await syncInnovationStatus(innovationId);
   return updated;
