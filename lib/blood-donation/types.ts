@@ -23,6 +23,12 @@ export type BloodDonationEventRow = {
   status: BloodDonationEventStatus;
   location: string | null;
   note: string | null;
+  reward_title?: string | null;
+  reward_thai_title?: string | null;
+  reward_description?: string | null;
+  reward_emotional_copy?: string | null;
+  reward_image_url?: string | null;
+  reward_status?: BloodDonationRewardStatus | null;
   created_at: string;
   updated_at: string;
 };
@@ -42,6 +48,12 @@ export type CreatePlannedBloodDonationEventPayload = {
   planned_date: string;
   location?: string;
   note?: string;
+  reward_title?: string;
+  reward_thai_title?: string;
+  reward_description?: string;
+  reward_emotional_copy?: string;
+  reward_image_url?: string;
+  reward_status?: BloodDonationRewardStatus;
 };
 
 export type CreateCompletedBloodDonationEventPayload = {
@@ -50,6 +62,12 @@ export type CreateCompletedBloodDonationEventPayload = {
   location?: string;
   note?: string;
   planned_date?: string;
+  reward_title?: string;
+  reward_thai_title?: string;
+  reward_description?: string;
+  reward_emotional_copy?: string;
+  reward_image_url?: string;
+  reward_status?: BloodDonationRewardStatus;
 };
 
 export type MarkBloodDonationEventCompletedPayload = {
@@ -61,6 +79,12 @@ export type RescheduleBloodDonationEventPayload = {
   planned_date: string;
   location?: string;
   note?: string;
+  reward_title?: string;
+  reward_thai_title?: string;
+  reward_description?: string;
+  reward_emotional_copy?: string;
+  reward_image_url?: string;
+  reward_status?: BloodDonationRewardStatus;
 };
 
 export type BloodDonationSummary = {
