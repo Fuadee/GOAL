@@ -22,8 +22,7 @@ export function RewardPreviewCard({
 
   if (!hasRewardContent) {
     return (
-      <section className="space-y-3 pt-0.5">
-        <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-amber-200/70">Reward Preview</p>
+      <section className="pt-2 sm:pt-3">
         <article className="rounded-3xl border border-dashed border-amber-200/35 bg-gradient-to-br from-[#2a1f12]/95 via-[#1f1710]/95 to-[#140f09]/95 p-5 shadow-[0_18px_36px_-30px_rgba(251,191,36,0.45)]">
           <p className="text-[11px] uppercase tracking-[0.18em] text-amber-100/80">Current Mission</p>
           <h3 className="mt-2 text-xl font-semibold text-amber-50">{missionTitle || 'ภารกิจปัจจุบัน'}</h3>
@@ -46,8 +45,7 @@ export function RewardPreviewCard({
   const isClaimed = rewardStatus === 'claimed';
 
   return (
-    <section className="space-y-3 pt-0.5">
-      <p className="pl-1 text-[10px] font-medium uppercase tracking-[0.35em] text-amber-200/75">Reward Preview</p>
+    <section className="pt-2 sm:pt-3">
       <article className="group relative overflow-hidden rounded-3xl border border-amber-300/25 bg-gradient-to-br from-[#1c1410] via-[#251912] to-[#120f0c] shadow-[0_28px_70px_-38px_rgba(251,146,60,0.65)] transition duration-500 hover:shadow-[0_32px_85px_-35px_rgba(251,146,60,0.75)]">
         <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.17),transparent_50%)]" />
         <div className="pointer-events-none absolute inset-[1px] rounded-[calc(1.5rem-1px)] border border-white/10" />
