@@ -16,7 +16,13 @@ export async function POST(request: Request, { params }: { params: { goalId: str
         actual_date: body.actual_date,
         location: body.location,
         note: body.note,
-        planned_date: body.planned_date
+        planned_date: body.planned_date,
+        reward_title: body.reward_title,
+        reward_thai_title: body.reward_thai_title,
+        reward_description: body.reward_description,
+        reward_emotional_copy: body.reward_emotional_copy,
+        reward_image_url: body.reward_image_url,
+        reward_status: body.reward_status || 'unlocked'
       });
 
       return NextResponse.json(created);
@@ -30,7 +36,13 @@ export async function POST(request: Request, { params }: { params: { goalId: str
       goal_id: params.goalId,
       planned_date: body.planned_date,
       location: body.location,
-      note: body.note
+      note: body.note,
+      reward_title: body.reward_title,
+      reward_thai_title: body.reward_thai_title,
+      reward_description: body.reward_description,
+      reward_emotional_copy: body.reward_emotional_copy,
+      reward_image_url: body.reward_image_url,
+      reward_status: body.reward_status || 'locked'
     });
 
     return NextResponse.json(created);

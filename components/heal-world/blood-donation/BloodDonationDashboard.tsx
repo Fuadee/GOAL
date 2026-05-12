@@ -344,6 +344,11 @@ export function BloodDonationDashboard({ initialData }: Props) {
             defaultDate={selectedEvent.planned_date ?? ''}
             defaultLocation={selectedEvent.location ?? ''}
             defaultNote={selectedEvent.note ?? ''}
+            defaultRewardTitle={selectedEvent.reward_title ?? ''}
+            defaultRewardThaiTitle={selectedEvent.reward_thai_title ?? ''}
+            defaultRewardDescription={selectedEvent.reward_description ?? ''}
+            defaultRewardEmotionalCopy={selectedEvent.reward_emotional_copy ?? ''}
+            defaultRewardImageUrl={selectedEvent.reward_image_url ?? ''}
             loading={loading}
             onSubmit={(event) =>
               submit(async () => {
@@ -544,10 +549,7 @@ function GoalForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event: F
       <Input name="target_count" label="Target Count" type="number" defaultValue="3" required />
       <Input name="start_date" label="Start Date" type="date" required />
       <Input name="end_date" label="End Date" type="date" required />
-      <Input name="reward_title" label="Reward Title" defaultValue="Japanese Solo Reward" />
-      <Input name="reward_description" label="Reward Description" defaultValue="หลังบริจาคเลือดสำเร็จ ให้รางวัลตัวเองด้วยมื้ออาหารญี่ปุ่นดี ๆ หนึ่งมื้อ" />
-      <Input name="reward_image_url" label="Reward Image URL" defaultValue="/rewards/japanese-solo-reward.jpg" />
-      <Input name="reward_emotional_copy" label="Emotional Copy" defaultValue="ไม่ใช่แค่กิน แต่คือการฉลองว่าฉันทำเรื่องดีสำเร็จแล้ว" />
+      <RewardFields />
       <button disabled={loading} className="rounded-full bg-rose-500/20 px-4 py-2 text-sm text-rose-100 disabled:opacity-60">
         {loading ? 'Saving...' : 'Save Goal'}
       </button>
@@ -563,6 +565,7 @@ function PlannedForm({ loading, onSubmit }: { loading: boolean; onSubmit: (event
       <Input name="planned_date" label="Planned Date" type="date" required />
       <Input name="location" label="Location" />
       <Input name="note" label="Note" />
+      <RewardFields />
       <button disabled={loading} className="rounded-full bg-rose-500/20 px-4 py-2 text-sm text-rose-100 disabled:opacity-60">
         {loading ? 'Saving...' : 'Save Plan'}
       </button>
@@ -603,12 +606,22 @@ function RescheduleForm({
   defaultDate,
   defaultLocation,
   defaultNote,
+  defaultRewardTitle,
+  defaultRewardThaiTitle,
+  defaultRewardDescription,
+  defaultRewardEmotionalCopy,
+  defaultRewardImageUrl,
   loading,
   onSubmit
 }: {
   defaultDate: string;
   defaultLocation: string;
   defaultNote: string;
+  defaultRewardTitle: string;
+  defaultRewardThaiTitle: string;
+  defaultRewardDescription: string;
+  defaultRewardEmotionalCopy: string;
+  defaultRewardImageUrl: string;
   loading: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
@@ -619,9 +632,50 @@ function RescheduleForm({
       <Input name="planned_date" label="Planned Date" type="date" defaultValue={defaultDate} required />
       <Input name="location" label="Location" defaultValue={defaultLocation} />
       <Input name="note" label="Note" defaultValue={defaultNote} />
+      <RewardFields
+        defaultTitle={defaultRewardTitle}
+        defaultThaiTitle={defaultRewardThaiTitle}
+        defaultDescription={defaultRewardDescription}
+        defaultEmotionalCopy={defaultRewardEmotionalCopy}
+        defaultImageUrl={defaultRewardImageUrl}
+      />
       <button disabled={loading} className="rounded-full bg-blue-500/20 px-4 py-2 text-sm text-blue-100 disabled:opacity-60">
         {loading ? 'Saving...' : 'Save Changes'}
       </button>
     </form>
+  );
+}
+
+function RewardFields({
+  defaultTitle,
+  defaultThaiTitle,
+  defaultDescription,
+  defaultEmotionalCopy,
+  defaultImageUrl
+}: {
+  defaultTitle?: string;
+  defaultThaiTitle?: string;
+  defaultDescription?: string;
+  defaultEmotionalCopy?: string;
+  defaultImageUrl?: string;
+}) {
+  return (
+    <section className="space-y-3 rounded-xl border border-dashed border-cyan-300/35 bg-cyan-500/5 p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-cyan-100">เพิ่ม Reward (Mission เฉพาะครั้งนี้)</p>
+        <button type="button" className="rounded-lg border border-cyan-200/35 px-3 py-1 text-xs text-cyan-100">+ เพิ่ม Reward</button>
+      </div>
+      <Input name="reward_title" label="Reward Title" defaultValue={defaultTitle} />
+      <Input name="reward_thai_title" label="Reward Thai Title" defaultValue={defaultThaiTitle} />
+      <Input name="reward_description" label="Reward Short Description" defaultValue={defaultDescription} />
+      <Input name="reward_emotional_copy" label="Emotional Copy" defaultValue={defaultEmotionalCopy} />
+      <Input name="reward_image_url" label="Reward Image URL" defaultValue={defaultImageUrl} />
+      <Input name="reward_status" label="Reward Status (locked/unlocked/claimed)" defaultValue="locked" />
+      <label className="space-y-1 text-sm text-slate-200">
+        <span>Reward Image Upload</span>
+        <input name="reward_image_upload" type="file" accept="image/*" className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 text-white outline-none file:mr-3 file:rounded-md file:border-0 file:bg-cyan-500/20 file:px-2.5 file:py-1 file:text-xs file:text-cyan-100" />
+      </label>
+      <p className="rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2 text-xs text-slate-300">Preview Card: เมื่อทำ mission สำเร็จ คุณจะได้ชีวิตแบบในภาพนี้</p>
+    </section>
   );
 }

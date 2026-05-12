@@ -15,9 +15,9 @@ export function RewardPreviewCard({ missionTitle, reward, isMissionCompleted = f
         <article className="rounded-2xl border border-dashed border-white/20 bg-slate-900/60 p-5">
           <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-100/75">Reward Preview · Current Mission</p>
           <h3 className="mt-2 text-lg font-medium text-white">{missionTitle || 'ภารกิจปัจจุบัน'}</h3>
-          <p className="mt-3 text-sm text-slate-300">ยังไม่ได้ตั้งรางวัลสำหรับภารกิจนี้</p>
+          <p className="mt-3 text-sm text-slate-300">ภารกิจนี้ยังไม่มีรางวัล</p>
           <button type="button" className="mt-4 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/15">
-            เพิ่มรางวัล
+            + เพิ่ม Reward
           </button>
         </article>
       </section>
@@ -71,7 +71,7 @@ export function RewardPreviewCard({ missionTitle, reward, isMissionCompleted = f
       </article>
 
       <p className="px-1 text-xs leading-relaxed text-slate-400 sm:text-sm">
-        รางวัลเล็ก ๆ ที่ทำให้สมองจำว่า การทำสิ่งดี ๆ มีความหมายและน่ากลับมาทำซ้ำ
+        ตั้งรางวัลเพื่อสร้างแรงจูงใจให้ตัวเอง แล้วใช้ภาพนี้พาตัวเองไปถึงวันที่ภารกิจสำเร็จ
       </p>
     </section>
   );

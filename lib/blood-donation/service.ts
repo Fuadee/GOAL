@@ -8,19 +8,10 @@ import { getActiveBloodDonationGoal, getBloodDonationEventsByGoalId } from '@/li
 import { BloodDonationDashboardViewModel, BloodDonationMission, BloodDonationReward } from '@/lib/blood-donation/types';
 import { getCurrentBloodDonationPlan } from '@/lib/blood-donation/plan-display';
 
-const defaultReward = (status: BloodDonationReward['status']): BloodDonationReward => ({
-  title: 'Japanese Solo Reward',
-  thaiTitle: 'มื้ออาหารญี่ปุ่นคนเดียวแบบภูมิใจ',
-  description: 'หลังบริจาคเลือดสำเร็จ ให้รางวัลตัวเองด้วยมื้ออาหารญี่ปุ่นดี ๆ หนึ่งมื้อ',
-  emotionalCopy: 'ไม่ใช่แค่กิน แต่คือการฉลองว่าฉันทำเรื่องดีสำเร็จแล้ว',
-  imageUrl: '/rewards/japanese-solo-reward.jpg',
-  status
-});
-
-const createCurrentMission = (status: BloodDonationReward['status']): BloodDonationMission => ({
+const createCurrentMission = (reward: BloodDonationReward | null): BloodDonationMission => ({
   id: 'blood-donation',
   title: 'บริจาคเลือดปีนี้',
-  reward: defaultReward(status)
+  reward
 });
 
 export async function getBloodDonationDashboardData(today = new Date()): Promise<BloodDonationDashboardViewModel> {
@@ -41,8 +32,17 @@ export async function getBloodDonationDashboardData(today = new Date()): Promise
   const events = await getBloodDonationEventsByGoalId(goal.id);
   const upcomingPlans = getUpcomingBloodDonationPlans(events, today);
   const currentPlan = getCurrentBloodDonationPlan(upcomingPlans);
-  const missionRewardStatus: BloodDonationReward['status'] = currentPlan?.status === 'completed' ? 'unlocked' : 'locked';
-
+  const persistedReward =
+    currentPlan?.reward_title && currentPlan.reward_description
+      ? {
+          title: currentPlan.reward_title,
+          thaiTitle: currentPlan.reward_thai_title ?? undefined,
+          description: currentPlan.reward_description,
+          emotionalCopy: currentPlan.reward_emotional_copy ?? undefined,
+          imageUrl: currentPlan.reward_image_url ?? undefined,
+          status: currentPlan.reward_status ?? 'locked'
+        }
+      : null;
   return {
     goal,
     events,
@@ -50,6 +50,6 @@ export async function getBloodDonationDashboardData(today = new Date()): Promise
     chance: getChanceToReachBloodDonationGoal(goal, events, today),
     upcomingPlans,
     history: getBloodDonationHistory(events),
-    currentMission: createCurrentMission(missionRewardStatus)
+    currentMission: createCurrentMission(persistedReward)
   };
 }
