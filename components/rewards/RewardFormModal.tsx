@@ -28,10 +28,10 @@ export function RewardFormModal({ open, levelId, defaultValues, onClose, onSubmi
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 backdrop-blur-md p-4 sm:p-6 md:items-start md:justify-center md:pt-20 lg:pt-24">
       <form
         action={onSubmit}
-        className="relative flex w-[calc(100vw-24px)] max-w-[32.5rem] flex-col rounded-3xl border border-white/15 bg-slate-950/90 shadow-[0_32px_100px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:w-full"
+        className="relative flex w-[calc(100vw-24px)] max-w-[32.5rem] flex-col rounded-3xl border border-white/20 bg-slate-950/92 shadow-[0_40px_120px_rgba(0,0,0,0.62),0_0_0_1px_rgba(255,255,255,0.05),0_0_70px_rgba(34,211,238,0.08)] backdrop-blur-2xl sm:w-full md:mt-4"
       >
         <input type="hidden" name="level_id" value={levelId} />
         <div className="flex items-center justify-between border-b border-white/10 px-5 pb-3 pt-4 sm:px-6">
@@ -46,7 +46,7 @@ export function RewardFormModal({ open, levelId, defaultValues, onClose, onSubmi
           </button>
         </div>
 
-        <div className="space-y-3 px-5 py-4 sm:space-y-3.5 sm:px-6">
+        <div className="space-y-4 px-5 py-5 sm:space-y-[1.125rem] sm:px-6 sm:py-6">
           <label className="block space-y-1.5">
             <span className="text-sm font-medium text-slate-200">Reward Title</span>
             <input
