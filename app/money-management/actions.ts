@@ -55,18 +55,43 @@ export async function createIncomeSourceAction(formData: FormData): Promise<{ su
   const id = String(formData.get('id') ?? '').trim() || null;
   const name = String(formData.get('name') ?? '').trim();
   const typeRaw = String(formData.get('type') ?? '').trim();
-  const expectedRaw = Number(String(formData.get('expected_income') ?? '').trim());
-  const actualRaw = Number(String(formData.get('actual_income') ?? '').trim());
+  const grossRaw = Number(String(formData.get('gross_amount') ?? '').trim());
+  const directCostRaw = Number(String(formData.get('direct_cost') ?? '').trim() || '0');
+  const netRaw = grossRaw - directCostRaw;
 
   if (!name) return { success: false, message: 'Name is required.' };
   if (!isIncomeType(typeRaw)) return { success: false, message: 'Income type is invalid.' };
-  if (!Number.isFinite(expectedRaw) || expectedRaw < 0) return { success: false, message: 'Expected income must be 0 or greater.' };
-  if (!Number.isFinite(actualRaw) || actualRaw < 0) return { success: false, message: 'Actual income must be 0 or greater.' };
+  if (!Number.isFinite(grossRaw) || grossRaw < 0) return { success: false, message: 'Gross income must be 0 or greater.' };
+  if (!Number.isFinite(directCostRaw) || directCostRaw < 0) return { success: false, message: 'Direct cost must be 0 or greater.' };
+  if (!Number.isFinite(netRaw) || netRaw < 0) return { success: false, message: 'Net income must be 0 or greater.' };
 
   if (id) {
-    await updateIncomeSource(id, { name, type: typeRaw, expected_income: expectedRaw, actual_income: actualRaw });
+    await updateIncomeSource(id, {
+      name,
+      type: typeRaw,
+      expected_income: grossRaw,
+      actual_income: netRaw,
+      gross_amount: grossRaw,
+      direct_cost: directCostRaw,
+      net_amount: netRaw,
+      category: String(formData.get('category') ?? 'real').trim() as 'real' | 'growing' | 'future',
+      stability: String(formData.get('status') ?? 'stable').trim() as 'stable' | 'unstable' | 'building' | 'future',
+      count_in_total: String(formData.get('count_in_total') ?? '') === 'on'
+    });
   } else {
-    await createIncomeSource({ name, type: typeRaw, expected_income: expectedRaw, actual_income: actualRaw });
+    const category = String(formData.get('category') ?? 'real').trim() as 'real' | 'growing' | 'future';
+    await createIncomeSource({
+      name,
+      type: typeRaw,
+      expected_income: grossRaw,
+      actual_income: netRaw,
+      gross_amount: grossRaw,
+      direct_cost: directCostRaw,
+      net_amount: netRaw,
+      category,
+      stability: String(formData.get('status') ?? 'stable').trim() as 'stable' | 'unstable' | 'building' | 'future',
+      count_in_total: String(formData.get('count_in_total') ?? '') === 'on' || category !== 'future'
+    });
   }
   revalidatePath('/money-management');
   revalidatePath('/money-management/income');

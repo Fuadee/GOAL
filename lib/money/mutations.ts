@@ -20,6 +20,12 @@ export async function createIncomeSource(payload: {
   type: IncomeSourceType;
   expected_income: number;
   actual_income: number;
+  gross_amount?: number;
+  direct_cost?: number;
+  net_amount?: number;
+  count_in_total?: boolean;
+  category?: 'real' | 'growing' | 'future';
+  stability?: 'stable' | 'unstable' | 'building' | 'future';
 }): Promise<IncomeSourceRow> {
   const rows = await supabaseRestRequest<IncomeSourceRow[]>('income_sources', 'POST', payload);
   return rows[0];
@@ -37,6 +43,12 @@ export async function updateIncomeSource(
     type: IncomeSourceType;
     expected_income: number;
     actual_income: number;
+    gross_amount?: number;
+    direct_cost?: number;
+    net_amount?: number;
+    count_in_total?: boolean;
+    category?: 'real' | 'growing' | 'future';
+    stability?: 'stable' | 'unstable' | 'building' | 'future';
   }
 ): Promise<IncomeSourceRow> {
   const rows = await supabaseRestRequest<IncomeSourceRow[]>(`income_sources?id=eq.${id}`, 'PATCH', payload);
