@@ -5,7 +5,7 @@ import { ChangeEvent, useEffect, useState } from 'react';
 type Props = {
   open: boolean;
   levelId: string;
-  defaultValues?: { title?: string | null; thaiTitle?: string | null; description?: string | null; emotionalCopy?: string | null; imageUrl?: string | null };
+  defaultValues?: { title?: string | null; imageUrl?: string | null };
   onClose: () => void;
   onSubmit: (fd: FormData) => void;
 };
@@ -28,21 +28,53 @@ export function RewardFormModal({ open, levelId, defaultValues, onClose, onSubmi
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <form action={onSubmit} className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 sm:p-4">
+      <form action={onSubmit} className="relative flex max-h-[90vh] w-full max-w-[30rem] flex-col overflow-hidden rounded-3xl border border-white/15 bg-slate-950/85 shadow-[0_32px_100px_rgba(0,0,0,0.6)] backdrop-blur-xl">
         <input type="hidden" name="level_id" value={levelId} />
-        <div className="mb-4 flex items-center justify-between"><h4 className="text-lg font-semibold text-white">เพิ่ม/แก้ไข Reward</h4><button type="button" onClick={onClose} className="rounded-full bg-white/10 px-3 py-1 text-xs text-white">ปิด</button></div>
-        <div className="space-y-3 rounded-xl border border-dashed border-cyan-300/35 bg-cyan-500/5 p-3">
-          <label className="space-y-1 text-sm text-slate-200"><span>Reward Title</span><input name="title" required defaultValue={defaultValues?.title ?? 'Reward'} className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 text-white outline-none" /></label>
-          <label className="space-y-1 text-sm text-slate-200"><span>Reward Thai Title (optional)</span><input name="thai_title" defaultValue={defaultValues?.thaiTitle ?? ''} className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 text-white outline-none" /></label>
-          <label className="space-y-1 text-sm text-slate-200"><span>Description</span><textarea name="description" rows={2} defaultValue={defaultValues?.description ?? ''} className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 text-white outline-none" /></label>
-          <label className="space-y-1 text-sm text-slate-200"><span>Emotional Copy</span><textarea name="emotional_copy" rows={2} defaultValue={defaultValues?.emotionalCopy ?? ''} className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 text-white outline-none" /></label>
-          <label className="space-y-1 text-sm text-slate-200"><span>Image URL</span><input defaultValue={defaultValues?.imageUrl ?? ''} onChange={(event) => setPreviewImageUrl(event.target.value)} className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 text-white outline-none" /></label>
-          <input type="hidden" name="image_url" value={previewImageUrl} />
-          <label className="space-y-1 text-sm text-slate-200"><span>Reward Image Upload</span><input name="reward_image_upload" type="file" accept="image/*" onChange={handleImageUpload} className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-2 text-white file:mr-3 file:rounded-md file:border-0 file:bg-cyan-500/20 file:px-2.5 file:py-1 file:text-xs file:text-cyan-100" /></label>
-          {previewImageUrl ? <img src={previewImageUrl} alt="Reward preview" className="h-24 w-full rounded-lg object-cover" /> : null}
+        <div className="flex items-center justify-between border-b border-white/10 px-5 pb-4 pt-5 sm:px-6">
+          <h4 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">Your Reward</h4>
+          <button type="button" onClick={onClose} className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:bg-white/10">ปิด</button>
         </div>
-        <button className="mt-4 w-full rounded-full bg-cyan-500/20 px-4 py-2 text-sm text-cyan-100">บันทึกรางวัล</button>
+
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5 sm:space-y-6 sm:px-6">
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-slate-200">Reward Title</span>
+            <input
+              name="title"
+              required
+              defaultValue={defaultValues?.title ?? 'Reward'}
+              className="w-full rounded-2xl border border-white/15 bg-black/25 px-4 py-3 text-lg font-medium text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/50"
+            />
+          </label>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-slate-200">Reward Image Upload</span>
+            <input
+              name="reward_image_upload"
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="w-full rounded-2xl border border-white/15 bg-black/20 px-3 py-2 text-sm text-slate-100 file:mr-3 file:rounded-xl file:border-0 file:bg-cyan-400/20 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-cyan-100"
+            />
+          </label>
+
+          <input type="hidden" name="image_url" value={previewImageUrl} />
+          <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/10 to-black/20 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+            {previewImageUrl ? (
+              <img src={previewImageUrl} alt="Reward preview" className="h-64 w-full rounded-2xl object-cover sm:h-72" />
+            ) : (
+              <div className="flex h-64 w-full items-center justify-center rounded-2xl border border-dashed border-white/20 bg-black/20 text-sm text-slate-300 sm:h-72">
+                Upload an image to bring your reward to life
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 border-t border-white/10 bg-slate-950/95 px-5 py-4 sm:px-6">
+          <button className="w-full rounded-full bg-cyan-400/20 px-5 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/30">
+            บันทึกรางวัล
+          </button>
+        </div>
       </form>
     </div>
   );
