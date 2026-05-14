@@ -20,6 +20,11 @@ export type IncomeSourceRow = {
   type: IncomeSourceType;
   expected_income: number;
   actual_income: number;
+  category?: 'real' | 'growing' | 'future';
+  stability?: 'stable' | 'unstable' | 'building' | 'future';
+  is_counted_in_real_income?: boolean;
+  frequency_label?: string | null;
+  note?: string | null;
   created_at: string;
 };
 
@@ -121,6 +126,7 @@ export type MoneyDashboardData = {
   progressPercent: number;
   gap: number;
   incomeSummary: IncomeSummary;
+  incomeSources: IncomeSourceRow[];
   expenseSummary: ExpenseSummary;
 };
 
