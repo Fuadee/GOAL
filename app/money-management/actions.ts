@@ -58,6 +58,7 @@ export async function createIncomeSourceAction(formData: FormData): Promise<{ su
   const grossRaw = Number(String(formData.get('gross_amount') ?? '').trim());
   const directCostRaw = Number(String(formData.get('direct_cost') ?? '').trim() || '0');
   const netRaw = grossRaw - directCostRaw;
+  const note = String(formData.get('note') ?? '').trim();
 
   if (!name) return { success: false, message: 'Name is required.' };
   if (!isIncomeType(typeRaw)) return { success: false, message: 'Income type is invalid.' };
@@ -76,7 +77,8 @@ export async function createIncomeSourceAction(formData: FormData): Promise<{ su
       net_amount: netRaw,
       category: String(formData.get('category') ?? 'real').trim() as 'real' | 'growing' | 'future',
       stability: String(formData.get('status') ?? 'stable').trim() as 'stable' | 'unstable' | 'building' | 'future',
-      count_in_total: String(formData.get('count_in_total') ?? '') === 'on'
+      count_in_total: String(formData.get('count_in_total') ?? '') === 'on',
+      note: note || null
     });
   } else {
     const category = String(formData.get('category') ?? 'real').trim() as 'real' | 'growing' | 'future';
@@ -90,7 +92,8 @@ export async function createIncomeSourceAction(formData: FormData): Promise<{ su
       net_amount: netRaw,
       category,
       stability: String(formData.get('status') ?? 'stable').trim() as 'stable' | 'unstable' | 'building' | 'future',
-      count_in_total: String(formData.get('count_in_total') ?? '') === 'on' || category !== 'future'
+      count_in_total: String(formData.get('count_in_total') ?? '') === 'on' || category !== 'future',
+      note: note || null
     });
   }
   revalidatePath('/money-management');

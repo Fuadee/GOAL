@@ -1,5 +1,10 @@
-import Link from 'next/link';
+'use client';
 
+import Link from 'next/link';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+
+import { createIncomeSourceAction } from '@/app/money-management/actions';
 import { IncomeSourceRow, MoneyDashboardData } from '@/lib/money/types';
 
 import { MoneySummaryDashboard } from './MoneySummaryDashboard';
@@ -13,6 +18,7 @@ type IncomeStability = 'stable' | 'unstable' | 'building' | 'future';
 type IncomeItem = {
   id: string;
   name: string;
+  type: 'active' | 'passive';
   category: IncomeCategory;
   status: IncomeStability;
   frequencyLabel: string;
@@ -20,6 +26,19 @@ type IncomeItem = {
   directCost: number;
   netAmount: number;
   countInTotal: boolean;
+  note: string;
+};
+
+type IncomeFormState = {
+  id: string | null;
+  name: string;
+  type: 'active' | 'passive';
+  gross_amount: string;
+  direct_cost: string;
+  category: IncomeCategory;
+  status: IncomeStability;
+  count_in_total: boolean;
+  note: string;
 };
 
 const categoryMeta: Record<IncomeCategory, { title: string; description: string }> = {
@@ -38,25 +57,32 @@ const stabilityLabel: Record<IncomeStability, string> = { stable: 'Stable', unst
 
 function normalizeIncome(source: IncomeSourceRow): IncomeItem {
   const category = source.category ?? 'real';
-  const grossAmount = Number(source.gross_amount ?? source.expected_income ?? source.actual_income ?? 0);
-  const directCost = Number(source.direct_cost ?? 0);
-  const netAmount = Number(source.net_amount ?? grossAmount - directCost);
+  const grossAmount = Number(source.gross_amount ?? source.expected_income ?? source.actual_income ?? 0) || 0;
+  const directCost = Number(source.direct_cost ?? 0) || 0;
+  const netAmount = grossAmount - directCost;
   const countInTotal = source.count_in_total ?? source.is_counted_in_real_income ?? category !== 'future';
 
   return {
     id: source.id,
     name: source.name,
+    type: source.type,
     category,
     status: source.stability ?? (category === 'future' ? 'future' : 'stable'),
     frequencyLabel: source.frequency_label ?? '/month',
     grossAmount,
     directCost,
-    netAmount,
-    countInTotal
+    netAmount: Number.isFinite(netAmount) ? netAmount : 0,
+    countInTotal,
+    note: source.note ?? ''
   };
 }
 
 function IncomeRealityCard({ data }: { data: MoneyDashboardData }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [form, setForm] = useState<IncomeFormState | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
   const items = data.incomeSources.map(normalizeIncome);
   const groups: Record<IncomeCategory, IncomeItem[]> = { real: [], growing: [], future: [] };
   items.forEach((item) => groups[item.category].push(item));
@@ -83,7 +109,7 @@ function IncomeRealityCard({ data }: { data: MoneyDashboardData }) {
             <div className="space-y-2">
               {groups[category].length === 0 ? <p className="rounded-lg border border-dashed border-white/10 px-3 py-2 text-xs text-slate-500">No sources yet</p> : groups[category].map((item) => (
                 <div key={item.id} className="rounded-lg border border-white/10 bg-slate-900/70 p-3">
-                  <div className="flex flex-wrap items-start justify-between gap-2"><p className="text-sm font-medium text-slate-100">{item.name}</p><span className={`inline-flex rounded-full border px-2 py-0.5 text-xs ${badgeClassByStability[item.status]}`}>{stabilityLabel[item.status]}</span></div>
+                  <div className="flex flex-wrap items-start justify-between gap-2"><p className="text-sm font-medium text-slate-100">{item.name}</p><div className="flex items-center gap-2"><span className={`inline-flex rounded-full border px-2 py-0.5 text-xs ${badgeClassByStability[item.status]}`}>{stabilityLabel[item.status]}</span><button type="button" className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs text-slate-300 transition hover:bg-white/10" onClick={() => { setForm({ id: item.id, name: item.name, type: item.type, gross_amount: String(item.grossAmount), direct_cost: String(item.directCost), category: item.category, status: item.status, count_in_total: item.countInTotal, note: item.note }); setMessage(null); }}>Edit</button></div></div>
                   <div className="mt-2 space-y-1 text-sm">
                     <p className="text-slate-300">รายรับ: {currency.format(item.grossAmount)} {item.frequencyLabel}</p>
                     <p className="text-slate-400">ต้นทุน/ดอกเบี้ย: {currency.format(item.directCost)}</p>
@@ -97,6 +123,18 @@ function IncomeRealityCard({ data }: { data: MoneyDashboardData }) {
       </div>
 
       <Link href="/money-management/income" className="mt-5 inline-flex w-fit rounded-full border border-indigo-300/30 bg-indigo-500/10 px-4 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20">Manage income</Link>
+
+      {form ? <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4"><div className="w-full max-w-2xl rounded-xl border border-white/10 bg-slate-900 p-4"><h4 className="text-lg font-semibold text-white">Edit income source</h4><form className="mt-3 grid gap-2 md:grid-cols-2" action={(formData) => { if (form.id) formData.set('id', form.id); setMessage(null); startTransition(async () => { const result = await createIncomeSourceAction(formData); setMessage(result.message); if (result.success) { setForm(null); router.refresh(); } }); }}>
+        <input name="name" required value={form.name} onChange={(e) => setForm((prev) => prev ? { ...prev, name: e.target.value } : prev)} className="theme-input" />
+        <select name="type" value={form.type} onChange={(e) => setForm((prev) => prev ? { ...prev, type: e.target.value as 'active' | 'passive' } : prev)} className="theme-input"><option value="active">active</option><option value="passive">passive</option></select>
+        <input name="gross_amount" type="number" min="0" step="0.01" required value={form.gross_amount} onChange={(e) => setForm((prev) => prev ? { ...prev, gross_amount: e.target.value } : prev)} className="theme-input" />
+        <input name="direct_cost" type="number" min="0" step="0.01" value={form.direct_cost} onChange={(e) => setForm((prev) => prev ? { ...prev, direct_cost: e.target.value } : prev)} className="theme-input" />
+        <select name="category" value={form.category} onChange={(e) => setForm((prev) => prev ? { ...prev, category: e.target.value as IncomeCategory } : prev)} className="theme-input"><option value="real">current</option><option value="growing">building</option><option value="future">future</option></select>
+        <select name="status" value={form.status} onChange={(e) => setForm((prev) => prev ? { ...prev, status: e.target.value as IncomeStability } : prev)} className="theme-input"><option value="stable">stable</option><option value="unstable">unstable</option><option value="building">building</option><option value="future">future</option></select>
+        <input name="note" placeholder="Note" value={form.note} onChange={(e) => setForm((prev) => prev ? { ...prev, note: e.target.value } : prev)} className="theme-input md:col-span-2" />
+        <label className="md:col-span-2 flex items-center gap-2 text-sm text-slate-300"><input name="count_in_total" type="checkbox" checked={form.count_in_total} onChange={(e) => setForm((prev) => prev ? { ...prev, count_in_total: e.target.checked } : prev)} />Count in total</label>
+        <div className="md:col-span-2 flex gap-2"><button disabled={isPending} className="theme-button-primary disabled:opacity-50">Save changes</button><button type="button" onClick={() => setForm(null)} className="theme-button-secondary">Cancel</button></div>
+      </form>{message ? <p className="mt-2 text-sm text-slate-300">{message}</p> : null}</div></div> : null}
     </article>
   );
 }
