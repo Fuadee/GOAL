@@ -5,10 +5,9 @@ import { useRouter } from 'next/navigation';
 
 import { ConstructionMilestoneView, ConstructionStepRow } from '@/lib/money/types';
 
-import { formatDateLabel, getCurrentConstructionStep, getWaitingSummary } from './construction-helpers';
+import { formatDateLabel, getCurrentConstructionStep } from './construction-helpers';
 import { ConstructionHeroCard } from './ConstructionHeroCard';
 import { ConstructionMilestoneStepper } from './ConstructionMilestoneStepper';
-import { ConstructionWaitingStatusCard } from './ConstructionWaitingStatusCard';
 
 type Props = {
   steps: ConstructionStepRow[];
@@ -51,12 +50,8 @@ export function ConstructionProgressSection({ steps }: Props) {
       }),
     [currentStep?.id, steps]
   );
-  const waitingSummary = getWaitingSummary(currentStep);
-
   return (
-    <section className="space-y-6">
-      <ConstructionWaitingStatusCard summary={waitingSummary} showControls={false} />
-
+    <section>
       <ConstructionHeroCard statusLabel={status} progressPercent={progressPercent} actionItems={[]}>
         <div className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 md:p-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
