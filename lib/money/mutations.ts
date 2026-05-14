@@ -26,6 +26,7 @@ export async function createIncomeSource(payload: {
   count_in_total?: boolean;
   category?: 'real' | 'growing' | 'future';
   stability?: 'stable' | 'unstable' | 'building' | 'future';
+  note?: string | null;
 }): Promise<IncomeSourceRow> {
   const rows = await supabaseRestRequest<IncomeSourceRow[]>('income_sources', 'POST', payload);
   return rows[0];
@@ -49,6 +50,7 @@ export async function updateIncomeSource(
     count_in_total?: boolean;
     category?: 'real' | 'growing' | 'future';
     stability?: 'stable' | 'unstable' | 'building' | 'future';
+    note?: string | null;
   }
 ): Promise<IncomeSourceRow> {
   const rows = await supabaseRestRequest<IncomeSourceRow[]>(`income_sources?id=eq.${id}`, 'PATCH', payload);
