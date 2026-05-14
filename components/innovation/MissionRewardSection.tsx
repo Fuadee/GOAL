@@ -65,9 +65,6 @@ export function MissionRewardSection({ mission }: { mission: InnovationCardViewM
         levelId={mission.id}
         defaultValues={{
           title: mission.reward_title,
-          thaiTitle: mission.reward_thai_title,
-          description: mission.reward_description,
-          emotionalCopy: mission.reward_emotional_copy,
           imageUrl: mission.reward_image_url
         }}
         onClose={() => setOpen(false)}
