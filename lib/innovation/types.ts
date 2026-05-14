@@ -72,6 +72,12 @@ export type InnovationRow = {
   blocked_at: string | null;
   created_at: string;
   updated_at: string;
+  reward_title: string | null;
+  reward_thai_title: string | null;
+  reward_description: string | null;
+  reward_emotional_copy: string | null;
+  reward_image_url: string | null;
+  reward_status: 'locked' | 'ready_to_claim' | 'claimed' | null;
 };
 
 export type InnovationProcessStepRow = {
@@ -160,6 +166,12 @@ export type UpdateInnovationPayload = {
   blocked_reason?: string | null;
   blocked_at?: string | null;
   status?: InnovationStatus;
+  reward_title?: string | null;
+  reward_thai_title?: string | null;
+  reward_description?: string | null;
+  reward_emotional_copy?: string | null;
+  reward_image_url?: string | null;
+  reward_status?: 'locked' | 'ready_to_claim' | 'claimed' | null;
 };
 
 export type UpdateInnovationProcessStepPayload = {

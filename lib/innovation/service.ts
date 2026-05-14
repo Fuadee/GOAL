@@ -80,6 +80,12 @@ export async function getInnovationDashboardData(): Promise<InnovationCardViewMo
       blocked_at: row.blocked_at,
       created_at: row.created_at,
       updated_at: row.updated_at,
+      reward_title: row.reward_title,
+      reward_thai_title: row.reward_thai_title,
+      reward_description: row.reward_description,
+      reward_emotional_copy: row.reward_emotional_copy,
+      reward_image_url: row.reward_image_url,
+      reward_status: row.reward_status,
       completedStepCount,
       stepTotal,
       progressPercent,
@@ -207,6 +213,29 @@ export async function updateInnovationStepStatus(stepId: string, innovationId: s
   const updated = await updateInnovationProcessStep(stepId, payload);
   await syncInnovationStatus(innovationId);
   return updated;
+}
+
+export async function upsertInnovationReward(
+  innovationId: string,
+  payload: { title: string; thaiTitle?: string; description?: string; emotionalCopy?: string; imageUrl?: string }
+) {
+  const innovation = await getInnovationById(innovationId);
+  if (!innovation) {
+    throw new Error('Innovation not found.');
+  }
+  const progressDone = innovation.status === 'completed';
+  return updateInnovation(innovationId, {
+    reward_title: payload.title,
+    reward_thai_title: payload.thaiTitle || null,
+    reward_description: payload.description || null,
+    reward_emotional_copy: payload.emotionalCopy || null,
+    reward_image_url: payload.imageUrl || null,
+    reward_status: progressDone ? 'ready_to_claim' : 'locked'
+  });
+}
+
+export async function claimInnovationReward(innovationId: string) {
+  return updateInnovation(innovationId, { reward_status: 'claimed' });
 }
 
 export async function addInnovationLog(payload: CreateInnovationLogPayload) {

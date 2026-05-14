@@ -7,6 +7,7 @@ import { PageShell } from '@/components/ui/mission';
 import { getInnovationDashboardPageData } from '@/lib/innovation/service';
 import { deriveInnovationState } from '@/lib/innovation/helpers';
 import { innovationUi } from '@/components/innovation/uiTokens';
+import { MissionRewardSection } from '@/components/innovation/MissionRewardSection';
 
 const TARGET_INNOVATIONS = 10;
 
@@ -46,6 +47,7 @@ export default async function InnovationPage() {
               </div>
               <div className="grid gap-3">
                 {currentMission ? <InnovationCard innovation={currentMission} isCurrent /> : <p className="text-sm text-slate-600">No active mission yet.</p>}
+                <MissionRewardSection mission={currentMission} />
               </div>
             </section>
 
