@@ -20,6 +20,10 @@ export type IncomeSourceRow = {
   type: IncomeSourceType;
   expected_income: number;
   actual_income: number;
+  gross_amount?: number;
+  direct_cost?: number;
+  net_amount?: number;
+  count_in_total?: boolean;
   category?: 'real' | 'growing' | 'future';
   stability?: 'stable' | 'unstable' | 'building' | 'future';
   is_counted_in_real_income?: boolean;
