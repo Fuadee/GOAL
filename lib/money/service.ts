@@ -25,6 +25,7 @@ export async function getMoneyDashboardData(): Promise<MoneyDashboardData> {
       totalExpected: incomeSources.reduce((sum, source) => sum + Number(source.expected_income), 0),
       totalActual: grossIncome
     },
+    incomeSources,
     expenseSummary: {
       count: expenses.length,
       totalAmount: totalExpense
