@@ -95,6 +95,56 @@ function SituationModeSection({ situations }: { situations: typeof SECRET_SAUCE_
   );
 }
 
+function RuleOfDaySection({ rules }: { rules: [ { title: string; body: string }, { title: string; body: string }, { title: string; body: string } ] }) {
+  return (
+    <section className="space-y-3 sm:space-y-4">
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/95">Rule of the Day</h2>
+      </div>
+      <div className="grid gap-3 sm:gap-4 xl:grid-cols-3">
+        {rules.map((rule) => (
+          <article key={rule.title} className="rounded-2xl border border-slate-700/70 bg-[#101a2e]/70 p-4">
+            <h3 className="text-base font-semibold text-slate-100">{rule.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300 sm:text-[0.95rem]">{rule.body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function MemorySection({ bullets }: { bullets: string[] }) {
+  return (
+    <section className="space-y-3 rounded-2xl border border-slate-700/70 bg-slate-900/65 p-4 sm:p-5">
+      <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/95">สิ่งที่ต้องจำ</h2>
+      <ul className="space-y-2 text-sm text-slate-200 sm:text-[0.95rem]">
+        {bullets.map((item) => (
+          <li key={item} className="flex gap-2 leading-relaxed">
+            <span aria-hidden className="text-cyan-300">•</span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function DailyChecklistSection({ items }: { items: string[] }) {
+  return (
+    <section className="space-y-3 rounded-2xl border border-slate-700/70 bg-gradient-to-br from-slate-900/90 to-[#13213c]/80 p-4 sm:p-5">
+      <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/95">Daily Checklist</h2>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {items.map((item) => (
+          <div key={item} className="flex items-start gap-2 rounded-xl border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-sm text-slate-200">
+            <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded border border-cyan-300/70 text-[10px] text-cyan-200">✓</span>
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function SecretSaucePage() {
   const [activeTopicId, setActiveTopicId] = useState(SECRET_SAUCE_TOPICS[0]?.id ?? 'sleep');
 
@@ -120,7 +170,13 @@ export function SecretSaucePage() {
         >
           <TopicHero title={activeTopic.title} subtitle={activeTopic.subtitle} emoji={activeTopic.emoji} />
           <KnowledgeCardGrid cards={activeTopic.cards} />
-          <SituationModeSection situations={activeTopic.situations} />
+          {activeTopic.id === 'eating-reset' && activeTopic.ruleOfDay ? (
+            <RuleOfDaySection rules={activeTopic.ruleOfDay} />
+          ) : (
+            <SituationModeSection situations={activeTopic.situations} />
+          )}
+          {activeTopic.memoryBullets ? <MemorySection bullets={activeTopic.memoryBullets} /> : null}
+          {activeTopic.dailyChecklist ? <DailyChecklistSection items={activeTopic.dailyChecklist} /> : null}
         </motion.div>
       </AnimatePresence>
     </div>
