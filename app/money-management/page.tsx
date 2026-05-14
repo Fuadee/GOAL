@@ -1,7 +1,7 @@
 import { ConstructionProgressSection } from '@/components/money-planner/ConstructionProgressSection';
 import { IncomePlanningSystem } from '@/components/money-planner/IncomePlanningSystem';
 import { Navbar } from '@/components/navbar';
-import { PageHeader, PageShell } from '@/components/ui/mission';
+import { PageShell } from '@/components/ui/mission';
 import { getConstructionProgressData, getMoneyDashboardData } from '@/lib/money/service';
 
 export default async function MoneyManagementPage() {
@@ -10,12 +10,7 @@ export default async function MoneyManagementPage() {
   return (
     <PageShell>
       <Navbar />
-      <section className="page-container space-y-5">
-        <PageHeader
-          kicker="Money Management"
-          title="Financial Command Center"
-          description="จัดการรายรับ รายจ่าย และ mission การเงินที่สำคัญในมุมมองเดียวแบบชัดเจน"
-        />
+      <section className="page-container space-y-5 pt-2 md:pt-3">
         <ConstructionProgressSection steps={construction.steps} />
         <IncomePlanningSystem data={data} />
       </section>
