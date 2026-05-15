@@ -1,5 +1,6 @@
 import { getConstructionSteps, getExpenses, getIncomeSources, getMoneyGoalPlans, getStepUpdates } from '@/lib/money/queries';
 import { ExpenseManagementPageData, IncomeManagementPageData, MoneyDashboardData, MoneyGoalPlanStatus, MoneyPlanPageData } from '@/lib/money/types';
+import { normalizeIncomeSource } from '@/lib/money/income-utils';
 
 const TARGET_INCOME = 100000;
 const ACTIVE_PLAN_STATUSES: MoneyGoalPlanStatus[] = ['planned', 'in_progress', 'completed'];
@@ -7,7 +8,9 @@ const ACTIVE_PLAN_STATUSES: MoneyGoalPlanStatus[] = ['planned', 'in_progress', '
 export async function getMoneyDashboardData(): Promise<MoneyDashboardData> {
   const [incomeSources, expenses] = await Promise.all([getIncomeSources(), getExpenses()]);
 
-  const grossIncome = incomeSources.reduce((sum, source) => sum + Number(source.actual_income), 0);
+  const normalizedIncomeSources = incomeSources.map((source) => normalizeIncomeSource(source as unknown as Record<string, unknown>));
+
+  const grossIncome = normalizedIncomeSources.filter((source) => source.countInTotal).reduce((sum, source) => sum + source.netAmount, 0);
   const totalExpense = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   const netIncome = grossIncome - totalExpense;
   const progressPercent = Math.max(0, Math.min((netIncome / TARGET_INCOME) * 100, 100));
@@ -22,7 +25,7 @@ export async function getMoneyDashboardData(): Promise<MoneyDashboardData> {
     gap,
     incomeSummary: {
       count: incomeSources.length,
-      totalExpected: incomeSources.reduce((sum, source) => sum + Number(source.expected_income), 0),
+      totalExpected: normalizedIncomeSources.reduce((sum, source) => sum + source.grossAmount, 0),
       totalActual: grossIncome
     },
     incomeSources,
@@ -46,7 +49,9 @@ export async function getExpenseManagementData(): Promise<ExpenseManagementPageD
 export async function getMoneyPlanPageData(): Promise<MoneyPlanPageData> {
   const [incomeSources, expenses, plans] = await Promise.all([getIncomeSources(), getExpenses(), getMoneyGoalPlans()]);
 
-  const grossIncome = incomeSources.reduce((sum, source) => sum + Number(source.actual_income), 0);
+  const normalizedIncomeSources = incomeSources.map((source) => normalizeIncomeSource(source as unknown as Record<string, unknown>));
+
+  const grossIncome = normalizedIncomeSources.filter((source) => source.countInTotal).reduce((sum, source) => sum + source.netAmount, 0);
   const totalExpense = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   const currentNet = grossIncome - totalExpense;
   const plannedIncrease = plans

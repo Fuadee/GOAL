@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import { createIncomeSourceAction, deleteIncomeSourceAction } from '@/app/money-management/actions';
 import { IncomeSourceRow } from '@/lib/money/types';
-import { IncomeCategory, IncomeStatus, normalizeCountInTotal, normalizeIncomeCategory, normalizeIncomeStatus, safeNumber } from '@/lib/money/income-utils';
+import { IncomeCategory, IncomeStatus, normalizeIncomeSource } from '@/lib/money/income-utils';
 
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
@@ -44,12 +44,13 @@ export function IncomeSourcesManager({ incomeSources }: Props) {
           <thead className="text-[color:var(--text-muted)]"><tr><th>Name</th><th>Gross</th><th>Direct cost</th><th>Net</th><th>Category</th><th>Status</th><th>Count in total</th><th>Actions</th></tr></thead>
           <tbody>
             {incomeSources.map((item) => {
-              const gross = safeNumber(item.gross_amount ?? item.expected_income ?? item.actual_income);
-              const cost = safeNumber(item.direct_cost);
-              const net = safeNumber(item.net_amount ?? gross - cost);
-              const category = normalizeIncomeCategory(item.category);
-              const countInTotal = normalizeCountInTotal(item.count_in_total ?? item.is_counted_in_real_income, category);
-              return <tr key={item.id} className="text-[color:var(--text-primary)]"><td className="py-2">{item.name}</td><td>{currency.format(gross)}</td><td>{currency.format(cost)}</td><td>{currency.format(net)}</td><td>{category}</td><td>{normalizeIncomeStatus(item.stability, category)}</td><td>{countInTotal ? 'yes' : 'no'}</td><td><div className="flex items-center gap-2"><button type="button" onClick={() => { setEditingIncomeSourceId(item.id); setIncomeForm({ name: item.name, type: item.type, gross_amount: String(gross), direct_cost: String(cost), category, status: normalizeIncomeStatus(item.stability, category), count_in_total: countInTotal }); setIncomeMsg(null); }} className="theme-button-secondary rounded-md px-2 py-1 text-xs">Edit</button><button type="button" disabled={isIncomeDeletePending || isIncomePending} onClick={() => { if (!window.confirm('Delete this income source? This cannot be undone.')) return; setIncomeMsg(null); startIncomeDeleteTransition(async () => { const result = await deleteIncomeSourceAction(item.id); setIncomeMsg(result.message); if (result.success) { if (editingIncomeSourceId === item.id) clearIncomeEditor(); router.refresh(); } }); }} className="rounded-md border border-rose-300/35 bg-rose-500/10 px-2 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20 disabled:opacity-50">Delete</button></div></td></tr>;
+              const normalized = normalizeIncomeSource(item as unknown as Record<string, unknown>);
+              const gross = normalized.grossAmount;
+              const cost = normalized.directCost;
+              const net = normalized.netAmount;
+              const category = normalized.category;
+              const countInTotal = normalized.countInTotal;
+              return <tr key={item.id} className="text-[color:var(--text-primary)]"><td className="py-2">{normalized.name}</td><td>{currency.format(gross)}</td><td>{currency.format(cost)}</td><td>{currency.format(net)}</td><td>{category}</td><td>{normalized.status}</td><td>{countInTotal ? 'yes' : 'no'}</td><td><div className="flex items-center gap-2"><button type="button" onClick={() => { setEditingIncomeSourceId(item.id); setIncomeForm({ name: normalized.name, type: item.type, gross_amount: String(gross), direct_cost: String(cost), category, status: normalized.status, count_in_total: countInTotal }); setIncomeMsg(null); }} className="theme-button-secondary rounded-md px-2 py-1 text-xs">Edit</button><button type="button" disabled={isIncomeDeletePending || isIncomePending} onClick={() => { if (!window.confirm('Delete this income source? This cannot be undone.')) return; setIncomeMsg(null); startIncomeDeleteTransition(async () => { const result = await deleteIncomeSourceAction(item.id); setIncomeMsg(result.message); if (result.success) { if (editingIncomeSourceId === item.id) clearIncomeEditor(); router.refresh(); } }); }} className="rounded-md border border-rose-300/35 bg-rose-500/10 px-2 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20 disabled:opacity-50">Delete</button></div></td></tr>;
             })}
           </tbody>
         </table>

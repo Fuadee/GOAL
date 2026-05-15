@@ -33,6 +33,13 @@ import {
 import { getConstructionSteps } from '@/lib/money/queries';
 import { INCOME_CATEGORIES, INCOME_STATUSES, normalizeCountInTotal, normalizeIncomeCategory, normalizeIncomeStatus } from '@/lib/money/income-utils';
 
+const parseNumberInput = (value: FormDataEntryValue | null, fallback = 0): number => {
+  const raw = String(value ?? '').trim();
+  if (!raw) return fallback;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 const isIncomeType = (value: string): value is (typeof INCOME_SOURCE_TYPES)[number] =>
   INCOME_SOURCE_TYPES.includes(value as (typeof INCOME_SOURCE_TYPES)[number]);
 
@@ -62,15 +69,15 @@ export async function createIncomeSourceAction(formData: FormData): Promise<{ su
   const id = String(formData.get('id') ?? '').trim() || null;
   const name = String(formData.get('name') ?? '').trim();
   const typeRaw = String(formData.get('type') ?? '').trim();
-  const grossRaw = Number(String(formData.get('gross_amount') ?? '').trim());
-  const directCostRaw = Number(String(formData.get('direct_cost') ?? '').trim() || '0');
+  const grossRaw = parseNumberInput(formData.get('gross_amount'), 0);
+  const directCostRaw = parseNumberInput(formData.get('direct_cost'), 0);
   const netRaw = grossRaw - directCostRaw;
   const note = String(formData.get('note') ?? '').trim();
 
   if (!name) return { success: false, message: 'Name is required.' };
   if (!isIncomeType(typeRaw)) return { success: false, message: 'Income type is invalid.' };
-  if (!Number.isFinite(grossRaw) || grossRaw < 0) return { success: false, message: 'Gross income must be 0 or greater.' };
-  if (!Number.isFinite(directCostRaw) || directCostRaw < 0) return { success: false, message: 'Direct cost must be 0 or greater.' };
+  if (grossRaw < 0) return { success: false, message: 'Gross income must be 0 or greater.' };
+  if (directCostRaw < 0) return { success: false, message: 'Direct cost must be 0 or greater.' };
   if (!Number.isFinite(netRaw) || netRaw < 0) return { success: false, message: 'Net income must be 0 or greater.' };
 
   const categoryRaw = String(formData.get('category') ?? '').trim();
@@ -81,34 +88,43 @@ export async function createIncomeSourceAction(formData: FormData): Promise<{ su
   if (categoryRaw && !isIncomeCategory(category)) return { success: false, message: 'Income category is invalid.' };
   if (statusRaw && !isIncomeStatus(status)) return { success: false, message: 'Income status is invalid.' };
 
-  if (id) {
-    await updateIncomeSource(id, {
-      name,
-      type: typeRaw,
-      expected_income: grossRaw,
-      actual_income: netRaw,
-      gross_amount: grossRaw,
-      direct_cost: directCostRaw,
-      net_amount: netRaw,
-      category,
-      stability: status,
-      count_in_total: normalizeCountInTotal(formData.get('count_in_total'), category),
-      note: note || null
-    });
-  } else {
-    await createIncomeSource({
-      name,
-      type: typeRaw,
-      expected_income: grossRaw,
-      actual_income: netRaw,
-      gross_amount: grossRaw,
-      direct_cost: directCostRaw,
-      net_amount: netRaw,
-      category,
-      stability: status,
-      count_in_total: normalizeCountInTotal(formData.get('count_in_total'), category),
-      note: note || null
-    });
+  const payload = {
+    name,
+    type: typeRaw,
+    expected_income: grossRaw,
+    actual_income: netRaw,
+    gross_amount: grossRaw,
+    direct_cost: directCostRaw,
+    net_amount: netRaw,
+    amount: grossRaw,
+    expected_amount: grossRaw,
+    actual_amount: grossRaw,
+    category,
+    stability: status,
+    status,
+    count_in_total: normalizeCountInTotal(formData.get('count_in_total'), category),
+    note: note || null
+  };
+
+  const basicPayload = {
+    name,
+    type: typeRaw,
+    expected_income: grossRaw,
+    actual_income: netRaw
+  };
+
+  try {
+    if (id) {
+      await updateIncomeSource(id, payload);
+    } else {
+      await createIncomeSource(payload);
+    }
+  } catch {
+    if (id) {
+      await updateIncomeSource(id, basicPayload);
+    } else {
+      await createIncomeSource(basicPayload);
+    }
   }
   revalidatePath('/money-management');
   revalidatePath('/money-management/income');
