@@ -26,22 +26,13 @@ import {
   CONSTRUCTION_EXECUTION_STATES,
   CONSTRUCTION_RISK_LEVELS,
   EXPENSE_TYPES,
-  INCOME_SOURCE_TYPES,
   MONEY_GOAL_PLAN_STATUSES,
   RENTAL_HOUSE_STATUSES
 } from '@/lib/money/types';
 import { getConstructionSteps } from '@/lib/money/queries';
-import { INCOME_CATEGORIES, INCOME_STATUSES, normalizeCountInTotal, normalizeIncomeCategory, normalizeIncomeStatus } from '@/lib/money/income-utils';
+import { normalizeIncomeCategory, normalizeIncomeStatus, safeNumber } from '@/lib/money/income-utils';
 
-const parseNumberInput = (value: FormDataEntryValue | null, fallback = 0): number => {
-  const raw = String(value ?? '').trim();
-  if (!raw) return fallback;
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
 
-const isIncomeType = (value: string): value is (typeof INCOME_SOURCE_TYPES)[number] =>
-  INCOME_SOURCE_TYPES.includes(value as (typeof INCOME_SOURCE_TYPES)[number]);
 
 const isExpenseType = (value: string): value is (typeof EXPENSE_TYPES)[number] =>
   EXPENSE_TYPES.includes(value as (typeof EXPENSE_TYPES)[number]);
@@ -59,38 +50,22 @@ const isExecutionState = (value: string): value is (typeof CONSTRUCTION_EXECUTIO
 const isRiskLevel = (value: string): value is (typeof CONSTRUCTION_RISK_LEVELS)[number] =>
   CONSTRUCTION_RISK_LEVELS.includes(value as (typeof CONSTRUCTION_RISK_LEVELS)[number]);
 
-const isIncomeCategory = (value: string): value is (typeof INCOME_CATEGORIES)[number] =>
-  INCOME_CATEGORIES.includes(value as (typeof INCOME_CATEGORIES)[number]);
 
-const isIncomeStatus = (value: string): value is (typeof INCOME_STATUSES)[number] =>
-  INCOME_STATUSES.includes(value as (typeof INCOME_STATUSES)[number]);
 
 export async function createIncomeSourceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
   const id = String(formData.get('id') ?? '').trim() || null;
-  const name = String(formData.get('name') ?? '').trim();
-  const typeRaw = String(formData.get('type') ?? '').trim();
-  const grossRaw = parseNumberInput(formData.get('gross_amount'), 0);
-  const directCostRaw = parseNumberInput(formData.get('direct_cost'), 0);
-  const netRaw = grossRaw - directCostRaw;
+  const name = String(formData.get('name') ?? '').trim() || 'Untitled income';
+  const grossRaw = safeNumber(formData.get('gross_amount'));
+  const directCostRaw = safeNumber(formData.get('direct_cost'));
+  const netRaw = safeNumber(grossRaw - directCostRaw);
   const note = String(formData.get('note') ?? '').trim();
-
-  if (!name) return { success: false, message: 'Name is required.' };
-  if (!isIncomeType(typeRaw)) return { success: false, message: 'Income type is invalid.' };
-  if (grossRaw < 0) return { success: false, message: 'Gross income must be 0 or greater.' };
-  if (directCostRaw < 0) return { success: false, message: 'Direct cost must be 0 or greater.' };
-  if (!Number.isFinite(netRaw) || netRaw < 0) return { success: false, message: 'Net income must be 0 or greater.' };
-
-  const categoryRaw = String(formData.get('category') ?? '').trim();
-  const statusRaw = String(formData.get('status') ?? '').trim();
-  const category = normalizeIncomeCategory(categoryRaw);
-  const status = normalizeIncomeStatus(statusRaw, category);
-
-  if (categoryRaw && !isIncomeCategory(category)) return { success: false, message: 'Income category is invalid.' };
-  if (statusRaw && !isIncomeStatus(status)) return { success: false, message: 'Income status is invalid.' };
+  const category = normalizeIncomeCategory(formData.get('category'));
+  const status = normalizeIncomeStatus(formData.get('status'));
+  const costLabel = String(formData.get('cost_label') ?? '').trim() || 'ต้นทุน/ดอกเบี้ย';
 
   const payload = {
     name,
-    type: typeRaw,
+    type: 'active' as const,
     expected_income: grossRaw,
     actual_income: netRaw,
     gross_amount: grossRaw,
@@ -102,30 +77,21 @@ export async function createIncomeSourceAction(formData: FormData): Promise<{ su
     category,
     stability: status,
     status,
-    count_in_total: normalizeCountInTotal(formData.get('count_in_total'), category),
+    count_in_total: category === 'active',
+    cost_label: costLabel,
     note: note || null
   };
 
-  const basicPayload = {
-    name,
-    type: typeRaw,
-    expected_income: grossRaw,
-    actual_income: netRaw
-  };
+  const basicPayload = { name, type: 'active' as const, expected_income: grossRaw, actual_income: netRaw };
 
   try {
-    if (id) {
-      await updateIncomeSource(id, payload);
-    } else {
-      await createIncomeSource(payload);
-    }
+    if (id) await updateIncomeSource(id, payload);
+    else await createIncomeSource(payload);
   } catch {
-    if (id) {
-      await updateIncomeSource(id, basicPayload);
-    } else {
-      await createIncomeSource(basicPayload);
-    }
+    if (id) await updateIncomeSource(id, basicPayload);
+    else await createIncomeSource(basicPayload);
   }
+
   revalidatePath('/money-management');
   revalidatePath('/money-management/income');
   return { success: true, message: id ? 'Income source updated.' : 'Income source added.' };
