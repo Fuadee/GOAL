@@ -14,6 +14,7 @@ import {
   RentalHouseStatus,
   StepUpdateRow
 } from '@/lib/money/types';
+import { IncomeCategory, IncomeStatus } from '@/lib/money/income-utils';
 
 export async function createIncomeSource(payload: {
   name: string;
@@ -24,8 +25,8 @@ export async function createIncomeSource(payload: {
   direct_cost?: number;
   net_amount?: number;
   count_in_total?: boolean;
-  category?: 'real' | 'growing' | 'future';
-  stability?: 'stable' | 'unstable' | 'building' | 'future';
+  category?: IncomeCategory;
+  stability?: IncomeStatus;
   note?: string | null;
 }): Promise<IncomeSourceRow> {
   const rows = await supabaseRestRequest<IncomeSourceRow[]>('income_sources', 'POST', payload);
@@ -48,8 +49,8 @@ export async function updateIncomeSource(
     direct_cost?: number;
     net_amount?: number;
     count_in_total?: boolean;
-    category?: 'real' | 'growing' | 'future';
-    stability?: 'stable' | 'unstable' | 'building' | 'future';
+    category?: IncomeCategory;
+    stability?: IncomeStatus;
     note?: string | null;
   }
 ): Promise<IncomeSourceRow> {

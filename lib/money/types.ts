@@ -1,3 +1,4 @@
+import { IncomeCategory, IncomeStatus } from '@/lib/money/income-utils';
 export const INCOME_SOURCE_TYPES = ['active', 'passive'] as const;
 export const EXPENSE_TYPES = ['fixed', 'variable'] as const;
 export const RENTAL_HOUSE_STATUSES = ['planning', 'building', 'active'] as const;
@@ -24,8 +25,8 @@ export type IncomeSourceRow = {
   direct_cost?: number;
   net_amount?: number;
   count_in_total?: boolean;
-  category?: 'real' | 'growing' | 'future';
-  stability?: 'stable' | 'unstable' | 'building' | 'future';
+  category?: IncomeCategory | 'real' | 'growing';
+  stability?: IncomeStatus;
   is_counted_in_real_income?: boolean;
   frequency_label?: string | null;
   note?: string | null;
