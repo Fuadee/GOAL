@@ -10,7 +10,7 @@ export async function getMoneyDashboardData(): Promise<MoneyDashboardData> {
 
   const normalizedIncomeSources = incomeSources.map((source) => normalizeIncomeSource(source as unknown as Record<string, unknown>));
 
-  const grossIncome = normalizedIncomeSources.filter((source) => source.countInTotal).reduce((sum, source) => sum + source.netAmount, 0);
+  const grossIncome = normalizedIncomeSources.filter((source) => source.category === 'active').reduce((sum, source) => sum + source.netAmount, 0);
   const totalExpense = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   const netIncome = grossIncome - totalExpense;
   const progressPercent = Math.max(0, Math.min((netIncome / TARGET_INCOME) * 100, 100));
@@ -51,7 +51,7 @@ export async function getMoneyPlanPageData(): Promise<MoneyPlanPageData> {
 
   const normalizedIncomeSources = incomeSources.map((source) => normalizeIncomeSource(source as unknown as Record<string, unknown>));
 
-  const grossIncome = normalizedIncomeSources.filter((source) => source.countInTotal).reduce((sum, source) => sum + source.netAmount, 0);
+  const grossIncome = normalizedIncomeSources.filter((source) => source.category === 'active').reduce((sum, source) => sum + source.netAmount, 0);
   const totalExpense = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   const currentNet = grossIncome - totalExpense;
   const plannedIncrease = plans

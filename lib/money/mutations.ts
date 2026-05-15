@@ -60,6 +60,7 @@ export async function updateIncomeSource(
     expected_amount?: number;
     actual_amount?: number;
     status?: IncomeStatus;
+    cost_label?: string;
   }
 ): Promise<IncomeSourceRow> {
   const rows = await supabaseRestRequest<IncomeSourceRow[]>(`income_sources?id=eq.${id}`, 'PATCH', payload);

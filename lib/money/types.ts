@@ -29,6 +29,7 @@ export type IncomeSourceRow = {
   stability?: IncomeStatus;
   is_counted_in_real_income?: boolean;
   frequency_label?: string | null;
+  cost_label?: string | null;
   note?: string | null;
   created_at: string;
 };
