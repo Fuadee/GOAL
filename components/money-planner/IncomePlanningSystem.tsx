@@ -5,14 +5,11 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { createIncomeSourceAction } from '@/app/money-management/actions';
-import { IncomeSourceRow, MoneyDashboardData } from '@/lib/money/types';
+import { MoneyDashboardData } from '@/lib/money/types';
 import {
   IncomeCategory,
   IncomeStatus,
-  normalizeCountInTotal,
-  normalizeIncomeCategory,
-  normalizeIncomeStatus,
-  safeNumber
+  normalizeIncomeSource
 } from '@/lib/money/income-utils';
 
 import { MoneySummaryDashboard } from './MoneySummaryDashboard';
@@ -61,35 +58,28 @@ const badgeClassByStability: Record<IncomeStatus, string> = {
 };
 const stabilityLabel: Record<IncomeStatus, string> = { stable: 'Stable', unstable: 'Unstable', building: 'Building', future: 'Future' };
 
-function normalizeIncome(source: IncomeSourceRow): IncomeItem {
-  const category = normalizeIncomeCategory(source.category);
-  const grossAmount = safeNumber(source.gross_amount ?? source.expected_income ?? source.actual_income);
-  const directCost = safeNumber(source.direct_cost);
-  const netAmount = safeNumber(source.net_amount ?? grossAmount - directCost);
-  const countInTotal = normalizeCountInTotal(source.count_in_total ?? source.is_counted_in_real_income, category);
-
-  return {
-    id: source.id,
-    name: source.name,
-    type: source.type,
-    category,
-    status: normalizeIncomeStatus(source.stability, category),
-    frequencyLabel: source.frequency_label ?? '/month',
-    grossAmount,
-    directCost,
-    netAmount: Number.isFinite(netAmount) ? netAmount : 0,
-    countInTotal,
-    note: source.note ?? ''
-  };
-}
-
 function IncomeRealityCard({ data }: { data: MoneyDashboardData }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState<IncomeFormState | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const items = data.incomeSources.map(normalizeIncome);
+  const items = data.incomeSources.map((source) => {
+    const normalized = normalizeIncomeSource(source as unknown as Record<string, unknown>);
+    return {
+      id: normalized.id,
+      name: normalized.name,
+      type: source.type,
+      category: normalized.category,
+      status: normalized.status,
+      frequencyLabel: source.frequency_label ?? '/month',
+      grossAmount: normalized.grossAmount,
+      directCost: normalized.directCost,
+      netAmount: normalized.netAmount,
+      countInTotal: normalized.countInTotal,
+      note: normalized.note ?? ''
+    };
+  });
   const groups: Record<IncomeCategory, IncomeItem[]> = { current: [], building: [], future: [] };
   items.forEach((item) => (groups[item.category] ?? groups.current).push(item));
 
