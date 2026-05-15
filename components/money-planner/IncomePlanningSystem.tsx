@@ -6,21 +6,27 @@ import { useRouter } from 'next/navigation';
 
 import { createIncomeSourceAction } from '@/app/money-management/actions';
 import { IncomeSourceRow, MoneyDashboardData } from '@/lib/money/types';
+import {
+  IncomeCategory,
+  IncomeStatus,
+  normalizeCountInTotal,
+  normalizeIncomeCategory,
+  normalizeIncomeStatus,
+  safeNumber
+} from '@/lib/money/income-utils';
 
 import { MoneySummaryDashboard } from './MoneySummaryDashboard';
 
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
 type Props = { data: MoneyDashboardData };
-type IncomeCategory = 'real' | 'growing' | 'future';
-type IncomeStability = 'stable' | 'unstable' | 'building' | 'future';
 
 type IncomeItem = {
   id: string;
   name: string;
   type: 'active' | 'passive';
   category: IncomeCategory;
-  status: IncomeStability;
+  status: IncomeStatus;
   frequencyLabel: string;
   grossAmount: number;
   directCost: number;
@@ -36,38 +42,38 @@ type IncomeFormState = {
   gross_amount: string;
   direct_cost: string;
   category: IncomeCategory;
-  status: IncomeStability;
+  status: IncomeStatus;
   count_in_total: boolean;
   note: string;
 };
 
 const categoryMeta: Record<IncomeCategory, { title: string; description: string }> = {
-  real: { title: 'Current Income', description: 'รายได้ที่รับอยู่ตอนนี้' },
-  growing: { title: 'Building Income', description: 'รายได้ที่กำลังสร้างและขยาย' },
-  future: { title: 'Future Income', description: 'รายได้อนาคต (ไม่นับรวมจนกว่าจะเปิดใช้งาน)' }
+  current: { title: 'Current Income', description: 'รายได้ที่รับอยู่ตอนนี้' },
+  building: { title: 'Building Income', description: 'รายได้ที่กำลังสร้างและขยาย' },
+  future: { title: 'Future Income', description: 'รายได้อนาคต ยังไม่นับเป็นเงินตอนนี้' }
 };
 
-const badgeClassByStability: Record<IncomeStability, string> = {
+const badgeClassByStability: Record<IncomeStatus, string> = {
   stable: 'border-emerald-400/30 bg-emerald-500/15 text-emerald-100',
   unstable: 'border-amber-400/30 bg-amber-500/15 text-amber-100',
   building: 'border-sky-400/30 bg-sky-500/15 text-sky-100',
   future: 'border-violet-400/30 bg-violet-500/15 text-violet-100'
 };
-const stabilityLabel: Record<IncomeStability, string> = { stable: 'Stable', unstable: 'Unstable', building: 'Building', future: 'Future' };
+const stabilityLabel: Record<IncomeStatus, string> = { stable: 'Stable', unstable: 'Unstable', building: 'Building', future: 'Future' };
 
 function normalizeIncome(source: IncomeSourceRow): IncomeItem {
-  const category = source.category ?? 'real';
-  const grossAmount = Number(source.gross_amount ?? source.expected_income ?? source.actual_income ?? 0) || 0;
-  const directCost = Number(source.direct_cost ?? 0) || 0;
-  const netAmount = grossAmount - directCost;
-  const countInTotal = source.count_in_total ?? source.is_counted_in_real_income ?? category !== 'future';
+  const category = normalizeIncomeCategory(source.category);
+  const grossAmount = safeNumber(source.gross_amount ?? source.expected_income ?? source.actual_income);
+  const directCost = safeNumber(source.direct_cost);
+  const netAmount = safeNumber(source.net_amount ?? grossAmount - directCost);
+  const countInTotal = normalizeCountInTotal(source.count_in_total ?? source.is_counted_in_real_income, category);
 
   return {
     id: source.id,
     name: source.name,
     type: source.type,
     category,
-    status: source.stability ?? (category === 'future' ? 'future' : 'stable'),
+    status: normalizeIncomeStatus(source.stability, category),
     frequencyLabel: source.frequency_label ?? '/month',
     grossAmount,
     directCost,
@@ -84,8 +90,8 @@ function IncomeRealityCard({ data }: { data: MoneyDashboardData }) {
   const [message, setMessage] = useState<string | null>(null);
 
   const items = data.incomeSources.map(normalizeIncome);
-  const groups: Record<IncomeCategory, IncomeItem[]> = { real: [], growing: [], future: [] };
-  items.forEach((item) => groups[item.category].push(item));
+  const groups: Record<IncomeCategory, IncomeItem[]> = { current: [], building: [], future: [] };
+  items.forEach((item) => (groups[item.category] ?? groups.current).push(item));
 
   const totalGrossIncome = items.filter((item) => item.countInTotal).reduce((sum, item) => sum + item.grossAmount, 0);
   const totalDirectCosts = items.filter((item) => item.countInTotal).reduce((sum, item) => sum + item.directCost, 0);
@@ -129,8 +135,8 @@ function IncomeRealityCard({ data }: { data: MoneyDashboardData }) {
         <select name="type" value={form.type} onChange={(e) => setForm((prev) => prev ? { ...prev, type: e.target.value as 'active' | 'passive' } : prev)} className="theme-input"><option value="active">active</option><option value="passive">passive</option></select>
         <input name="gross_amount" type="number" min="0" step="0.01" required value={form.gross_amount} onChange={(e) => setForm((prev) => prev ? { ...prev, gross_amount: e.target.value } : prev)} className="theme-input" />
         <input name="direct_cost" type="number" min="0" step="0.01" value={form.direct_cost} onChange={(e) => setForm((prev) => prev ? { ...prev, direct_cost: e.target.value } : prev)} className="theme-input" />
-        <select name="category" value={form.category} onChange={(e) => setForm((prev) => prev ? { ...prev, category: e.target.value as IncomeCategory } : prev)} className="theme-input"><option value="real">current</option><option value="growing">building</option><option value="future">future</option></select>
-        <select name="status" value={form.status} onChange={(e) => setForm((prev) => prev ? { ...prev, status: e.target.value as IncomeStability } : prev)} className="theme-input"><option value="stable">stable</option><option value="unstable">unstable</option><option value="building">building</option><option value="future">future</option></select>
+        <select name="category" value={form.category} onChange={(e) => setForm((prev) => prev ? { ...prev, category: e.target.value as IncomeCategory } : prev)} className="theme-input"><option value="current">current</option><option value="building">building</option><option value="future">future</option></select>
+        <select name="status" value={form.status} onChange={(e) => setForm((prev) => prev ? { ...prev, status: e.target.value as IncomeStatus } : prev)} className="theme-input"><option value="stable">stable</option><option value="unstable">unstable</option><option value="building">building</option><option value="future">future</option></select>
         <input name="note" placeholder="Note" value={form.note} onChange={(e) => setForm((prev) => prev ? { ...prev, note: e.target.value } : prev)} className="theme-input md:col-span-2" />
         <label className="md:col-span-2 flex items-center gap-2 text-sm text-slate-300"><input name="count_in_total" type="checkbox" checked={form.count_in_total} onChange={(e) => setForm((prev) => prev ? { ...prev, count_in_total: e.target.checked } : prev)} />Count in total</label>
         <div className="md:col-span-2 flex gap-2"><button disabled={isPending} className="theme-button-primary disabled:opacity-50">Save changes</button><button type="button" onClick={() => setForm(null)} className="theme-button-secondary">Cancel</button></div>

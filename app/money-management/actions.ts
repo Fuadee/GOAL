@@ -31,6 +31,7 @@ import {
   RENTAL_HOUSE_STATUSES
 } from '@/lib/money/types';
 import { getConstructionSteps } from '@/lib/money/queries';
+import { INCOME_CATEGORIES, INCOME_STATUSES, normalizeCountInTotal, normalizeIncomeCategory, normalizeIncomeStatus } from '@/lib/money/income-utils';
 
 const isIncomeType = (value: string): value is (typeof INCOME_SOURCE_TYPES)[number] =>
   INCOME_SOURCE_TYPES.includes(value as (typeof INCOME_SOURCE_TYPES)[number]);
@@ -51,6 +52,12 @@ const isExecutionState = (value: string): value is (typeof CONSTRUCTION_EXECUTIO
 const isRiskLevel = (value: string): value is (typeof CONSTRUCTION_RISK_LEVELS)[number] =>
   CONSTRUCTION_RISK_LEVELS.includes(value as (typeof CONSTRUCTION_RISK_LEVELS)[number]);
 
+const isIncomeCategory = (value: string): value is (typeof INCOME_CATEGORIES)[number] =>
+  INCOME_CATEGORIES.includes(value as (typeof INCOME_CATEGORIES)[number]);
+
+const isIncomeStatus = (value: string): value is (typeof INCOME_STATUSES)[number] =>
+  INCOME_STATUSES.includes(value as (typeof INCOME_STATUSES)[number]);
+
 export async function createIncomeSourceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
   const id = String(formData.get('id') ?? '').trim() || null;
   const name = String(formData.get('name') ?? '').trim();
@@ -66,6 +73,14 @@ export async function createIncomeSourceAction(formData: FormData): Promise<{ su
   if (!Number.isFinite(directCostRaw) || directCostRaw < 0) return { success: false, message: 'Direct cost must be 0 or greater.' };
   if (!Number.isFinite(netRaw) || netRaw < 0) return { success: false, message: 'Net income must be 0 or greater.' };
 
+  const categoryRaw = String(formData.get('category') ?? '').trim();
+  const statusRaw = String(formData.get('status') ?? '').trim();
+  const category = normalizeIncomeCategory(categoryRaw);
+  const status = normalizeIncomeStatus(statusRaw, category);
+
+  if (categoryRaw && !isIncomeCategory(category)) return { success: false, message: 'Income category is invalid.' };
+  if (statusRaw && !isIncomeStatus(status)) return { success: false, message: 'Income status is invalid.' };
+
   if (id) {
     await updateIncomeSource(id, {
       name,
@@ -75,13 +90,12 @@ export async function createIncomeSourceAction(formData: FormData): Promise<{ su
       gross_amount: grossRaw,
       direct_cost: directCostRaw,
       net_amount: netRaw,
-      category: String(formData.get('category') ?? 'real').trim() as 'real' | 'growing' | 'future',
-      stability: String(formData.get('status') ?? 'stable').trim() as 'stable' | 'unstable' | 'building' | 'future',
-      count_in_total: String(formData.get('count_in_total') ?? '') === 'on',
+      category,
+      stability: status,
+      count_in_total: normalizeCountInTotal(formData.get('count_in_total'), category),
       note: note || null
     });
   } else {
-    const category = String(formData.get('category') ?? 'real').trim() as 'real' | 'growing' | 'future';
     await createIncomeSource({
       name,
       type: typeRaw,
@@ -91,8 +105,8 @@ export async function createIncomeSourceAction(formData: FormData): Promise<{ su
       direct_cost: directCostRaw,
       net_amount: netRaw,
       category,
-      stability: String(formData.get('status') ?? 'stable').trim() as 'stable' | 'unstable' | 'building' | 'future',
-      count_in_total: String(formData.get('count_in_total') ?? '') === 'on' || category !== 'future',
+      stability: status,
+      count_in_total: normalizeCountInTotal(formData.get('count_in_total'), category),
       note: note || null
     });
   }
