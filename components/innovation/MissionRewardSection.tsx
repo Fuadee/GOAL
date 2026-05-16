@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { RewardFormModal } from '@/components/rewards/RewardFormModal';
+import { MissionRewardCard } from '@/components/ui/mission-system';
 import { claimInnovationRewardAction, upsertInnovationRewardAction } from '@/app/innovation/actions';
 import type { InnovationCardViewModel } from '@/lib/innovation/types';
 
@@ -22,42 +23,41 @@ export function MissionRewardSection({ mission }: { mission: InnovationCardViewM
         <p className="text-xs text-slate-500">รางวัลเมื่อภารกิจสำเร็จ</p>
       </div>
       {!hasReward ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-center">
-          <p className="text-sm text-slate-600">ตั้งรางวัลให้ภารกิจนี้ เพื่อเพิ่มแรงจูงใจในการทำให้สำเร็จ</p>
-          <button onClick={() => setOpen(true)} className="mt-3 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700">+ Add Reward</button>
+        <div className="rounded-3xl border border-dashed border-cyan-200/35 bg-gradient-to-br from-[#122235]/95 via-[#12202e]/95 to-[#0f1724]/95 p-5 text-center">
+          <p className="text-sm text-cyan-100/85">ตั้งรางวัลให้ภารกิจนี้ เพื่อเพิ่มแรงจูงใจในการทำให้สำเร็จ</p>
+          <button onClick={() => setOpen(true)} className="mt-3 rounded-lg border border-cyan-300/40 px-3 py-1.5 text-sm text-cyan-100">+ Add Reward</button>
         </div>
       ) : (
-        <div className="space-y-3">
-          {mission.reward_image_url ? <img src={mission.reward_image_url} alt="Reward" className="h-40 w-full rounded-xl object-cover" /> : null}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-base font-semibold text-slate-900">{mission.reward_thai_title || mission.reward_title}</p>
-              <p className="text-sm italic text-slate-600">{mission.reward_emotional_copy}</p>
-              <p className="text-sm text-slate-500">{mission.reward_description}</p>
-            </div>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700">{status === 'locked' ? 'Locked' : status === 'ready_to_claim' ? 'Ready' : 'Claimed'}</span>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => setOpen(true)} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700">Edit Reward</button>
-            {status === 'ready_to_claim' ? (
-              <button
-                disabled={pending}
-                onClick={() => start(async () => {
-                  setError(null);
-                  const fd = new FormData();
-                  fd.set('innovation_id', mission.id);
-                  const res = await claimInnovationRewardAction(fd);
-                  if (!res.success) setError(res.message);
-                })}
-                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm text-white"
-              >
-                รับรางวัล
-              </button>
-            ) : (
-              <p className="self-center text-xs text-slate-500">{status === 'claimed' ? 'รับรางวัลแล้ว' : 'ปลดล็อกเมื่อภารกิจสำเร็จ'}</p>
-            )}
-          </div>
-        </div>
+        <MissionRewardCard
+          accent="cyan"
+          missionTitle={mission.title}
+          rewardTitle={mission.reward_thai_title || mission.reward_title || 'Mission Reward'}
+          rewardImageUrl={mission.reward_image_url || undefined}
+          emotionalCopy={mission.reward_emotional_copy}
+          description={mission.reward_description}
+          isLocked={status === 'locked'}
+          isClaimed={status === 'claimed'}
+          actions={<button onClick={() => setOpen(true)} className="min-h-9 rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-3 py-1.5 text-xs font-medium text-cyan-100">Edit Reward</button>}
+          cta={status === 'ready_to_claim' ? (
+            <button
+              disabled={pending}
+              onClick={() => start(async () => {
+                setError(null);
+                const fd = new FormData();
+                fd.set('innovation_id', mission.id);
+                const res = await claimInnovationRewardAction(fd);
+                if (!res.success) setError(res.message);
+              })}
+              className="w-full rounded-lg bg-black/25 px-3 py-2.5 text-sm font-semibold text-current"
+            >
+              {pending ? 'Claiming...' : 'Mark Reward Claimed'}
+            </button>
+          ) : (
+            <button className="w-full rounded-lg bg-black/20 px-3 py-2.5 text-sm font-semibold text-current" disabled>
+              {status === 'claimed' ? 'Reward Claimed' : 'Complete mission to unlock'}
+            </button>
+          )}
+        />
       )}
       {error ? <p className="mt-2 text-xs text-rose-600">{error}</p> : null}
       <RewardFormModal

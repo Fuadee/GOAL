@@ -7,6 +7,7 @@ import { useState, useTransition } from 'react';
 import { markInnovationNextStepDoneAction } from '@/app/innovation/actions';
 import { getInnovationMissionSummary } from '@/lib/innovation/helpers';
 import { InnovationCardViewModel } from '@/lib/innovation/types';
+import { MissionActionBar, MissionHeroCard, MissionProgressSection } from '@/components/ui/mission-system';
 
 type CurrentMissionSectionProps = {
   mission: InnovationCardViewModel | null;
@@ -26,57 +27,35 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
   const missionSummary = getInnovationMissionSummary(mission);
 
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-4 shadow-[0_10px_30px_rgba(15,23,42,0.35)] md:p-5">
-      <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-300">CURRENT MISSION</p>
+    <MissionHeroCard accent="cyan" kicker="CURRENT MISSION" title={!mission ? 'No active mission yet.' : missionSummary.primaryText}>
       {!mission ? (
-        <div className="space-y-2">
-          <p className="text-lg font-semibold text-white">No active mission yet.</p>
-          <p className="text-sm text-slate-300">Choose one candidate to start building.</p>
-        </div>
+        <p className="mt-2 text-sm text-cyan-100/80">Choose one candidate to start building.</p>
       ) : (
         <>
-          <h2 className="text-xl font-semibold leading-tight text-white">{missionSummary.primaryText}</h2>
-          <div className="space-y-1.5 text-sm">
-            <p className="text-slate-300">NEXT ACTION</p>
+          <div className="mt-3 space-y-1 text-sm text-cyan-100/80">
+            <p>NEXT ACTION</p>
             <p className="font-semibold text-white">{missionSummary.secondaryText}</p>
-            <p className="text-slate-300">Progress <span className="font-semibold text-white">{mission.progressPercent}%</span></p>
-            <p className="text-xs text-slate-400">Updated {formatTimestamp(mission.updated_at)}</p>
+            <p className="text-xs text-cyan-200/70">Updated {formatTimestamp(mission.updated_at)}</p>
           </div>
-
+          <MissionProgressSection accent="cyan" value={mission.progressPercent} label={`Progress ${mission.progressPercent}%`} />
           {error ? <p className="text-sm text-rose-200">{error}</p> : null}
-
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={`/innovation/${mission.id}`}
-              className="theme-button-primary"
-            >
-              Continue Mission
-            </Link>
-            <button
-              type="button"
-              disabled={isPending || !mission.nextStep}
-              onClick={() => {
-                if (!mission.nextStep) {
+          <MissionActionBar>
+            <Link href={`/innovation/${mission.id}`} className="w-full rounded-xl border border-cyan-100/35 bg-gradient-to-r from-cyan-200 via-sky-200 to-blue-100 px-4 py-3 text-center text-sm font-semibold text-[#082132] shadow-[0_12px_24px_-14px_rgba(103,232,249,0.85)]">Continue Mission</Link>
+            <button type="button" disabled={isPending || !mission.nextStep} onClick={() => {
+              if (!mission.nextStep) return;
+              setError(null);
+              startTransition(async () => {
+                const result = await markInnovationNextStepDoneAction(mission.id);
+                if (!result.success) {
+                  setError(result.message);
                   return;
                 }
-
-                setError(null);
-                startTransition(async () => {
-                  const result = await markInnovationNextStepDoneAction(mission.id);
-                  if (!result.success) {
-                    setError(result.message);
-                    return;
-                  }
-                  router.refresh();
-                });
-              }}
-              className="rounded-xl border border-slate-500/60 px-3 py-2 text-sm font-semibold text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isPending ? 'Saving...' : 'Done'}
-            </button>
-          </div>
+                router.refresh();
+              });
+            }} className="w-full rounded-xl border border-white/20 bg-slate-900/40 px-3 py-2 text-sm font-semibold text-slate-100 disabled:opacity-50">{isPending ? 'Saving...' : 'Mark Next Step Done'}</button>
+          </MissionActionBar>
         </>
       )}
-    </section>
+    </MissionHeroCard>
   );
 }

@@ -1,6 +1,7 @@
 import { DiscoveryCandidatesSection } from '@/components/innovation/DiscoveryCandidatesSection';
 import { DiscoveryGapSection } from '@/components/innovation/DiscoveryGapSection';
 import { InnovationCard } from '@/components/innovation/InnovationCard';
+import { CurrentMissionSection } from '@/components/innovation/CurrentMissionSection';
 import { ProgressBar } from '@/components/innovation/ProgressBar';
 import { Navbar } from '@/components/navbar';
 import { PageShell } from '@/components/ui/mission';
@@ -46,7 +47,7 @@ export default async function InnovationPage() {
                 <p className={innovationUi.sectionSubtitle}>Work currently in progress.</p>
               </div>
               <div className="grid gap-3">
-                {currentMission ? <InnovationCard innovation={currentMission} isCurrent /> : <p className="text-sm text-slate-600">No active mission yet.</p>}
+                <CurrentMissionSection mission={currentMission} />
                 <MissionRewardSection mission={currentMission} />
               </div>
             </section>
