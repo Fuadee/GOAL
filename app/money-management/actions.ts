@@ -1,297 +1,53 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { createMoneyIncomeSource, softDeleteMoneyIncomeSource, updateMoneyIncomeSource } from '@/lib/money/mutations';
 
-import {
-  createExpense,
-  createIncomeSource,
-  createMoneyGoalPlan,
-  createRentalHouse,
-  deleteMoneyGoalPlan,
-  deleteExpense,
-  deleteIncomeSource,
-  completeConstructionStep,
-  createStepUpdate,
-  updateConstructionExecutionState,
-  syncConstructionStepLatestUpdate,
-  updateConstructionStepStatus,
-  updateConstructionStepTargetDate,
-  updateConstructionWaitingDetails,
-  updateExpense,
-  updateIncomeSource,
-  updateMoneyGoalPlan
-} from '@/lib/money/mutations';
-import {
-  CONSTRUCTION_STEP_STATUSES,
-  CONSTRUCTION_EXECUTION_STATES,
-  CONSTRUCTION_RISK_LEVELS,
-  EXPENSE_TYPES,
-  MONEY_GOAL_PLAN_STATUSES,
-  RENTAL_HOUSE_STATUSES
-} from '@/lib/money/types';
-import { getConstructionSteps } from '@/lib/money/queries';
-import { normalizeIncomeCategory, normalizeIncomeStatus, safeNumber } from '@/lib/money/income-utils';
+const toNumber = (value: FormDataEntryValue | null) => {
+  if (value == null || value === '') return 0;
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : NaN;
+};
 
-
-
-const isExpenseType = (value: string): value is (typeof EXPENSE_TYPES)[number] =>
-  EXPENSE_TYPES.includes(value as (typeof EXPENSE_TYPES)[number]);
-
-const isRentalStatus = (value: string): value is (typeof RENTAL_HOUSE_STATUSES)[number] =>
-  RENTAL_HOUSE_STATUSES.includes(value as (typeof RENTAL_HOUSE_STATUSES)[number]);
-
-const isMoneyGoalPlanStatus = (value: string): value is (typeof MONEY_GOAL_PLAN_STATUSES)[number] =>
-  MONEY_GOAL_PLAN_STATUSES.includes(value as (typeof MONEY_GOAL_PLAN_STATUSES)[number]);
-
-const isConstructionStepStatus = (value: string): value is (typeof CONSTRUCTION_STEP_STATUSES)[number] =>
-  CONSTRUCTION_STEP_STATUSES.includes(value as (typeof CONSTRUCTION_STEP_STATUSES)[number]);
-const isExecutionState = (value: string): value is (typeof CONSTRUCTION_EXECUTION_STATES)[number] =>
-  CONSTRUCTION_EXECUTION_STATES.includes(value as (typeof CONSTRUCTION_EXECUTION_STATES)[number]);
-const isRiskLevel = (value: string): value is (typeof CONSTRUCTION_RISK_LEVELS)[number] =>
-  CONSTRUCTION_RISK_LEVELS.includes(value as (typeof CONSTRUCTION_RISK_LEVELS)[number]);
-
-
-
-export async function createIncomeSourceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
-  const id = String(formData.get('id') ?? '').trim() || null;
-  const name = String(formData.get('name') ?? '').trim() || 'Untitled income';
-  const grossRaw = safeNumber(formData.get('gross_amount'));
-  const directCostRaw = safeNumber(formData.get('direct_cost'));
-  const netRaw = safeNumber(grossRaw - directCostRaw);
-  const note = String(formData.get('note') ?? '').trim();
-  const category = normalizeIncomeCategory(formData.get('category'));
-  const status = normalizeIncomeStatus(formData.get('status'));
-  const costLabel = String(formData.get('cost_label') ?? '').trim() || 'ต้นทุน/ดอกเบี้ย';
-
-  const payload = {
-    name,
-    type: 'active' as const,
-    expected_income: grossRaw,
-    actual_income: netRaw,
-    gross_amount: grossRaw,
-    direct_cost: directCostRaw,
-    net_amount: netRaw,
-    amount: grossRaw,
-    expected_amount: grossRaw,
-    actual_amount: grossRaw,
-    category,
-    stability: status,
-    status,
-    count_in_total: category === 'active',
-    cost_label: costLabel,
-    note: note || null
-  };
-
-  const basicPayload = { name, type: 'active' as const, expected_income: grossRaw, actual_income: netRaw };
-
-  try {
-    if (id) await updateIncomeSource(id, payload);
-    else await createIncomeSource(payload);
-  } catch {
-    if (id) await updateIncomeSource(id, basicPayload);
-    else await createIncomeSource(basicPayload);
-  }
-
-  revalidatePath('/money-management');
-  revalidatePath('/money-management/income');
-  return { success: true, message: id ? 'Income source updated.' : 'Income source added.' };
-}
-
-export async function createExpenseAction(formData: FormData): Promise<{ success: boolean; message: string }> {
-  const id = String(formData.get('id') ?? '').trim() || null;
-  const category = String(formData.get('category') ?? '').trim();
-  const typeRaw = String(formData.get('type') ?? '').trim();
-  const amount = Number(String(formData.get('amount') ?? '').trim());
-
-  if (!category) return { success: false, message: 'Category is required.' };
-  if (!isExpenseType(typeRaw)) return { success: false, message: 'Expense type is invalid.' };
-  if (!Number.isFinite(amount) || amount < 0) return { success: false, message: 'Amount must be 0 or greater.' };
-
-  if (id) {
-    await updateExpense(id, { category, type: typeRaw, amount });
-  } else {
-    await createExpense({ category, type: typeRaw, amount });
-  }
-  revalidatePath('/money-management');
-  revalidatePath('/money-management/expenses');
-  return { success: true, message: id ? 'Expense updated.' : 'Expense added.' };
-}
-
-export async function createRentalHouseAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+export async function upsertMoneyIncomeSourceAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const id = String(formData.get('id') ?? '').trim();
   const name = String(formData.get('name') ?? '').trim();
-  const statusRaw = String(formData.get('status') ?? '').trim();
-  const monthlyIncome = Number(String(formData.get('monthly_income') ?? '').trim());
+  const description = String(formData.get('description') ?? '').trim();
+  const expenseNote = String(formData.get('expense_note') ?? '').trim();
+  const incomeAmount = toNumber(formData.get('income_amount'));
+  const expenseAmount = toNumber(formData.get('expense_amount'));
 
-  if (!name) return { success: false, message: 'Name is required.' };
-  if (!isRentalStatus(statusRaw)) return { success: false, message: 'Status is invalid.' };
-  if (!Number.isFinite(monthlyIncome) || monthlyIncome < 0) return { success: false, message: 'Monthly income must be 0 or greater.' };
-
-  await createRentalHouse({ name, status: statusRaw, monthly_income: monthlyIncome });
-  revalidatePath('/money-management');
-  return { success: true, message: 'Rental house plan added.' };
-}
-
-export async function deleteIncomeSourceAction(id: string): Promise<{ success: boolean; message: string }> {
-  if (!id) return { success: false, message: 'Income source id is required.' };
-
-  await deleteIncomeSource(id);
-  revalidatePath('/money-management');
-  revalidatePath('/money-management/income');
-  return { success: true, message: 'Income source deleted.' };
-}
-
-export async function deleteExpenseAction(id: string): Promise<{ success: boolean; message: string }> {
-  if (!id) return { success: false, message: 'Expense id is required.' };
-
-  await deleteExpense(id);
-  revalidatePath('/money-management');
-  revalidatePath('/money-management/expenses');
-  return { success: true, message: 'Expense deleted.' };
-}
-
-export async function createMoneyGoalPlanAction(formData: FormData): Promise<{ success: boolean; message: string }> {
-  const id = String(formData.get('id') ?? '').trim() || null;
-  const planName = String(formData.get('plan_name') ?? '').trim();
-  const statusRaw = String(formData.get('status') ?? '').trim();
-  const netIncrease = Number(String(formData.get('net_increase') ?? '').trim());
-
-  if (!planName) return { success: false, message: 'Plan name is required.' };
-  if (!isMoneyGoalPlanStatus(statusRaw)) return { success: false, message: 'Plan status is invalid.' };
-  if (!Number.isFinite(netIncrease) || netIncrease < 0) return { success: false, message: 'Net increase must be 0 or greater.' };
+  if (!name) return { success: false, message: 'กรุณากรอกชื่อแหล่งรายได้' };
+  if (Number.isNaN(incomeAmount) || Number.isNaN(expenseAmount)) return { success: false, message: 'จำนวนเงินไม่ถูกต้อง' };
 
   if (id) {
-    await updateMoneyGoalPlan(id, { plan_name: planName, net_increase: netIncrease, status: statusRaw });
+    await updateMoneyIncomeSource(id, { name, description: description || null, income_amount: incomeAmount, expense_amount: expenseAmount, expense_note: expenseNote || null });
   } else {
-    await createMoneyGoalPlan({ plan_name: planName, net_increase: netIncrease, status: statusRaw });
+    await createMoneyIncomeSource({ name, description: description || null, income_amount: incomeAmount, expense_amount: expenseAmount, expense_note: expenseNote || null });
   }
 
-  revalidatePath('/money-management/plan');
   revalidatePath('/money-management');
-  return { success: true, message: id ? 'Plan updated.' : 'Plan added.' };
+  return { success: true, message: 'บันทึกสำเร็จ' };
 }
 
-export async function deleteMoneyGoalPlanAction(id: string): Promise<{ success: boolean; message: string }> {
-  if (!id) return { success: false, message: 'Plan id is required.' };
-
-  await deleteMoneyGoalPlan(id);
-  revalidatePath('/money-management/plan');
+export async function deleteMoneyIncomeSourceAction(id: string): Promise<{ success: boolean; message: string }> {
+  if (!id) return { success: false, message: 'ไม่พบรายการ' };
+  await softDeleteMoneyIncomeSource(id);
   revalidatePath('/money-management');
-  return { success: true, message: 'Plan deleted.' };
+  return { success: true, message: 'ลบรายการสำเร็จ' };
 }
 
-
-export async function markConstructionStepCompletedAction(stepId: string): Promise<{ success: boolean; message: string }> {
-  if (!stepId) return { success: false, message: 'Step id is required.' };
-
-  const steps = await getConstructionSteps();
-  const targetStep = steps.find((step) => step.id === stepId);
-
-  if (!targetStep) return { success: false, message: 'Step not found.' };
-  if (targetStep.status === 'completed' || targetStep.is_completed) return { success: true, message: 'Step already completed.' };
-
-  await completeConstructionStep(stepId);
-
-  revalidatePath('/money-management');
-  return { success: true, message: 'Construction step updated.' };
-}
-
-export async function addConstructionStepUpdateAction(stepId: string, message: string): Promise<{ success: boolean; message: string }> {
-  const trimmedStepId = stepId.trim();
-  const trimmedMessage = message.trim();
-
-  if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
-  if (!trimmedMessage) return { success: false, message: 'Update message is required.' };
-
-  await createStepUpdate(trimmedStepId, trimmedMessage);
-  await syncConstructionStepLatestUpdate(trimmedStepId, trimmedMessage);
-
-  revalidatePath('/money-management');
-  return { success: true, message: 'Step update saved.' };
-}
-
-export async function updateConstructionStepTargetDateAction(stepId: string, targetDate: string): Promise<{ success: boolean; message: string }> {
-  const trimmedStepId = stepId.trim();
-  const normalizedTargetDate = targetDate.trim();
-
-  if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
-
-  await updateConstructionStepTargetDate(trimmedStepId, normalizedTargetDate || null);
-
-  revalidatePath('/money-management');
-  return { success: true, message: 'Target date updated.' };
-}
-
-export async function updateConstructionStepStatusAction(stepId: string, status: string): Promise<{ success: boolean; message: string }> {
-  const trimmedStepId = stepId.trim();
-  const normalizedStatus = status.trim();
-
-  if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
-  if (!isConstructionStepStatus(normalizedStatus)) return { success: false, message: 'Invalid step status.' };
-
-  await updateConstructionStepStatus(trimmedStepId, normalizedStatus);
-
-  revalidatePath('/money-management');
-  return { success: true, message: 'Step status updated.' };
-}
-
-export async function updateConstructionExecutionStateAction(stepId: string, executionState: string): Promise<{ success: boolean; message: string }> {
-  const trimmedStepId = stepId.trim();
-  const normalizedState = executionState.trim();
-
-  if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
-  if (!isExecutionState(normalizedState)) return { success: false, message: 'Invalid execution state.' };
-
-  await updateConstructionExecutionState(trimmedStepId, normalizedState);
-  revalidatePath('/money-management');
-  return { success: true, message: 'Execution state updated.' };
-}
-
-export async function updateConstructionWaitingDetailsAction(
-  stepId: string,
-  payload: {
-    waiting_on: string;
-    waiting_since: string;
-    expected_response_date: string;
-    next_action_label: string;
-    latest_update_text: string;
-    risk_level: string;
-    is_current_focus: boolean;
-  }
-): Promise<{ success: boolean; message: string }> {
-  const trimmedStepId = stepId.trim();
-  const trimmedRiskLevel = payload.risk_level.trim();
-  if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
-
-  if (trimmedRiskLevel && !isRiskLevel(trimmedRiskLevel)) return { success: false, message: 'Invalid risk level.' };
-
-  await updateConstructionWaitingDetails(trimmedStepId, {
-    waiting_on: payload.waiting_on.trim() || null,
-    waiting_since: payload.waiting_since.trim() || null,
-    expected_response_date: payload.expected_response_date.trim() || null,
-    next_action_label: payload.next_action_label.trim() || null,
-    latest_update_text: payload.latest_update_text.trim() || null,
-    risk_level: trimmedRiskLevel && isRiskLevel(trimmedRiskLevel) ? trimmedRiskLevel : null,
-    is_current_focus: payload.is_current_focus
-  });
-  revalidatePath('/money-management');
-  return { success: true, message: 'Waiting details updated.' };
-}
-
-export async function markConstructionResponseReceivedAction(stepId: string): Promise<{ success: boolean; message: string }> {
-  const trimmedStepId = stepId.trim();
-  if (!trimmedStepId) return { success: false, message: 'Step id is required.' };
-
-  await updateConstructionWaitingDetails(trimmedStepId, {
-    waiting_on: null,
-    waiting_since: null,
-    expected_response_date: null,
-    next_action_label: null,
-    latest_update_text: 'Response received. Continue execution.',
-    risk_level: 'on_track',
-    is_current_focus: true
-  });
-  await updateConstructionExecutionState(trimmedStepId, 'doing');
-
-  revalidatePath('/money-management');
-  return { success: true, message: 'Response logged. Step set to doing.' };
-}
+export async function createIncomeSourceAction(formData: FormData) { return upsertMoneyIncomeSourceAction(formData); }
+export async function deleteIncomeSourceAction(id: string) { return deleteMoneyIncomeSourceAction(id); }
+export async function createExpenseAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
+export async function createRentalHouseAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
+export async function deleteExpenseAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
+export async function createMoneyGoalPlanAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
+export async function deleteMoneyGoalPlanAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
+export async function markConstructionStepCompletedAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
+export async function addConstructionStepUpdateAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
+export async function updateConstructionStepTargetDateAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
+export async function updateConstructionStepStatusAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
+export async function updateConstructionExecutionStateAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
+export async function updateConstructionWaitingDetailsAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
+export async function markConstructionResponseReceivedAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }

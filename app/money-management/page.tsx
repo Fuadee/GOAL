@@ -1,17 +1,14 @@
-import { MonthlyNetIncomeSystem } from '@/components/money-planner/MonthlyNetIncomeSystem';
 import { Navbar } from '@/components/navbar';
-import { PageShell } from '@/components/ui/mission';
-import { getIncomeManagementData } from '@/lib/money/service';
+import { SimpleMoneyManagement } from '@/components/money/SimpleMoneyManagement';
+import { getMoneyManagementData } from '@/lib/money/service';
 
 export default async function MoneyManagementPage() {
-  const data = await getIncomeManagementData();
+  const data = await getMoneyManagementData();
 
   return (
-    <PageShell>
+    <main className="min-h-screen bg-slate-100/70">
       <Navbar />
-      <section className="page-container space-y-5 pt-2 md:pt-3">
-        <MonthlyNetIncomeSystem incomeSources={data.incomeSources} />
-      </section>
-    </PageShell>
+      <SimpleMoneyManagement data={data} />
+    </main>
   );
 }
