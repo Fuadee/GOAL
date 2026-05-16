@@ -28,5 +28,8 @@ export async function updateMoneyIncomeSource(
 }
 
 export async function softDeleteMoneyIncomeSource(id: string): Promise<void> {
-  await supabaseRestRequest<MoneyIncomeSourceRow[]>(`money_income_sources?id=eq.${id}`, 'PATCH', { is_active: false });
+  await supabaseRestRequest<MoneyIncomeSourceRow[]>(`money_income_sources?id=eq.${id}`, 'PATCH', {
+    is_active: false,
+    updated_at: new Date().toISOString()
+  });
 }
