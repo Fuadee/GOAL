@@ -10,6 +10,12 @@ const thb = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB',
 const monthLabel = new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { month: 'long', year: 'numeric' }).format(new Date());
 const donutColors = ['#8B5CF6', '#64748B', '#14B8A6', '#3B82F6', '#F59E0B'];
 
+function financialColorClass(value: number) {
+  if (value > 0) return 'text-emerald-600';
+  if (value < 0) return 'text-rose-600';
+  return 'text-slate-500';
+}
+
 export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -37,8 +43,8 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
       <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3"><Stat label="รายได้รวม" value={data.summary.grossIncome} cls="text-emerald-300" /><Stat label="ค่าใช้จ่ายรวม" value={data.summary.totalExpense} cls="text-rose-300" /><Stat label="รายได้สุทธิ (คงเหลือ)" value={data.summary.netIncome} cls="text-emerald-300" /></div>
     </section>
 
-    <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-5">
-      <section className="rounded-2xl bg-white p-5 shadow-sm xl:col-span-3">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-semibold text-slate-800">รายได้ของฉัน</h2><button onClick={openCreate} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">+ เพิ่มแหล่งรายได้</button></div>
         {rows.length === 0 ? <div className="rounded-2xl border border-dashed p-6 text-center text-slate-500">ยังไม่มีแหล่งรายได้ กด “เพิ่มแหล่งรายได้” เพื่อเริ่มต้น</div> : <>
           <div className="hidden overflow-x-auto md:block"><table className="w-full text-sm"><thead className="text-left text-slate-500"><tr><th>แหล่งรายได้</th><th>รายได้</th><th>ค่าใช้จ่าย</th><th>คงเหลือ</th><th></th></tr></thead><tbody>{rows.map((r)=><tr key={r.id} className="border-t"><td className="py-3"><p className="font-medium text-slate-800">{r.name}</p><p className="text-slate-500">{r.description ?? '-'}</p></td><td className="text-emerald-600">{thb.format(r.income_amount)}</td><td className="text-rose-600">{thb.format(r.expense_amount)} <span className="text-xs text-slate-500">{r.expense_note ? `(${r.expense_note})` : ''}</span></td><td className="font-semibold text-emerald-600">{thb.format(r.income_amount-r.expense_amount)}</td><td><div className="flex gap-2"><button onClick={()=>openEdit(r)} className="text-slate-600">แก้ไข</button><button onClick={()=>onDelete(r.id)} className="text-rose-600">ลบ</button></div></td></tr>)}</tbody></table></div>
@@ -56,7 +62,7 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
 }
 
 function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, totalReturnPercent, onCreate, onEdit, onDelete }: { rows: GrowthAssetRow[]; totalValue: number; totalProfitLoss: number; totalReturnPercent: number; onCreate: () => void; onEdit: (row: GrowthAssetRow) => void; onDelete: (id: string) => void }) {
-  return <section className="xl:col-span-2 rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.3)]">
+  return <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.3)]">
     <div className="flex items-start justify-between gap-3">
       <h2 className="text-xl font-semibold text-slate-900">Growth Assets (ทรัพย์สินเพื่อการเติบโต)</h2>
       <button className="rounded-xl bg-[#12233f] px-3 py-2 text-xs font-semibold text-white">ดูทั้งหมด</button>
@@ -66,12 +72,15 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, totalReturnPercen
         <p className="text-sm text-slate-500">มูลค่ารวม</p>
         <p className="mt-1 text-3xl font-bold text-slate-900">{thb.format(totalValue)}</p>
         <p className="mt-4 text-sm text-slate-500">กำไรรวม</p>
-        <p className="mt-1 text-xl font-semibold text-emerald-600">{thb.format(totalProfitLoss)} ({totalReturnPercent >= 0 ? '+' : ''}{totalReturnPercent.toFixed(2)}%)</p>
+        <p className="mt-1 text-xl font-semibold">
+          <span className={financialColorClass(totalProfitLoss)}>{thb.format(totalProfitLoss)}</span>{' '}
+          <span className={financialColorClass(totalReturnPercent)}>({totalReturnPercent >= 0 ? '+' : ''}{totalReturnPercent.toFixed(2)}%)</span>
+        </p>
       </div>
-      <div className="h-44">
+      <div className="h-40 sm:h-44">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={rows} dataKey="current_value" nameKey="asset_name" innerRadius={48} outerRadius={72} paddingAngle={3}>
+            <Pie data={rows} dataKey="current_value" nameKey="asset_name" innerRadius={42} outerRadius={64} paddingAngle={3}>
               {rows.map((_, idx) => <Cell key={idx} fill={donutColors[idx % donutColors.length]} />)}
             </Pie>
             <Tooltip formatter={(value: number) => thb.format(value)} />
@@ -80,10 +89,10 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, totalReturnPercen
       </div>
     </div>
 
-    <div className="mt-5 overflow-x-auto rounded-2xl bg-slate-50/70">
-      <table className="min-w-[520px] w-full text-sm">
-        <thead className="text-left text-slate-500"><tr><th className="px-4 py-3">สินทรัพย์</th><th className="px-4 py-3">มูลค่าปัจจุบัน</th><th className="px-4 py-3">กำไร/ขาดทุน</th><th className="px-4 py-3">ผลตอบแทน</th><th className="px-4 py-3"></th></tr></thead>
-        <tbody>{rows.map((r) => <tr key={r.id} className="border-t border-slate-100 transition hover:bg-white"><td className="px-4 py-3 font-medium text-slate-800">{r.asset_name}</td><td className="px-4 py-3 text-slate-700">{thb.format(r.current_value)}</td><td className={`px-4 py-3 font-medium ${r.profit_loss >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{thb.format(r.profit_loss)}</td><td className={`px-4 py-3 font-semibold ${r.return_percent >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{r.return_percent >= 0 ? '+' : ''}{r.return_percent.toFixed(2)}%</td><td className="px-4 py-3"><div className="flex gap-2 text-xs"><button onClick={() => onEdit(r)} className="text-slate-600">แก้ไข</button><button onClick={() => onDelete(r.id)} className="text-rose-600">ลบ</button></div></td></tr>)}</tbody>
+    <div className="mt-5 rounded-2xl bg-slate-50/70 max-lg:overflow-x-auto">
+      <table className="w-full text-xs sm:text-sm max-lg:min-w-[520px]">
+        <thead className="text-left text-slate-500"><tr><th className="px-2 py-3 sm:px-3">สินทรัพย์</th><th className="px-2 py-3 sm:px-3">มูลค่าปัจจุบัน</th><th className="px-2 py-3 sm:px-3">กำไร/ขาดทุน</th><th className="px-2 py-3 sm:px-3">ผลตอบแทน</th><th className="px-2 py-3 sm:px-3"></th></tr></thead>
+        <tbody>{rows.map((r) => <tr key={r.id} className="border-t border-slate-100 transition hover:bg-white"><td className="px-2 py-3 font-medium text-slate-800 sm:px-3">{r.asset_name}</td><td className="px-2 py-3 text-slate-700 sm:px-3">{thb.format(r.current_value)}</td><td className={`px-2 py-3 font-medium sm:px-3 ${financialColorClass(r.profit_loss)}`}>{thb.format(r.profit_loss)}</td><td className={`px-2 py-3 font-semibold sm:px-3 ${financialColorClass(r.return_percent)}`}>{r.return_percent >= 0 ? '+' : ''}{r.return_percent.toFixed(2)}%</td><td className="px-2 py-3 sm:px-3"><div className="flex items-center gap-2 whitespace-nowrap text-sm"><button onClick={() => onEdit(r)} className="text-slate-600">แก้ไข</button><button onClick={() => onDelete(r.id)} className="text-rose-600">ลบ</button></div></td></tr>)}</tbody>
       </table>
     </div>
     <button onClick={onCreate} className="mt-5 flex w-full items-center justify-center rounded-xl border border-dashed border-slate-300 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50">+ เพิ่ม Growth Asset ใหม่</button>
