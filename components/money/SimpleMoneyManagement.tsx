@@ -10,10 +10,10 @@ import { BriefcaseBusiness, Landmark, PiggyBank, WalletCards } from 'lucide-reac
 const thb = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 });
 const monthLabel = new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { month: 'long', year: 'numeric' }).format(new Date());
 const categoryMeta = {
-  investment: { label: 'Investment', badge: 'INVESTMENT', color: '#22C55E', cardClass: 'border-emerald-200/80 bg-emerald-50/70 text-emerald-700', badgeClass: 'bg-emerald-100/90 text-emerald-700', icon: BriefcaseBusiness },
-  safe: { label: 'Safe / Buffer', badge: 'SAFE / BUFFER', color: '#60A5FA', cardClass: 'border-blue-200/80 bg-blue-50/70 text-blue-700', badgeClass: 'bg-blue-100/90 text-blue-700', icon: PiggyBank },
-  future: { label: 'Future Fund', badge: 'FUTURE FUND', color: '#F59E0B', cardClass: 'border-amber-200/80 bg-amber-50/80 text-amber-700', badgeClass: 'bg-amber-100/90 text-amber-700', icon: Landmark },
-  receivable: { label: 'Receivable', badge: 'RECEIVABLE', color: '#A78BFA', cardClass: 'border-violet-200/80 bg-violet-50/70 text-violet-700', badgeClass: 'bg-violet-100/90 text-violet-700', icon: WalletCards },
+  investment: { label: 'Investment', badge: 'INVESTMENT', color: '#22C55E', cardClass: 'border-emerald-200/80 bg-emerald-50/70 text-emerald-700', badgeClass: 'bg-emerald-100/90 text-emerald-700', iconText: 'I' },
+  safe: { label: 'Safe / Buffer', badge: 'SAFE / BUFFER', color: '#60A5FA', cardClass: 'border-blue-200/80 bg-blue-50/70 text-blue-700', badgeClass: 'bg-blue-100/90 text-blue-700', iconText: 'S' },
+  future: { label: 'Future Fund', badge: 'FUTURE FUND', color: '#F59E0B', cardClass: 'border-amber-200/80 bg-amber-50/80 text-amber-700', badgeClass: 'bg-amber-100/90 text-amber-700', iconText: 'F' },
+  receivable: { label: 'Receivable', badge: 'RECEIVABLE', color: '#A78BFA', cardClass: 'border-violet-200/80 bg-violet-50/70 text-violet-700', badgeClass: 'bg-violet-100/90 text-violet-700', iconText: 'R' },
 } as const;
 type AssetCategory = keyof typeof categoryMeta;
 
@@ -114,10 +114,9 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit,
         </p>
         <div className="mt-5 flex gap-3 overflow-x-auto pb-2 xl:grid xl:grid-cols-2 xl:overflow-visible">
           {(Object.keys(categoryMeta) as AssetCategory[]).map((key) => {
-            const Icon = categoryMeta[key].icon;
             const pct = adjustedTotalValue > 0 ? (categorySummary[key] / adjustedTotalValue) * 100 : 0;
             return <div key={key} className={`min-w-[170px] shrink-0 rounded-2xl border px-3.5 py-3 ${categoryMeta[key].cardClass}`}>
-              <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/75"><Icon size={14} /></span><p className="text-xs font-medium">{categoryMeta[key].label}</p></div>
+              <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/75 text-[11px] font-semibold">{categoryMeta[key].iconText}</span><p className="text-xs font-medium">{categoryMeta[key].label}</p></div>
               <p className="mt-2 text-xl font-semibold tracking-tight text-slate-900">{thb.format(categorySummary[key])}</p>
               <p className="text-sm text-slate-500">{pct.toFixed(2)}%</p>
             </div>;
