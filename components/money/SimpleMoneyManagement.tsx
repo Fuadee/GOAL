@@ -3,8 +3,8 @@
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
-import { deleteMoneyIncomeSourceAction, upsertMoneyIncomeSourceAction } from '@/app/money-management/actions';
-import { GrowthAssetRow, MoneyManagementPageData, MoneyIncomeSourceRow } from '@/lib/money/types';
+import { deleteGrowthAssetAction, deleteMoneyIncomeSourceAction, upsertGrowthAssetAction, upsertMoneyIncomeSourceAction } from '@/app/money-management/actions';
+import { GrowthAssetRow, GrowthAssetType, MoneyManagementPageData, MoneyIncomeSourceRow } from '@/lib/money/types';
 
 const thb = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 });
 const monthLabel = new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { month: 'long', year: 'numeric' }).format(new Date());
@@ -15,6 +15,8 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
   const [, startTransition] = useTransition();
   const [editing, setEditing] = useState<MoneyIncomeSourceRow | null>(null);
   const [open, setOpen] = useState(false);
+  const [growthOpen, setGrowthOpen] = useState(false);
+  const [growthEditing, setGrowthEditing] = useState<GrowthAssetRow | null>(null);
 
   const rows = useMemo(() => data.incomeSources ?? [], [data.incomeSources]);
   const growthRows = useMemo(() => data.growthAssets ?? [], [data.growthAssets]);
@@ -45,14 +47,15 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
         <button onClick={openCreate} className="mt-4 flex w-full items-center gap-3 rounded-2xl border border-dashed p-4 text-left"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">+</span><span><p className="font-medium text-slate-700">เพิ่มแหล่งรายได้ใหม่</p><p className="text-sm text-slate-500">เพิ่มแหล่งรายได้</p></span></button>
       </section>
 
-      <GrowthAssetsCard rows={growthRows} totalValue={data.growthSummary.totalValue} totalProfitLoss={data.growthSummary.totalProfitLoss} totalReturnPercent={data.growthSummary.totalReturnPercent} />
+      <GrowthAssetsCard rows={growthRows} totalValue={data.growthSummary.totalValue} totalProfitLoss={data.growthSummary.totalProfitLoss} totalReturnPercent={data.growthSummary.totalReturnPercent} onCreate={() => { setGrowthEditing(null); setGrowthOpen(true); }} onEdit={(row) => { setGrowthEditing(row); setGrowthOpen(true); }} onDelete={(id) => startTransition(async () => { if (!confirm('ยืนยันการลบ Growth Asset นี้?')) return; const res = await deleteGrowthAssetAction(id); if (res.success) router.refresh(); })} />
     </div>
 
     {open ? <MoneyForm row={editing} onClose={()=>setOpen(false)} onSubmit={(fd)=>startTransition(async()=>{const res=await upsertMoneyIncomeSourceAction(fd); if(res.success){setOpen(false);router.refresh();}})} /> : null}
+    {growthOpen ? <GrowthAssetForm row={growthEditing} onClose={() => setGrowthOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await upsertGrowthAssetAction(fd); if (res.success) { setGrowthOpen(false); setGrowthEditing(null); router.refresh(); } })} /> : null}
   </div>;
 }
 
-function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, totalReturnPercent }: { rows: GrowthAssetRow[]; totalValue: number; totalProfitLoss: number; totalReturnPercent: number }) {
+function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, totalReturnPercent, onCreate, onEdit, onDelete }: { rows: GrowthAssetRow[]; totalValue: number; totalProfitLoss: number; totalReturnPercent: number; onCreate: () => void; onEdit: (row: GrowthAssetRow) => void; onDelete: (id: string) => void }) {
   return <section className="xl:col-span-2 rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.3)]">
     <div className="flex items-start justify-between gap-3">
       <h2 className="text-xl font-semibold text-slate-900">Growth Assets (ทรัพย์สินเพื่อการเติบโต)</h2>
@@ -79,11 +82,11 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, totalReturnPercen
 
     <div className="mt-5 overflow-x-auto rounded-2xl bg-slate-50/70">
       <table className="min-w-[520px] w-full text-sm">
-        <thead className="text-left text-slate-500"><tr><th className="px-4 py-3">สินทรัพย์</th><th className="px-4 py-3">มูลค่าปัจจุบัน</th><th className="px-4 py-3">กำไร/ขาดทุน</th><th className="px-4 py-3">ผลตอบแทน</th></tr></thead>
-        <tbody>{rows.map((r) => <tr key={r.id} className="border-t border-slate-100 transition hover:bg-white"><td className="px-4 py-3 font-medium text-slate-800">{r.asset_name}</td><td className="px-4 py-3 text-slate-700">{thb.format(r.current_value)}</td><td className={`px-4 py-3 font-medium ${r.profit_loss >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{thb.format(r.profit_loss)}</td><td className={`px-4 py-3 font-semibold ${r.return_percent >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{r.return_percent >= 0 ? '+' : ''}{r.return_percent.toFixed(2)}%</td></tr>)}</tbody>
+        <thead className="text-left text-slate-500"><tr><th className="px-4 py-3">สินทรัพย์</th><th className="px-4 py-3">มูลค่าปัจจุบัน</th><th className="px-4 py-3">กำไร/ขาดทุน</th><th className="px-4 py-3">ผลตอบแทน</th><th className="px-4 py-3"></th></tr></thead>
+        <tbody>{rows.map((r) => <tr key={r.id} className="border-t border-slate-100 transition hover:bg-white"><td className="px-4 py-3 font-medium text-slate-800">{r.asset_name}</td><td className="px-4 py-3 text-slate-700">{thb.format(r.current_value)}</td><td className={`px-4 py-3 font-medium ${r.profit_loss >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{thb.format(r.profit_loss)}</td><td className={`px-4 py-3 font-semibold ${r.return_percent >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{r.return_percent >= 0 ? '+' : ''}{r.return_percent.toFixed(2)}%</td><td className="px-4 py-3"><div className="flex gap-2 text-xs"><button onClick={() => onEdit(r)} className="text-slate-600">แก้ไข</button><button onClick={() => onDelete(r.id)} className="text-rose-600">ลบ</button></div></td></tr>)}</tbody>
       </table>
     </div>
-    <button className="mt-5 flex w-full items-center justify-center rounded-xl border border-dashed border-slate-300 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50">+ เพิ่ม Growth Asset ใหม่</button>
+    <button onClick={onCreate} className="mt-5 flex w-full items-center justify-center rounded-xl border border-dashed border-slate-300 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50">+ เพิ่ม Growth Asset ใหม่</button>
   </section>;
 }
 
@@ -92,4 +95,14 @@ function Stat({ label, value, cls }: { label: string; value: number; cls: string
 function MoneyForm({ row, onClose, onSubmit }: { row: MoneyIncomeSourceRow | null; onClose: ()=>void; onSubmit:(fd:FormData)=>void }) {
   const [name,setName]=useState(row?.name ?? ''); const [description,setDescription]=useState(row?.description ?? ''); const [income,setIncome]=useState(row? String(row.income_amount):''); const [expense,setExpense]=useState(row? String(row.expense_amount):''); const [note,setNote]=useState(row?.expense_note ?? '');
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><form action={(fd)=>{if(row)fd.set('id',row.id);fd.set('name',name);fd.set('description',description);fd.set('income_amount',income);fd.set('expense_amount',expense);fd.set('expense_note',note);onSubmit(fd);}} className="w-full max-w-lg space-y-3 rounded-2xl bg-white p-5"><h3 className="text-lg font-semibold">{row ? 'แก้ไขแหล่งรายได้' : 'เพิ่มแหล่งรายได้'}</h3><input className="theme-input" placeholder="ชื่อแหล่งรายได้" value={name} onChange={(e)=>setName(e.target.value)} required /><textarea className="theme-input" placeholder="คำอธิบาย" value={description} onChange={(e)=>setDescription(e.target.value)} /><input className="theme-input" type="number" min="0" placeholder="รายได้" value={income} onChange={(e)=>setIncome(e.target.value)} /><input className="theme-input" type="number" min="0" placeholder="ค่าใช้จ่าย" value={expense} onChange={(e)=>setExpense(e.target.value)} /><input className="theme-input" placeholder="รายละเอียดค่าใช้จ่าย" value={note} onChange={(e)=>setNote(e.target.value)} /><div className="flex gap-2"><button className="theme-button-primary">บันทึก</button><button type="button" onClick={onClose} className="theme-button-secondary">ยกเลิก</button></div></form></div>;
+}
+
+function GrowthAssetForm({ row, onClose, onSubmit }: { row: GrowthAssetRow | null; onClose: () => void; onSubmit: (fd: FormData) => void }) {
+  const [assetName, setAssetName] = useState(row?.asset_name ?? '');
+  const [assetType, setAssetType] = useState<GrowthAssetType>(row?.asset_type ?? 'etf');
+  const [platform, setPlatform] = useState(row?.platform ?? '');
+  const [investedAmount, setInvestedAmount] = useState(row ? String(row.invested_amount) : '');
+  const [currentValue, setCurrentValue] = useState(row ? String(row.current_value) : '');
+
+  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><form action={(fd) => { if (row) fd.set('id', row.id); fd.set('asset_name', assetName); fd.set('asset_type', assetType); fd.set('platform', platform); fd.set('invested_amount', investedAmount); fd.set('current_value', currentValue); onSubmit(fd); }} className="w-full max-w-lg space-y-3 rounded-2xl bg-white p-5"><h3 className="text-lg font-semibold">{row ? 'แก้ไข Growth Asset' : 'เพิ่ม Growth Asset ใหม่'}</h3><input className="theme-input" placeholder="ชื่อสินทรัพย์" value={assetName} onChange={(e) => setAssetName(e.target.value)} required /><select className="theme-input" value={assetType} onChange={(e) => setAssetType(e.target.value as GrowthAssetType)}><option value="etf">ETF</option><option value="stock">Stock</option><option value="mutual_fund">Mutual Fund</option><option value="crypto">Crypto</option><option value="gold">Gold</option><option value="other">Other</option></select><select className="theme-input" value={platform} onChange={(e) => setPlatform(e.target.value)}><option value="">เลือกแพลตฟอร์ม</option><option value="eToro">eToro</option><option value="Binance">Binance</option><option value="Streaming">Streaming</option><option value="Bank">Bank</option><option value="Other">Other</option></select><input className="theme-input" type="number" min="0" step="0.01" placeholder="เงินต้น" value={investedAmount} onChange={(e) => setInvestedAmount(e.target.value)} required /><input className="theme-input" type="number" min="0" step="0.01" placeholder="มูลค่าปัจจุบัน" value={currentValue} onChange={(e) => setCurrentValue(e.target.value)} required /><div className="flex gap-2"><button className="theme-button-primary">Save</button><button type="button" onClick={onClose} className="theme-button-secondary">ยกเลิก</button></div></form></div>;
 }

@@ -1,5 +1,5 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
-import { MoneyIncomeSourceRow } from '@/lib/money/types';
+import { GrowthAssetRow, GrowthAssetType, MoneyIncomeSourceRow } from '@/lib/money/types';
 
 export async function createMoneyIncomeSource(payload: {
   name: string;
@@ -32,4 +32,33 @@ export async function softDeleteMoneyIncomeSource(id: string): Promise<void> {
     is_active: false,
     updated_at: new Date().toISOString()
   });
+}
+
+export async function createGrowthAsset(payload: {
+  asset_name: string;
+  asset_type: GrowthAssetType;
+  platform?: string | null;
+  invested_amount: number;
+  current_value: number;
+}): Promise<GrowthAssetRow> {
+  const rows = await supabaseRestRequest<GrowthAssetRow[]>('growth_assets', 'POST', payload);
+  return rows[0];
+}
+
+export async function updateGrowthAsset(
+  id: string,
+  payload: {
+    asset_name: string;
+    asset_type: GrowthAssetType;
+    platform?: string | null;
+    invested_amount: number;
+    current_value: number;
+  }
+): Promise<GrowthAssetRow> {
+  const rows = await supabaseRestRequest<GrowthAssetRow[]>(`growth_assets?id=eq.${id}`, 'PATCH', payload);
+  return rows[0];
+}
+
+export async function deleteGrowthAsset(id: string): Promise<void> {
+  await supabaseRestRequest<GrowthAssetRow[]>(`growth_assets?id=eq.${id}`, 'DELETE');
 }

@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createMoneyIncomeSource, softDeleteMoneyIncomeSource, updateMoneyIncomeSource } from '@/lib/money/mutations';
+import { createGrowthAsset, createMoneyIncomeSource, deleteGrowthAsset, softDeleteMoneyIncomeSource, updateGrowthAsset, updateMoneyIncomeSource } from '@/lib/money/mutations';
+import { GROWTH_ASSET_TYPES, GrowthAssetType } from '@/lib/money/types';
 
 const toNumber = (value: FormDataEntryValue | null) => {
   if (value == null || value === '') return 0;
@@ -49,6 +50,41 @@ export async function deleteMoneyIncomeSourceAction(id: string): Promise<{ succe
 
 export async function createIncomeSourceAction(formData: FormData) { return upsertMoneyIncomeSourceAction(formData); }
 export async function deleteIncomeSourceAction(id: string) { return deleteMoneyIncomeSourceAction(id); }
+export async function upsertGrowthAssetAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const id = String(formData.get('id') ?? '').trim();
+  const assetName = String(formData.get('asset_name') ?? '').trim();
+  const assetType = String(formData.get('asset_type') ?? '').trim() as GrowthAssetType;
+  const platform = String(formData.get('platform') ?? '').trim();
+  const investedAmount = toNumber(formData.get('invested_amount'));
+  const currentValue = toNumber(formData.get('current_value'));
+
+  if (!assetName) return { success: false, message: 'กรุณากรอกชื่อสินทรัพย์' };
+  if (!GROWTH_ASSET_TYPES.includes(assetType)) return { success: false, message: 'ประเภทสินทรัพย์ไม่ถูกต้อง' };
+  if (Number.isNaN(investedAmount) || Number.isNaN(currentValue)) return { success: false, message: 'จำนวนเงินไม่ถูกต้อง' };
+
+  try {
+    const payload = { asset_name: assetName, asset_type: assetType, platform: platform || null, invested_amount: investedAmount, current_value: currentValue };
+    if (id) await updateGrowthAsset(id, payload);
+    else await createGrowthAsset(payload);
+    revalidatePath('/money-management');
+    return { success: true, message: 'บันทึกสินทรัพย์สำเร็จ' };
+  } catch (error) {
+    console.error('[growth-assets upsert failed]', error);
+    return { success: false, message: 'บันทึกสินทรัพย์ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง' };
+  }
+}
+
+export async function deleteGrowthAssetAction(id: string): Promise<{ success: boolean; message: string }> {
+  if (!id) return { success: false, message: 'ไม่พบรายการ' };
+  try {
+    await deleteGrowthAsset(id);
+    revalidatePath('/money-management');
+    return { success: true, message: 'ลบสินทรัพย์สำเร็จ' };
+  } catch (error) {
+    console.error('[growth-assets delete failed]', error);
+    return { success: false, message: 'ลบสินทรัพย์ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง' };
+  }
+}
 export async function createExpenseAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
 export async function createRentalHouseAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
 export async function deleteExpenseAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
