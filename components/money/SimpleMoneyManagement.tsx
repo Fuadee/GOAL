@@ -22,6 +22,12 @@ function financialColorClass(value: number) {
   return 'text-slate-500';
 }
 
+function compactThb(value: number) {
+  if (value >= 1_000_000) return `฿${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `฿${(value / 1_000).toFixed(1)}K`;
+  return `฿${value.toFixed(0)}`;
+}
+
 export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -70,6 +76,7 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
 }
 
 function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit, onDelete }: { rows: GrowthAssetRow[]; totalValue: number; totalProfitLoss: number; onCreate: () => void; onEdit: (row: GrowthAssetRow) => void; onDelete: (id: string) => void }) {
+  const [activeSlice, setActiveSlice] = useState<string | null>(null);
   const viewRows = useMemo(() => rows.map((row) => {
     const category = row.asset_type as AssetCategory;
     const effectiveCurrentValue = category === 'receivable' ? row.invested_amount : row.current_value;
@@ -82,8 +89,14 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit,
   }, [viewRows]);
   const chartData = (Object.keys(categoryMeta) as AssetCategory[]).map((key) => ({ key, name: categoryMeta[key].label, value: categorySummary[key], color: categoryMeta[key].color })).filter((item) => item.value > 0);
   const adjustedTotalValue = viewRows.reduce((sum, row) => sum + row.effectiveCurrentValue, 0);
+  const totalAssetValue = adjustedTotalValue || totalValue;
   const adjustedTotalProfit = viewRows.reduce((sum, row) => sum + (row.category === 'receivable' ? 0 : row.profit_loss), 0);
   const adjustedTotalReturn = adjustedTotalValue > 0 ? (adjustedTotalProfit / adjustedTotalValue) * 100 : 0;
+  const chartDataWithPct = chartData.map((item) => ({
+    ...item,
+    pct: totalAssetValue > 0 ? (item.value / totalAssetValue) * 100 : 0,
+  }));
+  const largestAllocation = chartDataWithPct.reduce((top, item) => (item.value > top.value ? item : top), chartDataWithPct[0] ?? null);
 
   return <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6 lg:p-7">
     <div className="flex items-start justify-between gap-3">
@@ -93,11 +106,11 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit,
       </div>
       <button className="rounded-xl bg-[#12233f] px-3 py-2 text-xs font-semibold text-white">ดูทั้งหมด</button>
     </div>
-    <div className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_250px] xl:items-center xl:gap-10">
+    <div className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-stretch xl:gap-8">
       <div className="space-y-5">
         <div>
         <p className="text-sm text-slate-500">มูลค่ารวม</p>
-        <p className="mt-1 text-3xl font-bold text-slate-900">{thb.format(adjustedTotalValue || totalValue)}</p>
+        <p className="mt-1 text-3xl font-bold text-slate-900">{thb.format(totalAssetValue)}</p>
         <p className="mt-4 text-sm text-slate-500">กำไร/ขาดทุนรวม</p>
         <p className="mt-1 text-xl font-semibold">
           <span className={financialColorClass(adjustedTotalProfit)}>{thb.format(adjustedTotalProfit || totalProfitLoss)}</span>{' '}
@@ -115,16 +128,36 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit,
           })}
         </div>
       </div>
-      <div className="flex items-center justify-center py-2 sm:py-4 xl:py-0">
-        <div className="h-32 w-full max-w-[190px] sm:h-36 sm:max-w-[210px]">
+      <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.55)] sm:p-5">
+        <div>
+          <h3 className="text-base font-semibold text-slate-900">Portfolio Allocation</h3>
+          <p className="text-xs text-slate-500">สัดส่วนสินทรัพย์ตามหมวดหมู่</p>
+        </div>
+        <div className="mx-auto mt-3 h-44 w-full max-w-[230px] sm:h-48">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={42} outerRadius={60} paddingAngle={2} stroke="none">
-              {chartData.map((item) => <Cell key={item.key} fill={item.color} />)}
+              <Pie data={chartDataWithPct} dataKey="value" nameKey="name" innerRadius={52} outerRadius={70} paddingAngle={2} stroke="none" onMouseLeave={() => setActiveSlice(null)}>
+                {chartDataWithPct.map((item) => {
+                  const isActive = activeSlice === item.key;
+                  const hasActive = activeSlice !== null;
+                  return <Cell key={item.key} fill={item.color} fillOpacity={hasActive ? (isActive ? 1 : 0.38) : 0.85} stroke={isActive ? '#334155' : 'none'} strokeWidth={isActive ? 1.5 : 0} style={{ transition: 'all 200ms ease' }} onMouseEnter={() => setActiveSlice(item.key)} />;
+                })}
               </Pie>
-              <Tooltip formatter={(value: number) => thb.format(value)} />
+              <text x="50%" y="47%" textAnchor="middle" className="fill-slate-900 text-[18px] font-semibold">{compactThb(totalAssetValue)}</text>
+              <text x="50%" y="58%" textAnchor="middle" className="fill-slate-500 text-[11px]">Total Assets</text>
+              <Tooltip contentStyle={{ borderRadius: '10px', border: '1px solid #E2E8F0', boxShadow: '0 8px 24px -18px rgba(15,23,42,0.45)' }} formatter={(value: number) => thb.format(value)} />
             </PieChart>
           </ResponsiveContainer>
+        </div>
+        <div className="mt-2 border-t border-slate-200/90 pt-3">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">Largest Allocation</p>
+          <p className="mt-1 text-sm font-semibold text-slate-800">{largestAllocation ? `${largestAllocation.name} • ${largestAllocation.pct.toFixed(2)}%` : '-'}</p>
+        </div>
+        <div className="mt-3 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+          {chartDataWithPct.map((item) => <div key={item.key} className="flex items-center justify-between rounded-lg bg-white/80 px-2.5 py-1.5 text-xs text-slate-700">
+            <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} /><span className="truncate">{item.name}</span></span>
+            <span className="font-medium text-slate-600">{item.pct.toFixed(2)}%</span>
+          </div>)}
         </div>
       </div>
     </div>
