@@ -86,6 +86,49 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
       <GrowthAssetsCard rows={growthRows} totalValue={data.growthSummary.totalValue} totalProfitLoss={data.growthSummary.totalProfitLoss} onCreate={() => { setGrowthEditing(null); setGrowthOpen(true); }} onEdit={(row) => { setGrowthEditing(row); setGrowthOpen(true); }} onDelete={(id) => startTransition(async () => { if (!confirm('ยืนยันการลบ Growth Asset นี้?')) return; const res = await deleteGrowthAssetAction(id); if (res.success) router.refresh(); })} />
     </div>
 
+    <section className="relative mt-10 overflow-hidden rounded-[30px] border border-white/15 bg-gradient-to-br from-[#081226]/95 via-[#0D1D3A]/95 to-[#071327]/95 p-6 text-slate-100 shadow-[0_28px_65px_-34px_rgba(15,23,42,0.95)] backdrop-blur-xl md:mt-14 md:p-8 lg:p-10">
+      <div className="pointer-events-none absolute -left-16 top-10 h-44 w-44 rounded-full bg-indigo-300/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-14 bottom-8 h-48 w-48 rounded-full bg-sky-200/10 blur-3xl" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_42%)]" />
+      <div className="relative">
+        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-300/90">Long-Term Focus</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-4xl">Next Income Engine</h2>
+        <p className="mt-3 text-base font-medium text-sky-100/90 md:text-lg">Build a new income source capable of generating ฿100,000/month</p>
+        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-slate-200/90 md:text-base">กำลังค้นหาและสร้างระบบรายได้ใหม่ ที่สามารถเติบโตจนกลายเป็นรายได้หลักในอนาคต แม้ตอนนี้ยังไม่รู้ว่าจะเป็นธุรกิจรูปแบบไหน</p>
+
+        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-300/80">Current Stage</p>
+            <p className="mt-1.5 text-sm font-semibold text-slate-50">Exploration</p>
+          </div>
+          <div className="rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-300/80">Focus</p>
+            <p className="mt-1.5 text-sm font-semibold text-slate-50">Discovering Opportunity</p>
+          </div>
+          <div className="rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-300/80">Mode</p>
+            <p className="mt-1.5 text-sm font-semibold text-slate-50">Building Quietly</p>
+          </div>
+        </div>
+
+        <div className="relative mt-7 overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-white/[0.09] via-white/[0.05] to-white/[0.03] p-4 sm:p-5 md:p-6">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-amber-200/15 blur-2xl" />
+          <div className="relative">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-100/90">Big Reward Unlock</p>
+              <span className="rounded-full border border-amber-100/30 bg-amber-100/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-100">Locked</span>
+            </div>
+            <p className="mt-3 text-2xl font-semibold text-white">✈️ Las Vegas Trip</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-200/90">Reward ใหญ่เพียงหนึ่งเดียว สำหรับวันที่ธุรกิจใหม่เริ่มสร้างรายได้ระดับหกหลักต่อเดือนอย่างสม่ำเสมอ</p>
+            <div className="mt-4 rounded-xl border border-white/15 bg-slate-900/35 px-3.5 py-3">
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-300">Unlock when</p>
+              <p className="mt-1 text-sm font-semibold text-slate-50">New income source reaches ฿100,000/month consistently</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     {open ? <MoneyForm row={editing} onClose={()=>setOpen(false)} onSubmit={(fd)=>startTransition(async()=>{const res=await upsertMoneyIncomeSourceAction(fd); if(res.success){setOpen(false);router.refresh();}})} /> : null}
     {growthOpen ? <GrowthAssetForm row={growthEditing} onClose={() => setGrowthOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await upsertGrowthAssetAction(fd); if (res.success) { setGrowthOpen(false); setGrowthEditing(null); router.refresh(); } })} /> : null}
   </div>;
