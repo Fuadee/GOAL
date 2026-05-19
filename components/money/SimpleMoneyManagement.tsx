@@ -8,7 +8,22 @@ import { GrowthAssetRow, GrowthAssetType, MoneyManagementPageData, MoneyIncomeSo
 
 const thb = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 });
 const monthLabel = new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { month: 'long', year: 'numeric' }).format(new Date());
-const donutColors = ['#8B5CF6', '#64748B', '#14B8A6', '#3B82F6', '#F59E0B'];
+const categoryMeta = {
+  investment: { label: 'Investment', badge: 'INVESTMENT', color: '#10B981', chipClass: 'border-emerald-200 bg-emerald-50 text-emerald-700', badgeClass: 'bg-emerald-100 text-emerald-700' },
+  safe: { label: 'Safe / Buffer', badge: 'SAFE / BUFFER', color: '#3B82F6', chipClass: 'border-sky-200 bg-sky-50 text-sky-700', badgeClass: 'bg-sky-100 text-sky-700' },
+  future: { label: 'Future Fund', badge: 'FUTURE FUND', color: '#F59E0B', chipClass: 'border-amber-200 bg-amber-50 text-amber-700', badgeClass: 'bg-amber-100 text-amber-700' },
+  receivable: { label: 'Receivable', badge: 'RECEIVABLE', color: '#8B5CF6', chipClass: 'border-violet-200 bg-violet-50 text-violet-700', badgeClass: 'bg-violet-100 text-violet-700' },
+} as const;
+type AssetCategory = keyof typeof categoryMeta;
+
+function getAssetCategory(assetName: string): AssetCategory {
+  const normalized = assetName.trim().toLowerCase();
+  if (['etoro', 'binance', 'dime'].includes(normalized)) return 'investment';
+  if (['saving account', 'reserve', 'บ้านละงู'].includes(normalized)) return 'safe';
+  if (normalized === 'business invest') return 'future';
+  if (normalized === 'h-outstanding') return 'receivable';
+  return 'investment';
+}
 
 function financialColorClass(value: number) {
   if (value > 0) return 'text-emerald-600';
@@ -53,7 +68,7 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
         <button onClick={openCreate} className="mt-4 flex w-full items-center gap-3 rounded-2xl border border-dashed p-4 text-left"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">+</span><span><p className="font-medium text-slate-700">เพิ่มแหล่งรายได้ใหม่</p><p className="text-sm text-slate-500">เพิ่มแหล่งรายได้</p></span></button>
       </section>
 
-      <GrowthAssetsCard rows={growthRows} totalValue={data.growthSummary.totalValue} totalProfitLoss={data.growthSummary.totalProfitLoss} totalReturnPercent={data.growthSummary.totalReturnPercent} onCreate={() => { setGrowthEditing(null); setGrowthOpen(true); }} onEdit={(row) => { setGrowthEditing(row); setGrowthOpen(true); }} onDelete={(id) => startTransition(async () => { if (!confirm('ยืนยันการลบ Growth Asset นี้?')) return; const res = await deleteGrowthAssetAction(id); if (res.success) router.refresh(); })} />
+      <GrowthAssetsCard rows={growthRows} totalValue={data.growthSummary.totalValue} totalProfitLoss={data.growthSummary.totalProfitLoss} onCreate={() => { setGrowthEditing(null); setGrowthOpen(true); }} onEdit={(row) => { setGrowthEditing(row); setGrowthOpen(true); }} onDelete={(id) => startTransition(async () => { if (!confirm('ยืนยันการลบ Growth Asset นี้?')) return; const res = await deleteGrowthAssetAction(id); if (res.success) router.refresh(); })} />
     </div>
 
     {open ? <MoneyForm row={editing} onClose={()=>setOpen(false)} onSubmit={(fd)=>startTransition(async()=>{const res=await upsertMoneyIncomeSourceAction(fd); if(res.success){setOpen(false);router.refresh();}})} /> : null}
@@ -61,41 +76,65 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
   </div>;
 }
 
-function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, totalReturnPercent, onCreate, onEdit, onDelete }: { rows: GrowthAssetRow[]; totalValue: number; totalProfitLoss: number; totalReturnPercent: number; onCreate: () => void; onEdit: (row: GrowthAssetRow) => void; onDelete: (id: string) => void }) {
+function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit, onDelete }: { rows: GrowthAssetRow[]; totalValue: number; totalProfitLoss: number; onCreate: () => void; onEdit: (row: GrowthAssetRow) => void; onDelete: (id: string) => void }) {
+  const viewRows = useMemo(() => rows.map((row) => {
+    const category = getAssetCategory(row.asset_name);
+    const effectiveCurrentValue = category === 'receivable' ? row.invested_amount : row.current_value;
+    return { ...row, category, effectiveCurrentValue };
+  }), [rows]);
+  const categorySummary = useMemo(() => {
+    const base = { investment: 0, safe: 0, future: 0, receivable: 0 } as Record<AssetCategory, number>;
+    viewRows.forEach((row) => { base[row.category] += row.effectiveCurrentValue; });
+    return base;
+  }, [viewRows]);
+  const chartData = (Object.keys(categoryMeta) as AssetCategory[]).map((key) => ({ key, name: categoryMeta[key].label, value: categorySummary[key], color: categoryMeta[key].color })).filter((item) => item.value > 0);
+  const adjustedTotalValue = viewRows.reduce((sum, row) => sum + row.effectiveCurrentValue, 0);
+  const adjustedTotalProfit = viewRows.reduce((sum, row) => sum + (row.category === 'receivable' ? 0 : row.profit_loss), 0);
+  const adjustedTotalReturn = adjustedTotalValue > 0 ? (adjustedTotalProfit / adjustedTotalValue) * 100 : 0;
+
   return <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.3)]">
     <div className="flex items-start justify-between gap-3">
-      <h2 className="text-xl font-semibold text-slate-900">Growth Assets (ทรัพย์สินเพื่อการเติบโต)</h2>
+      <div>
+        <h2 className="text-xl font-semibold text-slate-900">สินทรัพย์ทั้งหมด</h2>
+        <p className="text-sm text-slate-500">จัดกลุ่มตามประเภท</p>
+      </div>
       <button className="rounded-xl bg-[#12233f] px-3 py-2 text-xs font-semibold text-white">ดูทั้งหมด</button>
     </div>
     <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div>
         <p className="text-sm text-slate-500">มูลค่ารวม</p>
-        <p className="mt-1 text-3xl font-bold text-slate-900">{thb.format(totalValue)}</p>
+        <p className="mt-1 text-3xl font-bold text-slate-900">{thb.format(adjustedTotalValue || totalValue)}</p>
         <p className="mt-4 text-sm text-slate-500">กำไรรวม</p>
         <p className="mt-1 text-xl font-semibold">
-          <span className={financialColorClass(totalProfitLoss)}>{thb.format(totalProfitLoss)}</span>{' '}
-          <span className={financialColorClass(totalReturnPercent)}>({totalReturnPercent >= 0 ? '+' : ''}{totalReturnPercent.toFixed(2)}%)</span>
+          <span className={financialColorClass(adjustedTotalProfit)}>{thb.format(adjustedTotalProfit || totalProfitLoss)}</span>{' '}
+          <span className={financialColorClass(adjustedTotalReturn)}>({adjustedTotalReturn >= 0 ? '+' : ''}{adjustedTotalReturn.toFixed(2)}%)</span>
         </p>
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+          {(Object.keys(categoryMeta) as AssetCategory[]).map((key) => <div key={key} className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${categoryMeta[key].chipClass}`}>{categoryMeta[key].label} {thb.format(categorySummary[key])}</div>)}
+        </div>
       </div>
       <div className="h-40 sm:h-44">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={rows} dataKey="current_value" nameKey="asset_name" innerRadius={42} outerRadius={64} paddingAngle={3}>
-              {rows.map((_, idx) => <Cell key={idx} fill={donutColors[idx % donutColors.length]} />)}
+            <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={42} outerRadius={64} paddingAngle={3}>
+              {chartData.map((item) => <Cell key={item.key} fill={item.color} />)}
             </Pie>
             <Tooltip formatter={(value: number) => thb.format(value)} />
           </PieChart>
         </ResponsiveContainer>
+        <div className="mt-2 space-y-1 text-xs">
+          {chartData.map((item) => <div key={item.key} className="flex items-center gap-2 text-slate-600"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />{item.name}</div>)}
+        </div>
       </div>
     </div>
 
     <div className="mt-5 rounded-2xl bg-slate-50/70 max-lg:overflow-x-auto">
       <table className="w-full text-xs sm:text-sm max-lg:min-w-[520px]">
-        <thead className="text-left text-slate-500"><tr><th className="px-2 py-3 sm:px-3">สินทรัพย์</th><th className="px-2 py-3 sm:px-3">มูลค่าปัจจุบัน</th><th className="px-2 py-3 sm:px-3">กำไร/ขาดทุน</th><th className="px-2 py-3 sm:px-3">ผลตอบแทน</th><th className="px-2 py-3 sm:px-3"></th></tr></thead>
-        <tbody>{rows.map((r) => <tr key={r.id} className="border-t border-slate-100 transition hover:bg-white"><td className="px-2 py-3 font-medium text-slate-800 sm:px-3">{r.asset_name}</td><td className="px-2 py-3 text-slate-700 sm:px-3">{thb.format(r.current_value)}</td><td className={`px-2 py-3 font-medium sm:px-3 ${financialColorClass(r.profit_loss)}`}>{thb.format(r.profit_loss)}</td><td className={`px-2 py-3 font-semibold sm:px-3 ${financialColorClass(r.return_percent)}`}>{r.return_percent >= 0 ? '+' : ''}{r.return_percent.toFixed(2)}%</td><td className="px-2 py-3 sm:px-3"><div className="flex items-center gap-2 whitespace-nowrap text-sm"><button onClick={() => onEdit(r)} className="text-slate-600">แก้ไข</button><button onClick={() => onDelete(r.id)} className="text-rose-600">ลบ</button></div></td></tr>)}</tbody>
+        <thead className="text-left text-slate-500"><tr><th className="px-2 py-3 sm:px-3">สินทรัพย์</th><th className="px-2 py-3 sm:px-3">ประเภท</th><th className="px-2 py-3 sm:px-3">มูลค่าปัจจุบัน</th><th className="px-2 py-3 sm:px-3">กำไร/ขาดทุน</th><th className="px-2 py-3 sm:px-3">ผลตอบแทน</th><th className="px-2 py-3 sm:px-3"></th></tr></thead>
+        <tbody>{viewRows.map((r) => <tr key={r.id} className="border-t border-slate-100 transition hover:bg-white"><td className="px-2 py-3 font-medium text-slate-800 sm:px-3">{r.asset_name}</td><td className="px-2 py-3 sm:px-3"><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${categoryMeta[r.category].badgeClass}`}>{categoryMeta[r.category].badge}</span></td><td className="px-2 py-3 text-slate-700 sm:px-3">{thb.format(r.effectiveCurrentValue)}</td><td className={`px-2 py-3 font-medium sm:px-3 ${financialColorClass(r.category === 'receivable' ? 0 : r.profit_loss)}`}>{thb.format(r.category === 'receivable' ? 0 : r.profit_loss)}</td><td className={`px-2 py-3 font-semibold sm:px-3 ${r.category === 'receivable' ? 'text-violet-600' : financialColorClass(r.return_percent)}`}>{r.category === 'receivable' ? 'Pending Recovery' : `${r.return_percent >= 0 ? '+' : ''}${r.return_percent.toFixed(2)}%`}</td><td className="px-2 py-3 sm:px-3"><div className="flex items-center gap-2 whitespace-nowrap text-sm"><button onClick={() => onEdit(r)} className="text-slate-600">แก้ไข</button><button onClick={() => onDelete(r.id)} className="text-rose-600">ลบ</button></div></td></tr>)}</tbody>
       </table>
     </div>
-    <button onClick={onCreate} className="mt-5 flex w-full items-center justify-center rounded-xl border border-dashed border-slate-300 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50">+ เพิ่ม Growth Asset ใหม่</button>
+    <button onClick={onCreate} className="mt-5 flex w-full items-center justify-center rounded-xl border border-dashed border-slate-300 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50">+ เพิ่มสินทรัพย์ใหม่</button>
   </section>;
 }
 
