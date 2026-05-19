@@ -102,7 +102,7 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit,
       </div>
       <button className="rounded-xl bg-[#12233f] px-3 py-2 text-xs font-semibold text-white">ดูทั้งหมด</button>
     </div>
-    <div className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_290px] xl:gap-8">
+    <div className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_250px] xl:items-center xl:gap-10">
       <div className="space-y-5">
         <div>
         <p className="text-sm text-slate-500">มูลค่ารวม</p>
@@ -124,19 +124,16 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit,
           })}
         </div>
       </div>
-      <div className="grid grid-cols-1 items-start gap-5 sm:grid-cols-[160px_minmax(0,1fr)] xl:grid-cols-1">
-        <div className="h-40 sm:h-44">
+      <div className="flex items-center justify-center py-2 sm:py-4 xl:py-0">
+        <div className="h-32 w-full max-w-[190px] sm:h-36 sm:max-w-[210px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={48} outerRadius={72} paddingAngle={2} stroke="none">
+              <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={42} outerRadius={60} paddingAngle={2} stroke="none">
               {chartData.map((item) => <Cell key={item.key} fill={item.color} />)}
               </Pie>
               <Tooltip formatter={(value: number) => thb.format(value)} />
             </PieChart>
           </ResponsiveContainer>
-        </div>
-        <div className="space-y-3 text-sm">
-          {chartData.map((item) => <div key={item.key} className="flex items-center justify-between gap-4 text-slate-500"><div className="flex items-center gap-2.5"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} /><span className="text-xs sm:text-sm">{item.name}</span></div><span className="text-xs text-slate-600 sm:text-sm">{thb.format(item.value)}</span></div>)}
         </div>
       </div>
     </div>
