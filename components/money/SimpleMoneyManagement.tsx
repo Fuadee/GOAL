@@ -5,14 +5,15 @@ import { useRouter } from 'next/navigation';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { deleteGrowthAssetAction, deleteMoneyIncomeSourceAction, upsertGrowthAssetAction, upsertMoneyIncomeSourceAction } from '@/app/money-management/actions';
 import { GrowthAssetRow, GrowthAssetType, MoneyManagementPageData, MoneyIncomeSourceRow } from '@/lib/money/types';
+import { BriefcaseBusiness, Landmark, PiggyBank, WalletCards } from 'lucide-react';
 
 const thb = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 });
 const monthLabel = new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { month: 'long', year: 'numeric' }).format(new Date());
 const categoryMeta = {
-  investment: { label: 'Investment', badge: 'INVESTMENT', color: '#10B981', chipClass: 'border-emerald-200 bg-emerald-50 text-emerald-700', badgeClass: 'bg-emerald-100 text-emerald-700' },
-  safe: { label: 'Safe / Buffer', badge: 'SAFE / BUFFER', color: '#3B82F6', chipClass: 'border-sky-200 bg-sky-50 text-sky-700', badgeClass: 'bg-sky-100 text-sky-700' },
-  future: { label: 'Future Fund', badge: 'FUTURE FUND', color: '#F59E0B', chipClass: 'border-amber-200 bg-amber-50 text-amber-700', badgeClass: 'bg-amber-100 text-amber-700' },
-  receivable: { label: 'Receivable', badge: 'RECEIVABLE', color: '#8B5CF6', chipClass: 'border-violet-200 bg-violet-50 text-violet-700', badgeClass: 'bg-violet-100 text-violet-700' },
+  investment: { label: 'Investment', badge: 'INVESTMENT', color: '#22C55E', cardClass: 'border-emerald-200/80 bg-emerald-50/70 text-emerald-700', badgeClass: 'bg-emerald-100/90 text-emerald-700', icon: BriefcaseBusiness },
+  safe: { label: 'Safe / Buffer', badge: 'SAFE / BUFFER', color: '#60A5FA', cardClass: 'border-blue-200/80 bg-blue-50/70 text-blue-700', badgeClass: 'bg-blue-100/90 text-blue-700', icon: PiggyBank },
+  future: { label: 'Future Fund', badge: 'FUTURE FUND', color: '#F59E0B', cardClass: 'border-amber-200/80 bg-amber-50/80 text-amber-700', badgeClass: 'bg-amber-100/90 text-amber-700', icon: Landmark },
+  receivable: { label: 'Receivable', badge: 'RECEIVABLE', color: '#A78BFA', cardClass: 'border-violet-200/80 bg-violet-50/70 text-violet-700', badgeClass: 'bg-violet-100/90 text-violet-700', icon: WalletCards },
 } as const;
 type AssetCategory = keyof typeof categoryMeta;
 
@@ -53,9 +54,11 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
   const openEdit = (row: MoneyIncomeSourceRow) => { setEditing(row); setOpen(true); };
 
   return <div className="mx-auto w-full max-w-[1440px] space-y-6 px-4 py-4 md:px-6">
-    <section className="rounded-3xl bg-gradient-to-br from-slate-900 via-[#152647] to-slate-900 p-6 text-white shadow-xl">
-      <div className="flex items-start justify-between"><div><p className="text-sm text-slate-300">ภาพรวมการเงิน</p><p className="mt-2 text-4xl font-bold text-emerald-300">{thb.format(data.summary.netIncome)}</p><p className="text-sm text-slate-300">รายได้สุทธิ (คงเหลือ)</p></div><div className="rounded-xl border border-white/20 px-3 py-2 text-sm">{monthLabel}</div></div>
-      <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3"><Stat label="รายได้รวม" value={data.summary.grossIncome} cls="text-emerald-300" /><Stat label="ค่าใช้จ่ายรวม" value={data.summary.totalExpense} cls="text-rose-300" /><Stat label="รายได้สุทธิ (คงเหลือ)" value={data.summary.netIncome} cls="text-emerald-300" /></div>
+    <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-gradient-to-br from-[#0B1733] via-[#13244A] to-[#0A1630] p-7 text-white shadow-[0_20px_45px_-26px_rgba(15,23,42,0.75)] backdrop-blur-sm md:p-8">
+      <div className="pointer-events-none absolute -top-14 right-0 h-44 w-44 rounded-full bg-emerald-300/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 left-6 h-40 w-40 rounded-full bg-blue-300/10 blur-3xl" />
+      <div className="relative flex items-start justify-between gap-3"><div><p className="text-sm text-slate-300">ภาพรวมการเงิน</p><p className="mt-2 text-4xl font-semibold tracking-tight text-emerald-300 md:text-5xl">{thb.format(data.summary.netIncome)}</p><p className="mt-1 text-sm text-slate-300">รายได้สุทธิ (คงเหลือ)</p></div><div className="rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-slate-100 backdrop-blur">{monthLabel}</div></div>
+      <div className="relative mt-7 grid grid-cols-1 gap-3 md:grid-cols-3"><Stat label="รายได้รวม" value={data.summary.grossIncome} cls="text-emerald-300" /><Stat label="ค่าใช้จ่ายรวม" value={data.summary.totalExpense} cls="text-rose-300" /><Stat label="รายได้สุทธิ (คงเหลือ)" value={data.summary.netIncome} cls="text-emerald-300" /></div>
     </section>
 
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
@@ -92,7 +95,7 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit,
   const adjustedTotalProfit = viewRows.reduce((sum, row) => sum + (row.category === 'receivable' ? 0 : row.profit_loss), 0);
   const adjustedTotalReturn = adjustedTotalValue > 0 ? (adjustedTotalProfit / adjustedTotalValue) * 100 : 0;
 
-  return <section className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.3)]">
+  return <section className="rounded-[24px] border border-slate-200/80 bg-white p-6 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)]">
     <div className="flex items-start justify-between gap-3">
       <div>
         <h2 className="text-xl font-semibold text-slate-900">สินทรัพย์ทั้งหมด</h2>
@@ -100,45 +103,55 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit,
       </div>
       <button className="rounded-xl bg-[#12233f] px-3 py-2 text-xs font-semibold text-white">ดูทั้งหมด</button>
     </div>
-    <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
       <div>
         <p className="text-sm text-slate-500">มูลค่ารวม</p>
         <p className="mt-1 text-3xl font-bold text-slate-900">{thb.format(adjustedTotalValue || totalValue)}</p>
-        <p className="mt-4 text-sm text-slate-500">กำไรรวม</p>
+        <p className="mt-4 text-sm text-slate-500">กำไร/ขาดทุนรวม</p>
         <p className="mt-1 text-xl font-semibold">
           <span className={financialColorClass(adjustedTotalProfit)}>{thb.format(adjustedTotalProfit || totalProfitLoss)}</span>{' '}
           <span className={financialColorClass(adjustedTotalReturn)}>({adjustedTotalReturn >= 0 ? '+' : ''}{adjustedTotalReturn.toFixed(2)}%)</span>
         </p>
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-          {(Object.keys(categoryMeta) as AssetCategory[]).map((key) => <div key={key} className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${categoryMeta[key].chipClass}`}>{categoryMeta[key].label} {thb.format(categorySummary[key])}</div>)}
+        <div className="mt-5 flex gap-3 overflow-x-auto pb-2 xl:grid xl:grid-cols-2 xl:overflow-visible">
+          {(Object.keys(categoryMeta) as AssetCategory[]).map((key) => {
+            const Icon = categoryMeta[key].icon;
+            const pct = adjustedTotalValue > 0 ? (categorySummary[key] / adjustedTotalValue) * 100 : 0;
+            return <div key={key} className={`min-w-[170px] shrink-0 rounded-2xl border px-3.5 py-3 ${categoryMeta[key].cardClass}`}>
+              <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/75"><Icon size={14} /></span><p className="text-xs font-medium">{categoryMeta[key].label}</p></div>
+              <p className="mt-2 text-xl font-semibold tracking-tight text-slate-900">{thb.format(categorySummary[key])}</p>
+              <p className="text-sm text-slate-500">{pct.toFixed(2)}%</p>
+            </div>;
+          })}
         </div>
       </div>
-      <div className="h-40 sm:h-44">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={42} outerRadius={64} paddingAngle={3}>
+      <div className="grid grid-cols-1 items-center gap-4 sm:grid-cols-[170px_minmax(0,1fr)] xl:grid-cols-1">
+        <div className="h-44 sm:h-52">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={86} paddingAngle={2} stroke="none">
               {chartData.map((item) => <Cell key={item.key} fill={item.color} />)}
-            </Pie>
-            <Tooltip formatter={(value: number) => thb.format(value)} />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="mt-2 space-y-1 text-xs">
-          {chartData.map((item) => <div key={item.key} className="flex items-center gap-2 text-slate-600"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />{item.name}</div>)}
+              </Pie>
+              <Tooltip formatter={(value: number) => thb.format(value)} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="space-y-2.5 text-sm">
+          {chartData.map((item) => <div key={item.key} className="flex items-center justify-between gap-3 text-slate-600"><div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />{item.name}</div><span>{thb.format(item.value)}</span></div>)}
         </div>
       </div>
     </div>
 
     <div className="mt-5 rounded-2xl bg-slate-50/70 max-lg:overflow-x-auto">
       <table className="w-full text-xs sm:text-sm max-lg:min-w-[520px]">
-        <thead className="text-left text-slate-500"><tr><th className="px-2 py-3 sm:px-3">สินทรัพย์</th><th className="px-2 py-3 sm:px-3">ประเภท</th><th className="px-2 py-3 sm:px-3">มูลค่าปัจจุบัน</th><th className="px-2 py-3 sm:px-3">กำไร/ขาดทุน</th><th className="px-2 py-3 sm:px-3">ผลตอบแทน</th><th className="px-2 py-3 sm:px-3"></th></tr></thead>
-        <tbody>{viewRows.map((r) => <tr key={r.id} className="border-t border-slate-100 transition hover:bg-white"><td className="px-2 py-3 font-medium text-slate-800 sm:px-3">{r.asset_name}</td><td className="px-2 py-3 sm:px-3"><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${categoryMeta[r.category].badgeClass}`}>{categoryMeta[r.category].badge}</span></td><td className="px-2 py-3 text-slate-700 sm:px-3">{thb.format(r.effectiveCurrentValue)}</td><td className={`px-2 py-3 font-medium sm:px-3 ${financialColorClass(r.category === 'receivable' ? 0 : r.profit_loss)}`}>{thb.format(r.category === 'receivable' ? 0 : r.profit_loss)}</td><td className={`px-2 py-3 font-semibold sm:px-3 ${r.category === 'receivable' ? 'text-violet-600' : financialColorClass(r.return_percent)}`}>{r.category === 'receivable' ? 'Pending Recovery' : `${r.return_percent >= 0 ? '+' : ''}${r.return_percent.toFixed(2)}%`}</td><td className="px-2 py-3 sm:px-3"><div className="flex items-center gap-2 whitespace-nowrap text-sm"><button onClick={() => onEdit(r)} className="text-slate-600">แก้ไข</button><button onClick={() => onDelete(r.id)} className="text-rose-600">ลบ</button></div></td></tr>)}</tbody>
+        <thead className="text-left text-slate-500"><tr><th className="px-2 py-3.5 sm:px-3">สินทรัพย์</th><th className="px-2 py-3.5 sm:px-3">ประเภท</th><th className="px-2 py-3.5 sm:px-3">มูลค่าปัจจุบัน</th><th className="px-2 py-3.5 sm:px-3">กำไร/ขาดทุน</th><th className="px-2 py-3.5 sm:px-3">ผลตอบแทน</th><th className="px-2 py-3.5 sm:px-3">จัดการ</th></tr></thead>
+        <tbody>{viewRows.map((r) => <tr key={r.id} className="border-t border-slate-100/80 transition hover:bg-white"><td className="px-2 py-4 font-medium text-slate-800 sm:px-3">{r.asset_name}</td><td className="px-2 py-4 sm:px-3"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide ${categoryMeta[r.category].badgeClass}`}>{categoryMeta[r.category].badge}</span></td><td className="px-2 py-4 text-slate-700 sm:px-3">{thb.format(r.effectiveCurrentValue)}</td><td className={`px-2 py-4 font-medium sm:px-3 ${financialColorClass(r.category === 'receivable' ? 0 : r.profit_loss)}`}>{r.category === 'receivable' ? <span className="text-amber-600">Pending Recovery</span> : thb.format(r.profit_loss)}</td><td className={`px-2 py-4 font-semibold sm:px-3 ${r.category === 'receivable' ? 'text-amber-600' : financialColorClass(r.return_percent)}`}>{r.category === 'receivable' ? <span>Awaiting repayment</span> : `${r.return_percent >= 0 ? '+' : ''}${r.return_percent.toFixed(2)}%`}</td><td className="px-2 py-4 sm:px-3"><div className="flex items-center gap-2 whitespace-nowrap text-sm"><button onClick={() => onEdit(r)} className="text-slate-500 hover:text-slate-700">แก้ไข</button><button onClick={() => onDelete(r.id)} className="text-rose-500 hover:text-rose-600">ลบ</button></div></td></tr>)}</tbody>
       </table>
     </div>
     <button onClick={onCreate} className="mt-5 flex w-full items-center justify-center rounded-xl border border-dashed border-slate-300 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50">+ เพิ่มสินทรัพย์ใหม่</button>
   </section>;
 }
 
-function Stat({ label, value, cls }: { label: string; value: number; cls: string }) { return <div className="rounded-2xl bg-white/5 p-4"><p className="text-xs text-slate-300">{label}</p><p className={`text-2xl font-semibold ${cls}`}>{thb.format(value)}</p></div>; }
+function Stat({ label, value, cls }: { label: string; value: number; cls: string }) { return <div className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-inner backdrop-blur-sm"><p className="text-xs text-slate-300">{label}</p><p className={`mt-1 text-2xl font-semibold ${cls}`}>{thb.format(value)}</p></div>; }
 
 function MoneyForm({ row, onClose, onSubmit }: { row: MoneyIncomeSourceRow | null; onClose: ()=>void; onSubmit:(fd:FormData)=>void }) {
   const [name,setName]=useState(row?.name ?? ''); const [description,setDescription]=useState(row?.description ?? ''); const [income,setIncome]=useState(row? String(row.income_amount):''); const [expense,setExpense]=useState(row? String(row.expense_amount):''); const [note,setNote]=useState(row?.expense_note ?? '');
