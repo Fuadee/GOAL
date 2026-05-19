@@ -1,7 +1,7 @@
 create table if not exists public.growth_assets (
   id uuid primary key default gen_random_uuid(),
   asset_name text not null,
-  asset_type text not null check (asset_type in ('etf', 'stock', 'mutual_fund', 'crypto', 'gold')),
+  asset_type text not null check (asset_type in ('etf', 'stock', 'mutual_fund', 'crypto', 'gold', 'other')),
   platform text,
   current_value numeric(14,2) not null default 0 check (current_value >= 0),
   invested_amount numeric(14,2) not null default 0 check (invested_amount >= 0),
