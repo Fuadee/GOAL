@@ -16,15 +16,6 @@ const categoryMeta = {
 } as const;
 type AssetCategory = keyof typeof categoryMeta;
 
-function getAssetCategory(assetName: string): AssetCategory {
-  const normalized = assetName.trim().toLowerCase();
-  if (['etoro', 'binance', 'dime'].includes(normalized)) return 'investment';
-  if (['saving account', 'reserve', 'บ้านละงู'].includes(normalized)) return 'safe';
-  if (normalized === 'business invest') return 'future';
-  if (normalized === 'h-outstanding') return 'receivable';
-  return 'investment';
-}
-
 function financialColorClass(value: number) {
   if (value > 0) return 'text-emerald-600';
   if (value < 0) return 'text-rose-600';
@@ -80,7 +71,7 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
 
 function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit, onDelete }: { rows: GrowthAssetRow[]; totalValue: number; totalProfitLoss: number; onCreate: () => void; onEdit: (row: GrowthAssetRow) => void; onDelete: (id: string) => void }) {
   const viewRows = useMemo(() => rows.map((row) => {
-    const category = getAssetCategory(row.asset_name);
+    const category = row.asset_type as AssetCategory;
     const effectiveCurrentValue = category === 'receivable' ? row.invested_amount : row.current_value;
     return { ...row, category, effectiveCurrentValue };
   }), [rows]);
@@ -157,10 +148,21 @@ function MoneyForm({ row, onClose, onSubmit }: { row: MoneyIncomeSourceRow | nul
 
 function GrowthAssetForm({ row, onClose, onSubmit }: { row: GrowthAssetRow | null; onClose: () => void; onSubmit: (fd: FormData) => void }) {
   const [assetName, setAssetName] = useState(row?.asset_name ?? '');
-  const [assetType, setAssetType] = useState<GrowthAssetType>(row?.asset_type ?? 'etf');
-  const [platform, setPlatform] = useState(row?.platform ?? '');
+  const [assetType, setAssetType] = useState<GrowthAssetType>(row?.asset_type ?? 'investment');
   const [investedAmount, setInvestedAmount] = useState(row ? String(row.invested_amount) : '');
   const [currentValue, setCurrentValue] = useState(row ? String(row.current_value) : '');
 
-  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><form action={(fd) => { if (row) fd.set('id', row.id); fd.set('asset_name', assetName); fd.set('asset_type', assetType); fd.set('platform', platform); fd.set('invested_amount', investedAmount); fd.set('current_value', currentValue); onSubmit(fd); }} className="w-full max-w-lg space-y-3 rounded-2xl bg-white p-5"><h3 className="text-lg font-semibold">{row ? 'แก้ไข Growth Asset' : 'เพิ่ม Growth Asset ใหม่'}</h3><input className="theme-input" placeholder="ชื่อสินทรัพย์" value={assetName} onChange={(e) => setAssetName(e.target.value)} required /><select className="theme-input" value={assetType} onChange={(e) => setAssetType(e.target.value as GrowthAssetType)}><option value="etf">ETF</option><option value="stock">Stock</option><option value="mutual_fund">Mutual Fund</option><option value="crypto">Crypto</option><option value="gold">Gold</option><option value="other">Other</option></select><select className="theme-input" value={platform} onChange={(e) => setPlatform(e.target.value)}><option value="">เลือกแพลตฟอร์ม</option><option value="eToro">eToro</option><option value="Binance">Binance</option><option value="Streaming">Streaming</option><option value="Bank">Bank</option><option value="Other">Other</option></select><input className="theme-input" type="number" min="0" step="0.01" placeholder="เงินต้น" value={investedAmount} onChange={(e) => setInvestedAmount(e.target.value)} required /><input className="theme-input" type="number" min="0" step="0.01" placeholder="มูลค่าปัจจุบัน" value={currentValue} onChange={(e) => setCurrentValue(e.target.value)} required /><div className="flex gap-2"><button className="theme-button-primary">Save</button><button type="button" onClick={onClose} className="theme-button-secondary">ยกเลิก</button></div></form></div>;
+  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[1px]"><form action={(fd) => { if (row) fd.set('id', row.id); fd.set('asset_name', assetName); fd.set('asset_type', assetType); fd.set('invested_amount', investedAmount); fd.set('current_value', currentValue); onSubmit(fd); }} className="w-full max-w-lg space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+    <h3 className="text-lg font-semibold text-slate-900">{row ? 'แก้ไขสินทรัพย์' : 'เพิ่มสินทรัพย์ใหม่'}</h3>
+    <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none" placeholder="ชื่อสินทรัพย์" value={assetName} onChange={(e) => setAssetName(e.target.value)} required />
+    <select className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-slate-400 focus:outline-none" value={assetType} onChange={(e) => setAssetType(e.target.value as GrowthAssetType)}>
+      <option value="investment">Investment</option>
+      <option value="safe">Safe / Buffer</option>
+      <option value="future">Future Fund</option>
+      <option value="receivable">Receivable</option>
+    </select>
+    <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none" type="number" min="0" step="0.01" placeholder="เงินต้น" value={investedAmount} onChange={(e) => setInvestedAmount(e.target.value)} required />
+    <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none" type="number" min="0" step="0.01" placeholder="มูลค่าปัจจุบัน" value={currentValue} onChange={(e) => setCurrentValue(e.target.value)} required />
+    <div className="flex gap-2"><button className="theme-button-primary">บันทึก</button><button type="button" onClick={onClose} className="theme-button-secondary">ยกเลิก</button></div>
+  </form></div>;
 }

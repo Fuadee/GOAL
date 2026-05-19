@@ -25,7 +25,7 @@ export type ConstructionWaitingSummaryView = { currentStep: string; executionSta
 
 export type MoneyIncomeSourceRow = { id: string; user_id: string | null; name: string; description: string | null; income_amount: number; expense_amount: number; expense_note: string | null; sort_order: number; is_active: boolean; created_at: string; updated_at: string; };
 export type MoneySummary = { grossIncome: number; totalExpense: number; netIncome: number; };
-export const GROWTH_ASSET_TYPES = ['etf', 'stock', 'mutual_fund', 'crypto', 'gold', 'other'] as const;
+export const GROWTH_ASSET_TYPES = ['investment', 'safe', 'future', 'receivable'] as const;
 export type GrowthAssetType = (typeof GROWTH_ASSET_TYPES)[number];
 export type GrowthAssetRow = { id: string; user_id: string | null; asset_name: string; asset_type: GrowthAssetType; platform: string | null; current_value: number; invested_amount: number; profit_loss: number; return_percent: number; created_at: string; updated_at: string; };
 
