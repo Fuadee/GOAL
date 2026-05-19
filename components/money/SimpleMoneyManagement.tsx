@@ -8,6 +8,7 @@ import { GrowthAssetRow, GrowthAssetType, MoneyManagementPageData, MoneyIncomeSo
 
 const thb = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 });
 const monthLabel = new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { month: 'long', year: 'numeric' }).format(new Date());
+const targetPassiveIncomeMonthly = 10_000;
 const categoryMeta = {
   investment: { label: 'Investment', badge: 'INVESTMENT', color: '#22C55E', cardClass: 'border-emerald-200/80 bg-emerald-50/70 text-emerald-700', badgeClass: 'bg-emerald-100/90 text-emerald-700', iconText: 'I' },
   safe: { label: 'Safe / Buffer', badge: 'SAFE / BUFFER', color: '#60A5FA', cardClass: 'border-blue-200/80 bg-blue-50/70 text-blue-700', badgeClass: 'bg-blue-100/90 text-blue-700', iconText: 'S' },
@@ -38,6 +39,10 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
 
   const rows = useMemo(() => data.incomeSources ?? [], [data.incomeSources]);
   const growthRows = useMemo(() => data.growthAssets ?? [], [data.growthAssets]);
+  // TODO: When income sources support income type classification, calculate passive income from records marked as passive.
+  const currentPassiveIncomeMonthly = 0;
+  const progressPercent = Math.min((currentPassiveIncomeMonthly / targetPassiveIncomeMonthly) * 100, 100);
+  const rewardUnlocked = progressPercent >= 100;
   const onDelete = (id: string) => startTransition(async () => {
     const result = await deleteMoneyIncomeSourceAction(id);
     if (!result.success) return;
@@ -57,6 +62,17 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
       <div className="relative mt-7 grid grid-cols-1 gap-3 md:grid-cols-3"><Stat label="รายได้รวม" value={data.summary.grossIncome} cls="text-emerald-300" /><Stat label="ค่าใช้จ่ายรวม" value={data.summary.totalExpense} cls="text-rose-300" /><Stat label="รายได้สุทธิ (คงเหลือ)" value={data.summary.netIncome} cls="text-emerald-300" /></div>
     </section>
 
+    <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6">
+      <div className="space-y-1">
+        <h2 className="text-xl font-semibold text-slate-900">Annual Money Mission</h2>
+        <p className="text-sm text-slate-500">เป้าหมายหลักของปีนี้: สร้าง Passive Income เพิ่ม และให้รางวัลตัวเองเมื่อทำสำเร็จ</p>
+      </div>
+      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <AnnualGoalCard currentPassiveIncomeMonthly={currentPassiveIncomeMonthly} progressPercent={progressPercent} />
+        <AnnualRewardCard rewardUnlocked={rewardUnlocked} progressPercent={progressPercent} />
+      </div>
+    </section>
+
     <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-[40%_60%] md:gap-6 lg:grid-cols-[35%_65%] lg:gap-7">
       <section className="rounded-2xl bg-white p-4 shadow-sm md:p-4.5 lg:p-5">
         <div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-semibold text-slate-800 lg:text-xl">รายได้ของฉัน</h2><button onClick={openCreate} className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">+ เพิ่มแหล่งรายได้</button></div>
@@ -73,6 +89,58 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
     {open ? <MoneyForm row={editing} onClose={()=>setOpen(false)} onSubmit={(fd)=>startTransition(async()=>{const res=await upsertMoneyIncomeSourceAction(fd); if(res.success){setOpen(false);router.refresh();}})} /> : null}
     {growthOpen ? <GrowthAssetForm row={growthEditing} onClose={() => setGrowthOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await upsertGrowthAssetAction(fd); if (res.success) { setGrowthOpen(false); setGrowthEditing(null); router.refresh(); } })} /> : null}
   </div>;
+}
+
+function AnnualGoalCard({ currentPassiveIncomeMonthly, progressPercent }: { currentPassiveIncomeMonthly: number; progressPercent: number }) {
+  return <article className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Annual Goal</p>
+    <h3 className="mt-2 text-lg font-semibold text-slate-900">เป้าหมายประจำปี</h3>
+    <p className="mt-2 text-sm font-medium text-slate-800">สร้าง Passive Income เพิ่ม +฿10,000/เดือน</p>
+    <p className="mt-2 text-sm leading-relaxed text-slate-600">เพิ่มรายได้แบบไม่ต้องแลกเวลาด้วยงานประจำ เช่น บ้านเช่า การลงทุน หรือธุรกิจที่เริ่มสร้างกระแสเงินสดได้จริง</p>
+
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3">
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-slate-500">Target</span>
+        <span className="font-semibold text-slate-800">+฿10,000 / เดือน</span>
+      </div>
+      <div className="mt-1.5 flex items-center justify-between text-sm">
+        <span className="text-slate-500">Current</span>
+        <span className="font-semibold text-emerald-600">{thb.format(currentPassiveIncomeMonthly)} / เดือน</span>
+      </div>
+      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
+        <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${progressPercent}%` }} />
+      </div>
+      <p className="mt-2 text-right text-xs font-medium text-slate-500">{progressPercent.toFixed(1)}%</p>
+    </div>
+
+    <p className="mt-4 rounded-xl bg-emerald-50 px-3 py-2 text-xs text-emerald-700">“ทุก +฿1,000/เดือน คืออิสรภาพที่เพิ่มขึ้นปีละ ฿12,000”</p>
+  </article>;
+}
+
+function AnnualRewardCard({ rewardUnlocked, progressPercent }: { rewardUnlocked: boolean; progressPercent: number }) {
+  return <article className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-indigo-50 via-sky-50 to-cyan-50 p-4 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.45)] sm:p-5">
+    <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/40 blur-2xl" />
+    <div className="relative">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Annual Reward</p>
+        <span className="rounded-full border border-white/70 bg-white/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">Big Reward</span>
+      </div>
+      <h3 className="text-lg font-semibold text-slate-900">Reward ใหญ่ประจำปี</h3>
+      <p className="mt-2 text-base font-semibold text-slate-800">✈️ Trip ไปเที่ยวต่างประเทศ</p>
+      <p className="mt-2 text-sm text-slate-600">รางวัลใหญ่เพียงหนึ่งเดียวของปีนี้ สำหรับการทำเป้าหมาย Passive Income +฿10,000/เดือน สำเร็จ</p>
+
+      <div className="mt-4 rounded-xl border border-white/80 bg-white/80 p-3">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Unlock when</p>
+        <p className="mt-1 text-sm font-semibold text-slate-800">Passive Income เพิ่มถึง +฿10,000/เดือน</p>
+      </div>
+
+      <div className={`mt-3 flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-medium ${rewardUnlocked ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-100 text-slate-600'}`}>
+        <span>{rewardUnlocked ? '🔓 Unlocked' : '🔒 Locked'}</span>
+        <span>{progressPercent.toFixed(1)}%</span>
+      </div>
+      <p className="mt-2 text-xs text-slate-500">🌍 เต็มเป้าเมื่อไหร่ เก็บกระเป๋าพร้อมพาสปอร์ตได้เลย</p>
+    </div>
+  </article>;
 }
 
 function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit, onDelete }: { rows: GrowthAssetRow[]; totalValue: number; totalProfitLoss: number; onCreate: () => void; onEdit: (row: GrowthAssetRow) => void; onDelete: (id: string) => void }) {
