@@ -54,7 +54,6 @@ export async function upsertGrowthAssetAction(formData: FormData): Promise<{ suc
   const id = String(formData.get('id') ?? '').trim();
   const assetName = String(formData.get('asset_name') ?? '').trim();
   const assetType = String(formData.get('asset_type') ?? '').trim() as GrowthAssetType;
-  const platform = String(formData.get('platform') ?? '').trim();
   const investedAmount = toNumber(formData.get('invested_amount'));
   const currentValue = toNumber(formData.get('current_value'));
 
@@ -63,7 +62,7 @@ export async function upsertGrowthAssetAction(formData: FormData): Promise<{ suc
   if (Number.isNaN(investedAmount) || Number.isNaN(currentValue)) return { success: false, message: 'จำนวนเงินไม่ถูกต้อง' };
 
   try {
-    const payload = { asset_name: assetName, asset_type: assetType, platform: platform || null, invested_amount: investedAmount, current_value: currentValue };
+    const payload = { asset_name: assetName, asset_type: assetType, invested_amount: investedAmount, current_value: currentValue };
     if (id) await updateGrowthAsset(id, payload);
     else await createGrowthAsset(payload);
     revalidatePath('/money-management');
