@@ -10,19 +10,17 @@ type ApproachItem = {
 };
 
 type RelationshipMissionDashboardProps = {
-  startedAt: string;
   approaches: ApproachItem[];
 };
 
-export function RelationshipMissionDashboard({ startedAt, approaches }: RelationshipMissionDashboardProps) {
+export function RelationshipMissionDashboard({ approaches }: RelationshipMissionDashboardProps) {
   const [achieved, setAchieved] = useState(false);
   const [isReflectionOpen, setIsReflectionOpen] = useState(false);
   const [reflection, setReflection] = useState(
     'เริ่มเข้าใจแล้วว่าจริงๆ ตัวเองต้องการ connection แบบไหน และไม่อยากฝืนตัวเองไปอยู่ใน environment ที่ไม่ใช่'
   );
 
-  const movementStarted = useMemo(() => approaches.filter((item) => item.status === 'active' || item.status === 'done').length, [approaches]);
-  const progressPercent = achieved ? 100 : Math.min(100, Math.round((movementStarted / 4) * 100));
+  const currentAction = useMemo(() => approaches.find((item) => item.status === 'active') ?? approaches[0], [approaches]);
 
   return (
     <section className="mx-auto w-full max-w-6xl space-y-5 px-4 pb-10 pt-6 md:px-6 md:pt-8">
@@ -35,39 +33,39 @@ export function RelationshipMissionDashboard({ startedAt, approaches }: Relation
         </div>
       </section>
 
-      <section className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Progress</p>
-            <p className="mt-1 text-3xl font-semibold text-white">{progressPercent}%</p>
+      <section className="rounded-3xl border border-emerald-200/20 bg-[radial-gradient(circle_at_top,rgba(52,211,153,0.16),rgba(14,24,36,0.98)_52%)] p-5 shadow-xl shadow-emerald-950/20 md:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="pr-2">
+            <h2 className="text-xs uppercase tracking-[0.2em] text-emerald-100/90">Success Condition</h2>
+            <p className="mt-2 text-2xl font-semibold text-white md:text-[1.75rem]">ได้ไป Date จริง 1 ครั้ง</p>
+            <p className="mt-1 text-sm text-emerald-50/90">แค่นี้คือชนะ mission นี้ทันที</p>
           </div>
-          <p className="text-sm text-slate-300">{movementStarted} / 4 Movement Started</p>
+          <div className="rounded-xl border border-white/15 bg-slate-950/45 px-4 py-2 text-right">
+            <p className="text-xl font-semibold text-white">{achieved ? '1 / 1' : '0 / 1'}</p>
+            <p className={`text-xs ${achieved ? 'text-emerald-200' : 'text-slate-300'}`}>{achieved ? 'Achieved' : 'Not Yet'}</p>
+          </div>
         </div>
-        <div className="mt-4 h-2.5 rounded-full bg-slate-800">
-          <div className="h-2.5 rounded-full bg-gradient-to-r from-teal-300 via-emerald-300 to-amber-300" style={{ width: `${progressPercent}%` }} />
-        </div>
-        <p className="mt-3 text-sm text-slate-400">Started: {startedAt}</p>
+        <button type="button" onClick={() => setAchieved(true)} disabled={achieved} className="mt-3 rounded-lg bg-gradient-to-r from-teal-300 to-emerald-300 px-3.5 py-1.5 text-sm font-semibold text-slate-900 disabled:cursor-not-allowed disabled:opacity-60">Mark as Achieved</button>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <article className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Current Approach</h2>
-          <div className="mt-4 space-y-3">
-            {approaches.map((item) => (
-              <div key={item.id} className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <span className="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-teal-200/30 bg-teal-300/15 text-teal-100">◉</span>
-                    <div>
-                      <p className="text-sm font-medium text-white">{item.title}</p>
-                      <p className="mt-1 text-xs text-slate-300">{item.description}</p>
-                    </div>
+          <h2 className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Current Action</h2>
+          {currentAction ? (
+            <div className="mt-4 rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <span className="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-teal-200/30 bg-teal-300/15 text-teal-100">◉</span>
+                  <div>
+                    <p className="text-sm font-medium text-white">{currentAction.title}</p>
+                    <p className="mt-1 text-xs text-slate-300">{currentAction.description}</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/30 bg-emerald-300/15 px-2.5 py-1 text-xs text-emerald-100"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />กำลังทำ</span>
                 </div>
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/30 bg-emerald-300/15 px-2.5 py-1 text-xs text-emerald-100"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />สำคัญที่สุดตอนนี้</span>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : null}
+          <p className="mt-3 text-xs text-slate-400">ไม่วัดด้วย progress bar อีกต่อไป — วัดจากผลลัพธ์จริงในโลกจริงเท่านั้น</p>
         </article>
 
         <article className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
@@ -88,26 +86,11 @@ export function RelationshipMissionDashboard({ startedAt, approaches }: Relation
 
       <section className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Last Reflection</h2>
+          <h2 className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Reflection</h2>
           <button type="button" onClick={() => setIsReflectionOpen(true)} className="rounded-lg border border-white/20 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/5">บันทึก Reflection</button>
         </div>
         <p className="mt-4 text-base italic text-slate-100">“{reflection}”</p>
         <p className="mt-3 text-xs text-slate-400">24 May 2026</p>
-      </section>
-
-      <section className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h2 className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Success Condition</h2>
-            <p className="mt-2 text-3xl font-semibold text-white">ได้ไป Date จริง 1 ครั้ง</p>
-            <p className="mt-1 text-sm text-slate-300">แค่นี้ก็ถือว่าชนะแล้ว</p>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 text-right">
-            <p className="text-2xl font-semibold text-white">{achieved ? '1 / 1' : '0 / 1'}</p>
-            <p className={`text-sm ${achieved ? 'text-emerald-200' : 'text-slate-400'}`}>{achieved ? 'Achieved' : 'Not Yet Achieved'}</p>
-          </div>
-        </div>
-        <button type="button" onClick={() => setAchieved(true)} disabled={achieved} className="mt-4 rounded-xl bg-gradient-to-r from-teal-300 to-emerald-300 px-4 py-2 text-sm font-semibold text-slate-900 disabled:cursor-not-allowed disabled:opacity-60">Mark as Achieved</button>
       </section>
 
       <p className="pb-2 text-center text-sm text-slate-400">โฟกัสที่การเปิดชีวิต ไม่ใช่การฝืนความรัก</p>
