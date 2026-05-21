@@ -26,14 +26,13 @@ export function RelationshipMissionDashboard({ startedAt, approaches }: Relation
 
   return (
     <section className="mx-auto w-full max-w-6xl space-y-5 px-4 pb-10 pt-6 md:px-6 md:pt-8">
-      <section className="grid gap-4 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-[#0b1420] to-[#142534] p-5 shadow-2xl shadow-black/25 md:grid-cols-[1.1fr_0.9fr] md:p-7">
-        <div className="space-y-3">
+      <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-[#0b1420] to-[#142534] p-6 shadow-2xl shadow-black/25 md:p-8">
+        <div className="space-y-4">
           <p className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Current Mission</p>
           <h1 className="text-3xl font-semibold text-white md:text-4xl">Go on 1 Real Date</h1>
-          <p className="max-w-lg text-sm leading-relaxed text-slate-300">เป้าหมายตอนนี้ไม่ใช่การมีแฟนทันที แต่คือการเปิดชีวิตตัวเองอีกครั้ง</p>
+          <p className="max-w-3xl text-sm leading-relaxed text-slate-300 md:text-base">เป้าหมายตอนนี้ไม่ใช่การมีแฟนทันที แต่คือการเปิดชีวิตตัวเองอีกครั้ง</p>
           <span className="inline-flex w-fit rounded-full border border-emerald-300/30 bg-emerald-300/15 px-3 py-1 text-xs font-medium text-emerald-100">IN PROGRESS</span>
         </div>
-        <div className="min-h-[180px] rounded-2xl border border-white/10 bg-[linear-gradient(120deg,rgba(15,23,42,0.3),rgba(6,182,212,0.18),rgba(251,191,36,0.2)),url('https://images.unsplash.com/photo-1473116763249-2faaef81ccda?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center shadow-inner shadow-black/30" />
       </section>
 
       <section className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
