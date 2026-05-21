@@ -14,11 +14,26 @@ type RelationshipMissionDashboardProps = {
 };
 
 export function RelationshipMissionDashboard({ approaches }: RelationshipMissionDashboardProps) {
-  const [achieved, setAchieved] = useState(false);
   const [isReflectionOpen, setIsReflectionOpen] = useState(false);
   const [reflection, setReflection] = useState(
     'เริ่มเข้าใจแล้วว่าจริงๆ ตัวเองต้องการ connection แบบไหน และไม่อยากฝืนตัวเองไปอยู่ใน environment ที่ไม่ใช่'
   );
+  const [dateHistory, setDateHistory] = useState([
+    {
+      id: 'date-2',
+      title: 'Date #2',
+      date: '2 June 2026',
+      reflection: 'รู้ว่าเราชอบผู้หญิงที่ energy สบาย ๆ',
+      tags: ['Comfortable', 'Chemistry'],
+    },
+    {
+      id: 'date-1',
+      title: 'Date #1',
+      date: '24 May 2026',
+      reflection: 'เริ่มรู้สึกว่าตัวเองคุยได้ธรรมชาติมากขึ้น',
+      tags: ['Nervous', 'Good Conversation', 'New Experience'],
+    },
+  ]);
 
   const currentAction = useMemo(() => approaches.find((item) => item.status === 'active') ?? approaches[0], [approaches]);
 
@@ -34,18 +49,13 @@ export function RelationshipMissionDashboard({ approaches }: RelationshipMission
       </section>
 
       <section className="rounded-3xl border border-emerald-200/20 bg-[radial-gradient(circle_at_top,rgba(52,211,153,0.16),rgba(14,24,36,0.98)_52%)] p-5 shadow-xl shadow-emerald-950/20 md:p-5">
-        <div className="flex items-center justify-between gap-3">
+        <div className="space-y-3">
           <div className="pr-2">
             <h2 className="text-xs uppercase tracking-[0.2em] text-emerald-100/90">Success Condition</h2>
-            <p className="mt-2 text-2xl font-semibold text-white md:text-[1.75rem]">ได้ไป Date จริง 1 ครั้ง</p>
-            <p className="mt-1 text-sm text-emerald-50/90">แค่นี้คือชนะ mission นี้ทันที</p>
-          </div>
-          <div className="rounded-xl border border-white/15 bg-slate-950/45 px-4 py-2 text-right">
-            <p className="text-xl font-semibold text-white">{achieved ? '1 / 1' : '0 / 1'}</p>
-            <p className={`text-xs ${achieved ? 'text-emerald-200' : 'text-slate-300'}`}>{achieved ? 'Achieved' : 'Not Yet'}</p>
+            <p className="mt-2 text-2xl font-semibold text-white md:text-[1.75rem]">REAL DATE HISTORY</p>
+            <p className="mt-1 text-sm text-emerald-50/90">mission success = ออกไปใช้ชีวิตจริง แล้วเก็บประสบการณ์ความสัมพันธ์จริงแบบต่อเนื่อง</p>
           </div>
         </div>
-        <button type="button" onClick={() => setAchieved(true)} disabled={achieved} className="mt-3 rounded-lg bg-gradient-to-r from-teal-300 to-emerald-300 px-3.5 py-1.5 text-sm font-semibold text-slate-900 disabled:cursor-not-allowed disabled:opacity-60">Mark as Achieved</button>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
@@ -71,7 +81,7 @@ export function RelationshipMissionDashboard({ approaches }: RelationshipMission
         <article className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
           <h2 className="text-xs uppercase tracking-[0.2em] text-amber-200/90">Reward</h2>
           <h3 className="mt-2 text-2xl font-semibold text-white">เที่ยวคนเดียว</h3>
-          <p className="mt-2 text-sm text-slate-300">ให้รางวัลกับตัวเอง หลังจากได้ไป Date จริง 1 ครั้ง</p>
+          <p className="mt-2 text-sm text-slate-300">ให้รางวัลกับตัวเองเมื่อเดินหน้าต่อเนื่องและกล้าออกไปใช้ชีวิตจริง</p>
           <div className="mt-4 h-36 rounded-2xl border border-white/10 bg-[linear-gradient(120deg,rgba(20,184,166,0.15),rgba(245,158,11,0.2)),url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center" />
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
             {['Reset', 'Freedom', 'Growth', 'New Experience'].map((tag) => (
@@ -80,8 +90,49 @@ export function RelationshipMissionDashboard({ approaches }: RelationshipMission
           </div>
           <p className="mt-4 text-sm text-slate-300">จังหวัดใกล้เคียงที่อยากไป</p>
           <p className="text-sm text-slate-400">ภูเก็ต • พังงา • เกาะลันตา • หรือที่ไหนก็ได้ที่สบายใจ</p>
-          {achieved ? <p className="mt-3 text-sm font-medium text-emerald-200">Reward unlocked ✨</p> : null}
         </article>
+      </section>
+
+      <section className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Date History</h2>
+          <button
+            type="button"
+            onClick={() =>
+              setDateHistory((prev) => [
+                {
+                  id: `date-${Date.now()}`,
+                  title: `Date #${prev.length + 1}`,
+                  date: 'Today',
+                  reflection: 'วันนี้เราออกไปใช้ชีวิตจริง และได้เรียนรู้อะไรบางอย่างเพิ่มขึ้นอีกนิด',
+                  tags: ['New Experience'],
+                },
+                ...prev,
+              ])
+            }
+            className="rounded-lg border border-teal-200/30 bg-teal-300/10 px-3 py-1.5 text-xs font-medium text-teal-100 hover:bg-teal-300/20"
+          >
+            + Add Real Date
+          </button>
+        </div>
+        <div className="mt-4 space-y-3">
+          {dateHistory.map((item) => (
+            <article key={item.id} className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+              <h3 className="text-lg font-medium text-white">{item.title}</h3>
+              <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">{item.date}</p>
+              <p className="mt-3 text-sm italic text-slate-100">“{item.reflection}”</p>
+              {item.tags.length ? (
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                  {item.tags.map((tag) => (
+                    <span key={tag} className="rounded-full border border-white/15 px-2.5 py-1 text-slate-200">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
@@ -89,6 +140,7 @@ export function RelationshipMissionDashboard({ approaches }: RelationshipMission
           <h2 className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Reflection</h2>
           <button type="button" onClick={() => setIsReflectionOpen(true)} className="rounded-lg border border-white/20 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/5">บันทึก Reflection</button>
         </div>
+        <p className="mt-3 text-sm text-slate-300">สะท้อน mindset จากทุก date history เพื่อเห็นแพทเทิร์นที่แท้จริงของหัวใจตัวเอง</p>
         <p className="mt-4 text-base italic text-slate-100">“{reflection}”</p>
         <p className="mt-3 text-xs text-slate-400">24 May 2026</p>
       </section>
