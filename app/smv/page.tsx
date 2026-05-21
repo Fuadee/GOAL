@@ -1,12 +1,11 @@
 import { Navbar } from '@/components/navbar';
-import { PageShell } from '@/components/ui/mission';
 import { RelationshipMissionDashboard } from '@/components/smv/RelationshipMissionDashboard';
 
 export default function SmvOverviewPage() {
   return (
-    <PageShell className="smv-static">
+    <main className="min-h-screen bg-slate-100/70">
       <Navbar />
       <RelationshipMissionDashboard />
-    </PageShell>
+    </main>
   );
 }
