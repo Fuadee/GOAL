@@ -201,6 +201,17 @@ export type SocialEvidenceRow = {
   created_at: string;
 };
 
+export type SmvRealDateHistoryRow = {
+  id: string;
+  user_id: string | null;
+  title: string;
+  date: string;
+  reflection: string | null;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+};
+
 export type SmvMetricInputValue = {
   metricId: string;
   key: string;

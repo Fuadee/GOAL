@@ -14,6 +14,7 @@ import {
   SmvStageStatus,
   SmvActionLogRow,
   SmvAppearanceProgressRow,
+  SmvRealDateHistoryRow,
   SocialEvidenceRow,
   SocialEvidenceType,
   SocialLevelRow,
@@ -303,4 +304,43 @@ export async function createSocialEvidence(input: {
 
 export async function getSocialEvidenceByUser(userId: string, limit = 100) {
   return supabaseRestRequest<SocialEvidenceRow[]>(`social_evidence?user_id=eq.${userId}&order=created_at.desc&limit=${limit}`, 'GET');
+}
+
+export async function getSmvRealDateHistory() {
+  return supabaseRestRequest<SmvRealDateHistoryRow[]>('smv_real_date_history?select=*&order=date.desc&order=created_at.desc', 'GET');
+}
+
+export async function createSmvRealDateHistory(input: {
+  user_id?: string | null;
+  title: string;
+  date: string;
+  reflection?: string;
+  tags?: string[];
+}) {
+  const rows = await supabaseRestRequest<SmvRealDateHistoryRow[]>('smv_real_date_history', 'POST', {
+    user_id: input.user_id ?? null,
+    title: input.title.trim(),
+    date: input.date,
+    reflection: input.reflection?.trim() ? input.reflection.trim() : null,
+    tags: input.tags ?? []
+  });
+  return rows[0];
+}
+
+export async function updateSmvRealDateHistory(
+  id: string,
+  input: { title: string; date: string; reflection?: string; tags?: string[] }
+) {
+  const rows = await supabaseRestRequest<SmvRealDateHistoryRow[]>(`smv_real_date_history?id=eq.${id}`, 'PATCH', {
+    title: input.title.trim(),
+    date: input.date,
+    reflection: input.reflection?.trim() ? input.reflection.trim() : null,
+    tags: input.tags ?? [],
+    updated_at: new Date().toISOString()
+  });
+  return rows[0];
+}
+
+export async function deleteSmvRealDateHistory(id: string) {
+  await supabaseRestRequest<SmvRealDateHistoryRow[]>(`smv_real_date_history?id=eq.${id}`, 'DELETE');
 }

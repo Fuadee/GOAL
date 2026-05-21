@@ -4,11 +4,15 @@ import { revalidatePath } from 'next/cache';
 
 import { addSocialEvidence, createEvidenceAndRecalculate, markConfidenceStagePassed, markSocialLevelCompleted, updateAppearanceLevel } from '@/lib/smv/service';
 import {
+  createSmvRealDateHistory,
   createSmvActionLog,
   createSmvScoreHistory,
+  deleteSmvRealDateHistory,
   getSmvDimensionScore,
   getSmvDimensions,
   getSmvMetrics,
+  getSmvRealDateHistory,
+  updateSmvRealDateHistory,
   upsertSmvDimensionScore
 } from '@/lib/smv/repository';
 import { APPEARANCE_CATEGORY_KEYS } from '@/lib/smv/appearance-config';
@@ -287,6 +291,58 @@ export async function updateAppearanceLevelAction(formData: FormData): Promise<{
       success: false,
       message: error instanceof Error ? error.message : 'ไม่สามารถอัปเดตด่านได้'
     };
+  }
+}
+
+type RealDatePayload = { title: string; date: string; reflection?: string; tags?: string[] };
+
+function validateRealDatePayload(input: RealDatePayload): string | null {
+  if (!input.title.trim()) return 'Date title is required.';
+  if (!input.date) return 'Date is required.';
+  return null;
+}
+
+export async function listSmvRealDateHistoryAction() {
+  return getSmvRealDateHistory();
+}
+
+export async function createSmvRealDateHistoryAction(input: RealDatePayload): Promise<{ success: boolean; message: string }> {
+  const validationError = validateRealDatePayload(input);
+  if (validationError) return { success: false, message: validationError };
+
+  try {
+    await createSmvRealDateHistory(input);
+    revalidatePath('/smv');
+    return { success: true, message: 'Saved.' };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'Could not save real date history.' };
+  }
+}
+
+export async function updateSmvRealDateHistoryAction(
+  id: string,
+  input: RealDatePayload
+): Promise<{ success: boolean; message: string }> {
+  const validationError = validateRealDatePayload(input);
+  if (validationError) return { success: false, message: validationError };
+
+  try {
+    await updateSmvRealDateHistory(id, input);
+    revalidatePath('/smv');
+    return { success: true, message: 'Updated.' };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'Could not update real date history.' };
+  }
+}
+
+export async function deleteSmvRealDateHistoryAction(id: string): Promise<{ success: boolean; message: string }> {
+  if (!id.trim()) return { success: false, message: 'Invalid record id.' };
+  try {
+    await deleteSmvRealDateHistory(id);
+    revalidatePath('/smv');
+    return { success: true, message: 'Deleted.' };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'Could not delete real date history.' };
   }
 }
 
