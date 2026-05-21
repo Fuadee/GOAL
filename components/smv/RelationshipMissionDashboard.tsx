@@ -1,28 +1,97 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
+
+import {
+  createSmvRealDateHistoryAction,
+  deleteSmvRealDateHistoryAction,
+  listSmvRealDateHistoryAction,
+  updateSmvRealDateHistoryAction
+} from '@/app/smv/actions';
+import { SmvRealDateHistoryRow } from '@/lib/smv/types';
+
+type DateFormState = {
+  title: string;
+  date: string;
+  reflection: string;
+  tags: string;
+};
+
+const EMPTY_FORM: DateFormState = { title: '', date: '', reflection: '', tags: '' };
 
 export function RelationshipMissionDashboard() {
   const [isReflectionOpen, setIsReflectionOpen] = useState(false);
   const [reflection, setReflection] = useState(
     'เริ่มเข้าใจแล้วว่าจริงๆ ตัวเองต้องการ connection แบบไหน และไม่อยากฝืนตัวเองไปอยู่ใน environment ที่ไม่ใช่'
   );
-  const [dateHistory, setDateHistory] = useState([
-    {
-      id: 'date-2',
-      title: 'Date #2',
-      date: '2 June 2026',
-      reflection: 'รู้ว่าเราชอบผู้หญิงที่ energy สบาย ๆ',
-      tags: ['Comfortable', 'Chemistry'],
-    },
-    {
-      id: 'date-1',
-      title: 'Date #1',
-      date: '24 May 2026',
-      reflection: 'เริ่มรู้สึกว่าตัวเองคุยได้ธรรมชาติมากขึ้น',
-      tags: ['Nervous', 'Good Conversation', 'New Experience'],
-    },
-  ]);
+  const [isDateModalOpen, setIsDateModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formState, setFormState] = useState<DateFormState>(EMPTY_FORM);
+  const [dateHistory, setDateHistory] = useState<SmvRealDateHistoryRow[]>([]);
+  const [isPending, startTransition] = useTransition();
+
+  const loadHistory = () => {
+    startTransition(async () => {
+      const rows = await listSmvRealDateHistoryAction();
+      setDateHistory(rows);
+    });
+  };
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const parsedTags = useMemo(
+    () => formState.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
+    [formState.tags]
+  );
+
+  const resetDateModal = () => {
+    setEditingId(null);
+    setFormState(EMPTY_FORM);
+    setIsDateModalOpen(false);
+  };
+
+  const onSave = () => {
+    startTransition(async () => {
+      const payload = { ...formState, tags: parsedTags };
+      const result = editingId
+        ? await updateSmvRealDateHistoryAction(editingId, payload)
+        : await createSmvRealDateHistoryAction(payload);
+
+      if (!result.success) {
+        alert(result.message);
+        return;
+      }
+
+      resetDateModal();
+      await loadHistory();
+    });
+  };
+
+  const onEdit = (item: SmvRealDateHistoryRow) => {
+    setEditingId(item.id);
+    setFormState({
+      title: item.title,
+      date: item.date,
+      reflection: item.reflection ?? '',
+      tags: item.tags.join(', ')
+    });
+    setIsDateModalOpen(true);
+  };
+
+  const onDelete = (id: string) => {
+    if (!confirm('ยืนยันการลบรายการนี้ใช่ไหม?')) return;
+
+    startTransition(async () => {
+      const result = await deleteSmvRealDateHistoryAction(id);
+      if (!result.success) {
+        alert(result.message);
+        return;
+      }
+      await loadHistory();
+    });
+  };
 
   return (
     <section className="mx-auto w-full max-w-6xl space-y-4 px-4 pb-8 pt-6 md:px-6 md:pt-8">
@@ -64,37 +133,31 @@ export function RelationshipMissionDashboard() {
       <section className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Real Date History</h2>
-          <button
-            type="button"
-            onClick={() =>
-              setDateHistory((prev) => [
-                {
-                  id: `date-${Date.now()}`,
-                  title: `Date #${prev.length + 1}`,
-                  date: 'Today',
-                  reflection: 'วันนี้เราออกไปใช้ชีวิตจริง และได้เรียนรู้อะไรบางอย่างเพิ่มขึ้นอีกนิด',
-                  tags: ['New Experience'],
-                },
-                ...prev,
-              ])
-            }
-            className="rounded-lg border border-teal-200/30 bg-teal-300/10 px-3 py-1.5 text-xs font-medium text-teal-100 hover:bg-teal-300/20"
-          >
-            + Add Real Date
-          </button>
+          <button type="button" onClick={() => setIsDateModalOpen(true)} className="rounded-lg border border-teal-200/30 bg-teal-300/10 px-3 py-1.5 text-xs font-medium text-teal-100 hover:bg-teal-300/20">+ Add Real Date</button>
         </div>
         <div className="mt-4 space-y-3">
+          {dateHistory.length === 0 && !isPending ? (
+            <article className="rounded-2xl border border-dashed border-white/15 bg-slate-900/40 p-5 text-center text-sm text-slate-300">
+              ยังไม่มี Date History — เริ่มบันทึกประสบการณ์จริงครั้งแรกของคุณ
+            </article>
+          ) : null}
           {dateHistory.map((item) => (
             <article key={item.id} className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
-              <h3 className="text-lg font-medium text-white">{item.title}</h3>
-              <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">{item.date}</p>
-              <p className="mt-3 text-sm italic text-slate-100">“{item.reflection}”</p>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-medium text-white">{item.title}</h3>
+                  <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">{new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <button type="button" onClick={() => onEdit(item)} className="rounded-lg border border-white/20 px-2.5 py-1 text-slate-100 hover:bg-white/10">Edit</button>
+                  <button type="button" onClick={() => onDelete(item.id)} className="rounded-lg border border-rose-300/30 px-2.5 py-1 text-rose-100 hover:bg-rose-300/10">Delete</button>
+                </div>
+              </div>
+              <p className="mt-3 text-sm italic text-slate-100">“{item.reflection ?? '-'}”</p>
               {item.tags.length ? (
                 <div className="mt-3 flex flex-wrap gap-2 text-xs">
                   {item.tags.map((tag) => (
-                    <span key={tag} className="rounded-full border border-white/15 px-2.5 py-1 text-slate-200">
-                      {tag}
-                    </span>
+                    <span key={tag} className="rounded-full border border-white/15 px-2.5 py-1 text-slate-200">{tag}</span>
                   ))}
                 </div>
               ) : null}
@@ -112,6 +175,25 @@ export function RelationshipMissionDashboard() {
         <p className="mt-4 text-base italic text-slate-100">“{reflection}”</p>
         <p className="mt-3 text-xs text-slate-400">24 May 2026</p>
       </section>
+
+      {isDateModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <button type="button" className="absolute inset-0 bg-black/70" onClick={resetDateModal} />
+          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/15 bg-slate-900 p-5">
+            <h3 className="text-lg font-semibold text-white">{editingId ? 'Edit Real Date' : 'Add Real Date'}</h3>
+            <div className="mt-3 space-y-3">
+              <input value={formState.title} onChange={(e) => setFormState((prev) => ({ ...prev, title: e.target.value }))} placeholder="Date title เช่น Date #1" className="w-full rounded-xl border border-white/20 bg-slate-950 px-3 py-2 text-sm text-white" />
+              <input type="date" value={formState.date} onChange={(e) => setFormState((prev) => ({ ...prev, date: e.target.value }))} className="w-full rounded-xl border border-white/20 bg-slate-950 px-3 py-2 text-sm text-white" />
+              <textarea value={formState.reflection} onChange={(e) => setFormState((prev) => ({ ...prev, reflection: e.target.value }))} rows={4} placeholder="Reflection" className="w-full rounded-xl border border-white/20 bg-slate-950 px-3 py-2 text-sm text-white" />
+              <input value={formState.tags} onChange={(e) => setFormState((prev) => ({ ...prev, tags: e.target.value }))} placeholder="Tags (คั่นด้วย comma)" className="w-full rounded-xl border border-white/20 bg-slate-950 px-3 py-2 text-sm text-white" />
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <button type="button" onClick={resetDateModal} className="rounded-lg border border-white/20 px-4 py-2 text-sm text-slate-200">Cancel</button>
+              <button type="button" onClick={onSave} disabled={isPending} className="rounded-lg bg-teal-300 px-4 py-2 text-sm font-semibold text-slate-900">Save</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <p className="pb-1 text-center text-sm text-slate-400">นี่คือบันทึกการเติบโตของชีวิตจริง ไม่ใช่ productivity dashboard</p>
 
