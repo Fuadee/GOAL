@@ -1,19 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
-type ApproachItem = {
-  id: string;
-  title: string;
-  description: string;
-  status: 'active' | 'done';
-};
-
-type RelationshipMissionDashboardProps = {
-  approaches: ApproachItem[];
-};
-
-export function RelationshipMissionDashboard({ approaches }: RelationshipMissionDashboardProps) {
+export function RelationshipMissionDashboard() {
   const [isReflectionOpen, setIsReflectionOpen] = useState(false);
   const [reflection, setReflection] = useState(
     'เริ่มเข้าใจแล้วว่าจริงๆ ตัวเองต้องการ connection แบบไหน และไม่อยากฝืนตัวเองไปอยู่ใน environment ที่ไม่ใช่'
@@ -35,10 +24,8 @@ export function RelationshipMissionDashboard({ approaches }: RelationshipMission
     },
   ]);
 
-  const currentAction = useMemo(() => approaches.find((item) => item.status === 'active') ?? approaches[0], [approaches]);
-
   return (
-    <section className="mx-auto w-full max-w-6xl space-y-5 px-4 pb-10 pt-6 md:px-6 md:pt-8">
+    <section className="mx-auto w-full max-w-6xl space-y-4 px-4 pb-8 pt-6 md:px-6 md:pt-8">
       <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-[#0b1420] to-[#142534] p-6 shadow-2xl shadow-black/25 md:p-8">
         <div className="space-y-4">
           <p className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Current Mission</p>
@@ -58,26 +45,7 @@ export function RelationshipMissionDashboard({ approaches }: RelationshipMission
         </div>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <article className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Current Action</h2>
-          {currentAction ? (
-            <div className="mt-4 rounded-2xl border border-white/10 bg-slate-900/50 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <span className="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-teal-200/30 bg-teal-300/15 text-teal-100">◉</span>
-                  <div>
-                    <p className="text-sm font-medium text-white">{currentAction.title}</p>
-                    <p className="mt-1 text-xs text-slate-300">{currentAction.description}</p>
-                  </div>
-                </div>
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/30 bg-emerald-300/15 px-2.5 py-1 text-xs text-emerald-100"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />สำคัญที่สุดตอนนี้</span>
-              </div>
-            </div>
-          ) : null}
-          <p className="mt-3 text-xs text-slate-400">ไม่วัดด้วย progress bar อีกต่อไป — วัดจากผลลัพธ์จริงในโลกจริงเท่านั้น</p>
-        </article>
-
+      <section>
         <article className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
           <h2 className="text-xs uppercase tracking-[0.2em] text-amber-200/90">Reward</h2>
           <h3 className="mt-2 text-2xl font-semibold text-white">เที่ยวคนเดียว</h3>
@@ -95,7 +63,7 @@ export function RelationshipMissionDashboard({ approaches }: RelationshipMission
 
       <section className="rounded-3xl border border-white/10 bg-[#0e1824] p-5 shadow-xl shadow-black/20 md:p-6">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Date History</h2>
+          <h2 className="text-xs uppercase tracking-[0.2em] text-teal-200/80">Real Date History</h2>
           <button
             type="button"
             onClick={() =>
@@ -145,7 +113,7 @@ export function RelationshipMissionDashboard({ approaches }: RelationshipMission
         <p className="mt-3 text-xs text-slate-400">24 May 2026</p>
       </section>
 
-      <p className="pb-2 text-center text-sm text-slate-400">โฟกัสที่การเปิดชีวิต ไม่ใช่การฝืนความรัก</p>
+      <p className="pb-1 text-center text-sm text-slate-400">นี่คือบันทึกการเติบโตของชีวิตจริง ไม่ใช่ productivity dashboard</p>
 
       {isReflectionOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
