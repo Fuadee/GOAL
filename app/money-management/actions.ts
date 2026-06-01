@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createGrowthAsset, createMoneyIncomeSource, deleteGrowthAsset, softDeleteMoneyIncomeSource, updateGrowthAsset, updateMoneyIncomeSource } from '@/lib/money/mutations';
+import { createAssetMonthlySnapshot, createGrowthAsset, createMoneyIncomeSource, deleteGrowthAsset, findAssetMonthlySnapshotByMonth, replaceAssetMonthlySnapshotItems, softDeleteMoneyIncomeSource, updateAssetMonthlySnapshot, updateGrowthAsset, updateMoneyIncomeSource } from '@/lib/money/mutations';
 import { GROWTH_ASSET_TYPES, GrowthAssetType } from '@/lib/money/types';
 
 const toNumber = (value: FormDataEntryValue | null) => {
@@ -96,3 +96,41 @@ export async function updateConstructionStepStatusAction(...args: unknown[]) { v
 export async function updateConstructionExecutionStateAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
 export async function updateConstructionWaitingDetailsAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
 export async function markConstructionResponseReceivedAction(...args: unknown[]) { void args; return { success: false, message: 'Deprecated' }; }
+
+export async function saveAssetMonthlySnapshotAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const rawMonth = String(formData.get('snapshot_month') ?? '').trim();
+  const snapshotMonth = /^\d{4}-\d{2}$/.test(rawMonth) ? `${rawMonth}-01` : rawMonth;
+  if (!/^\d{4}-\d{2}-01$/.test(snapshotMonth)) return { success: false, message: 'เดือน/ปีไม่ถูกต้อง' };
+
+  const assetIds = formData.getAll('asset_id').map((value) => String(value ?? '').trim());
+  const assetNames = formData.getAll('asset_name').map((value) => String(value ?? '').trim());
+  const assetTypes = formData.getAll('asset_type').map((value) => String(value ?? '').trim() as GrowthAssetType);
+  const values = formData.getAll('value').map(toNumber);
+
+  if (assetNames.length === 0) return { success: false, message: 'ยังไม่มีสินทรัพย์สำหรับสร้าง Snapshot' };
+  if (values.some(Number.isNaN)) return { success: false, message: 'มูลค่าสินทรัพย์ไม่ถูกต้อง' };
+
+  const items = assetNames.map((assetName, index) => ({
+    asset_id: assetIds[index] || null,
+    asset_name: assetName,
+    asset_type: assetTypes[index],
+    value: values[index] ?? 0,
+  })).filter((item) => item.asset_name && GROWTH_ASSET_TYPES.includes(item.asset_type));
+
+  if (items.length !== assetNames.length) return { success: false, message: 'ข้อมูลสินทรัพย์ไม่ครบถ้วน' };
+
+  try {
+    const totalValue = items.reduce((sum, item) => sum + item.value, 0);
+    const existingSnapshot = await findAssetMonthlySnapshotByMonth(snapshotMonth);
+    const snapshot = existingSnapshot
+      ? await updateAssetMonthlySnapshot(existingSnapshot.id, { total_value: totalValue })
+      : await createAssetMonthlySnapshot({ snapshot_month: snapshotMonth, total_value: totalValue });
+
+    await replaceAssetMonthlySnapshotItems(snapshot.id, items);
+    revalidatePath('/money-management');
+    return { success: true, message: 'บันทึก Snapshot สำเร็จ' };
+  } catch (error) {
+    console.error('[asset-monthly-snapshot save failed]', error);
+    return { success: false, message: 'บันทึก Snapshot ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง' };
+  }
+}
