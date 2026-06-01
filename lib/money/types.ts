@@ -28,8 +28,10 @@ export type MoneySummary = { grossIncome: number; totalExpense: number; netIncom
 export const GROWTH_ASSET_TYPES = ['investment', 'safe', 'future', 'receivable'] as const;
 export type GrowthAssetType = (typeof GROWTH_ASSET_TYPES)[number];
 export type GrowthAssetRow = { id: string; user_id: string | null; asset_name: string; asset_type: GrowthAssetType; platform: string | null; current_value: number; invested_amount: number; profit_loss: number; return_percent: number; created_at: string; updated_at: string; };
+export type AssetMonthlySnapshotItemRow = { id: string; snapshot_id: string; asset_id: string | null; asset_name: string; asset_type: GrowthAssetType; value: number; created_at: string; };
+export type AssetMonthlySnapshotRow = { id: string; snapshot_month: string; total_value: number; created_at: string; updated_at: string; items: AssetMonthlySnapshotItemRow[]; };
 
-export type MoneyManagementPageData = { incomeSources: MoneyIncomeSourceRow[]; growthAssets: GrowthAssetRow[]; summary: MoneySummary; growthSummary: { totalValue: number; totalProfitLoss: number; totalInvested: number; totalReturnPercent: number; }; };
+export type MoneyManagementPageData = { incomeSources: MoneyIncomeSourceRow[]; growthAssets: GrowthAssetRow[]; assetSnapshots: AssetMonthlySnapshotRow[]; summary: MoneySummary; growthSummary: { totalValue: number; totalProfitLoss: number; totalInvested: number; totalReturnPercent: number; }; };
 export type IncomeManagementPageData = { incomeSources: IncomeSourceRow[] };
 export type ExpenseManagementPageData = { expenses: ExpenseRow[] };
 export type MoneyPlanPageData = { targetIncome: number; currentNet: number; plannedIncrease: number; projectedNet: number; remainingGap: number; plans: MoneyGoalPlanRow[] };

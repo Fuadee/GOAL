@@ -1,10 +1,11 @@
-import { getGrowthAssets, getMoneyIncomeSources } from '@/lib/money/queries';
+import { getAssetMonthlySnapshots, getGrowthAssets, getMoneyIncomeSources } from '@/lib/money/queries';
 import { MoneyManagementPageData } from '@/lib/money/types';
 
 export async function getMoneyManagementData(): Promise<MoneyManagementPageData> {
   try {
     const incomeSources = (await getMoneyIncomeSources()) ?? [];
     const growthAssets = (await getGrowthAssets()) ?? [];
+    const assetSnapshots = (await getAssetMonthlySnapshots()) ?? [];
 
     const summary = incomeSources.reduce(
       (acc, row) => {
@@ -31,12 +32,13 @@ export async function getMoneyManagementData(): Promise<MoneyManagementPageData>
         ? (growthSummary.totalProfitLoss / growthSummary.totalInvested) * 100
         : 0;
 
-    return { incomeSources, growthAssets, summary, growthSummary };
+    return { incomeSources, growthAssets, assetSnapshots, summary, growthSummary };
   } catch (error) {
     console.error('[money-management load failed]', error);
     return {
       incomeSources: [],
       growthAssets: [],
+      assetSnapshots: [],
       summary: { grossIncome: 0, totalExpense: 0, netIncome: 0 },
       growthSummary: { totalValue: 0, totalProfitLoss: 0, totalInvested: 0, totalReturnPercent: 0 }
     };
