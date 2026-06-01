@@ -33,25 +33,25 @@ export function DiscoveryCandidatesSection({ candidates }: DiscoveryCandidatesSe
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
   return (
-    <details id="discovery-candidates" className="rounded-2xl border border-slate-200 bg-slate-50/90 p-4" open={false}>
+    <details id="discovery-candidates" className="rounded-[24px] border border-slate-200/80 bg-white/80 p-4 shadow-sm" open={false}>
       <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className={innovationUi.sectionTitle}>Candidate Queue ({candidates.length})</h2>
-          <p className={innovationUi.sectionSubtitle}>Ideas waiting for execution.</p>
+          <h2 className={innovationUi.sectionTitle}>ไอเดียรอคัดเลือก ({candidates.length})</h2>
+          <p className={innovationUi.sectionSubtitle}>ไอเดียที่รอเลือกเข้าสู่การลงมือทำ</p>
         </div>
-        <span className="text-sm font-semibold text-slate-600">Expand</span>
+        <span className="text-sm font-semibold text-slate-600">เปิดดู</span>
       </summary>
 
       <div className="mt-3 flex justify-end">
         <Link href="/innovation/discovery/new" className={innovationUi.headerOutlineButton}>
-          + Add Candidate
+          + เพิ่มไอเดีย
         </Link>
       </div>
 
       {candidates.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-100 p-4 text-slate-700">
-          <p className="font-medium">No candidates in queue.</p>
-          <p className="text-sm text-slate-500">Add one idea and start mission.</p>
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-slate-700">
+          <p className="font-medium">ยังไม่มีไอเดียในคิว</p>
+          <p className="text-sm text-slate-500">เพิ่มไอเดียหนึ่งรายการ แล้วค่อยเลือกเริ่มภารกิจ</p>
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
@@ -60,7 +60,7 @@ export function DiscoveryCandidatesSection({ candidates }: DiscoveryCandidatesSe
             const problemPreview = getProblemPreview(candidate);
 
             return (
-              <article key={candidate.id} className="space-y-2 rounded-2xl border border-dashed border-slate-300 bg-slate-100 p-3.5">
+              <article key={candidate.id} className="space-y-2 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="line-clamp-1 text-base font-semibold text-slate-900">{candidate.title}</h3>
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATE_STYLES[stateMeta.state]}`}>{stateMeta.label}</span>
@@ -86,10 +86,10 @@ export function DiscoveryCandidatesSection({ candidates }: DiscoveryCandidatesSe
                       });
                     }}
                   >
-                    {isPending && pendingId === candidate.id ? 'Starting...' : 'Start Mission'}
+                    {isPending && pendingId === candidate.id ? 'กำลังเริ่ม...' : 'เริ่มภารกิจ'}
                   </button>
                   <Link href={`/innovation/discovery/${candidate.id}`} className={innovationUi.secondaryButton}>
-                    Open
+                    เปิดดู
                   </Link>
                 </div>
               </article>

@@ -16,9 +16,9 @@ export default async function DiscoveryCandidateDetailPage({ params }: Discovery
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    <main className="min-h-screen bg-slate-100/70">
       <Navbar />
-      <section className="mx-auto w-full max-w-6xl px-6 py-16 md:px-10 md:py-20">
+      <section className="mx-auto w-full max-w-5xl px-4 py-5 md:px-6 md:py-6">
         <DiscoveryCandidateDetailPanel candidate={candidate} />
       </section>
     </main>
