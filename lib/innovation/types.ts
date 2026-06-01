@@ -1,4 +1,4 @@
-export const INNOVATION_STATUS = ['idea', 'building', 'testing', 'blocked', 'completed'] as const;
+export const INNOVATION_STATUS = ['idea', 'building', 'testing', 'blocked', 'completed', 'terminated'] as const;
 export const INNOVATION_LOG_TYPES = ['update', 'problem', 'solution', 'decision', 'lesson'] as const;
 export const INNOVATION_STEP_STATUS = ['todo', 'waiting', 'in_progress', 'blocked', 'completed'] as const;
 export const DISCOVERY_CANDIDATE_STATUS = ['observed', 'pain_point', 'concept', 'validated', 'converted'] as const;
@@ -21,7 +21,7 @@ export type DiscoveryCandidateStateAction =
   | 'open_innovation'
   | 'view_linked_innovation_info';
 
-export type InnovationDerivedState = 'idea' | 'building' | 'blocked' | 'completed';
+export type InnovationDerivedState = 'idea' | 'building' | 'blocked' | 'completed' | 'terminated';
 export type InnovationStateAction =
   | 'add_first_step'
   | 'edit_innovation'
@@ -31,7 +31,8 @@ export type InnovationStateAction =
   | 'block'
   | 'resume'
   | 'edit_block_reason'
-  | 'create_follow_up';
+  | 'create_follow_up'
+  | 'view_history';
 
 export type DiscoveryCandidateStateMeta = {
   state: DiscoveryCandidateState;
@@ -67,6 +68,9 @@ export type InnovationRow = {
   description: string | null;
   goal: string | null;
   status: InnovationStatus;
+  result: 'failed' | 'succeeded' | null;
+  ended_at: string | null;
+  is_active: boolean;
   is_blocked: boolean;
   blocked_reason: string | null;
   blocked_at: string | null;
@@ -162,6 +166,9 @@ export type CreateInnovationProcessStepPayload = {
 };
 
 export type UpdateInnovationPayload = {
+  result?: 'failed' | 'succeeded' | null;
+  ended_at?: string | null;
+  is_active?: boolean;
   is_blocked?: boolean;
   blocked_reason?: string | null;
   blocked_at?: string | null;

@@ -11,7 +11,7 @@ import {
   InnovationNextAction
 } from '@/lib/innovation/types';
 
-const CURRENT_MISSION_STATUS_PRIORITY: InnovationDerivedState[] = ['building', 'idea', 'blocked', 'completed'];
+const CURRENT_MISSION_STATUS_PRIORITY: InnovationDerivedState[] = ['building', 'idea', 'blocked', 'completed', 'terminated'];
 
 function compareSteps(a: InnovationProcessStepSummary, b: InnovationProcessStepSummary): number {
   const orderA = a.step_order ?? Number.MAX_SAFE_INTEGER;
@@ -104,6 +104,10 @@ export function getPrimaryDiscoveryActionLabel(candidate: DiscoveryCandidateRow)
 }
 
 export function deriveInnovationState(innovation: InnovationCardViewModel): InnovationDerivedState {
+  if (!innovation.is_active || innovation.status === 'terminated') {
+    return 'terminated';
+  }
+
   if (innovation.is_blocked) {
     return 'blocked';
   }
@@ -139,6 +143,11 @@ const INNOVATION_STATE_META: Record<InnovationDerivedState, { label: string; des
     label: 'COMPLETED',
     description: 'เสร็จครบทุกขั้นแล้ว',
     allowedActions: ['open_details', 'create_follow_up']
+  },
+  terminated: {
+    label: 'TERMINATED',
+    description: 'ยุติแล้วไม่สำเร็จ',
+    allowedActions: ['open_details', 'view_history']
   }
 };
 
@@ -157,7 +166,7 @@ export function getInnovationStateMeta(innovation: InnovationCardViewModel): Inn
 export function getCurrentInnovation(innovations: InnovationCardViewModel[]): InnovationCardViewModel | null {
   return (
     innovations
-      .filter((innovation) => deriveInnovationState(innovation) !== 'completed')
+      .filter((innovation) => innovation.is_active && !['completed', 'terminated'].includes(deriveInnovationState(innovation)))
       .sort((a, b) => {
         const aState = deriveInnovationState(a);
         const bState = deriveInnovationState(b);

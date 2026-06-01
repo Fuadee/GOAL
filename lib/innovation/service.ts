@@ -75,6 +75,9 @@ export async function getInnovationDashboardData(): Promise<InnovationCardViewMo
       description: row.description,
       goal: row.goal,
       status: row.status,
+      result: row.result,
+      ended_at: row.ended_at,
+      is_active: row.is_active,
       is_blocked: row.is_blocked,
       blocked_reason: row.blocked_reason,
       blocked_at: row.blocked_at,
@@ -259,6 +262,24 @@ export async function markInnovationNextStepDone(innovationId: string) {
 
   await syncInnovationStatus(innovationId);
   return nextStep;
+}
+
+
+export async function terminateInnovationMission(innovationId: string) {
+  const innovation = await getInnovationById(innovationId);
+
+  if (!innovation) {
+    throw new Error('Innovation not found.');
+  }
+
+  return updateInnovation(innovationId, {
+    status: 'terminated',
+    result: 'failed',
+    ended_at: new Date().toISOString(),
+    is_active: false,
+    is_blocked: false,
+    blocked_at: null
+  });
 }
 
 export async function blockInnovation(innovationId: string, blockedReason: string) {
