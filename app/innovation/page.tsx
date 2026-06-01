@@ -30,12 +30,6 @@ export default async function InnovationPage() {
     <PageShell>
       <Navbar />
       <section className="page-container mx-auto max-w-5xl space-y-5 sm:space-y-6">
-        <header className="space-y-1 pt-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">GOAL</p>
-          <h1 className="text-xl font-semibold text-slate-950 sm:text-2xl">พื้นที่ลงมือสร้าง Innovation</h1>
-          <p className="text-sm leading-6 text-slate-500">จัดลำดับไอเดีย เลือกภารกิจ และติดตามความคืบหน้าให้ชัดเจน</p>
-        </header>
-
         {innovations.length === 0 ? (
           <>
             <section className="premium-card border-dashed p-10 text-center"><p className="text-[color:var(--text-secondary)]">ยังไม่มี Innovation เริ่มบันทึกไอเดียแรกเพื่อสร้างอนาคตของคุณ</p></section>
