@@ -15,6 +15,7 @@ import {
   getInnovationDashboardPageData,
   markCandidateValidated,
   markInnovationNextStepDone,
+  terminateInnovationMission,
   removeDiscoveryCandidate,
   resumeInnovation,
   updateCandidateConcept,
@@ -206,6 +207,17 @@ export async function markInnovationNextStepDoneAction(innovationId: string): Pr
   revalidateInnovationPages(`/innovation/${innovationId}`);
 
   return { success: true, message: 'Step marked done.' };
+}
+
+
+export async function terminateInnovationMissionAction(innovationId: string): Promise<{ success: boolean; message: string }> {
+  try {
+    await terminateInnovationMission(innovationId);
+    revalidateInnovationPages(`/innovation/${innovationId}`);
+    return { success: true, message: 'Mission moved to history.' };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'Unable to terminate mission.' };
+  }
 }
 
 export async function blockInnovationAction(innovationId: string, blockedReason: string): Promise<{ success: boolean; message: string }> {
