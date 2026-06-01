@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { deleteGrowthAssetAction, deleteMoneyIncomeSourceAction, saveAssetMonthlySnapshotAction, upsertGrowthAssetAction, upsertMoneyIncomeSourceAction } from '@/app/money-management/actions';
-import { AssetMonthlySnapshotRow, GrowthAssetRow, GrowthAssetType, MoneyManagementPageData, MoneyIncomeSourceRow } from '@/lib/money/types';
+import { AssetMonthlySnapshotRow, GrowthAssetRow, GrowthAssetType, MoneyManagementPageData, MoneyIncomeSourceRow, MoneySummary } from '@/lib/money/types';
 
 const thb = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 });
 const monthLabel = new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { month: 'long', year: 'numeric' }).format(new Date());
@@ -19,6 +19,7 @@ const categoryMeta = {
 } as const;
 type AssetCategory = keyof typeof categoryMeta;
 const assetCategories = Object.keys(categoryMeta) as AssetCategory[];
+const incomeBreakdownColors = ['#22C55E', '#0EA5E9', '#F59E0B', '#A78BFA', '#F43F5E', '#14B8A6'];
 
 function financialColorClass(value: number) {
   if (value > 0) return 'text-emerald-600';
@@ -94,7 +95,10 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
     </section>
 
     <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-[40%_60%] md:gap-6 lg:grid-cols-[35%_65%] lg:gap-7">
-      <IncomeSourcesCard rows={rows} onCreate={openCreate} onEdit={openEdit} onDelete={onDelete} />
+      <div className="space-y-5">
+        <IncomeSourcesCard rows={rows} onCreate={openCreate} onEdit={openEdit} onDelete={onDelete} />
+        <MonthlyIncomeOverviewCard rows={rows} summary={data.summary} />
+      </div>
       <GrowthAssetsCard rows={growthRows} totalValue={data.growthSummary.totalValue} totalProfitLoss={data.growthSummary.totalProfitLoss} onCreate={() => { setGrowthEditing(null); setGrowthOpen(true); }} onEdit={(row) => { setGrowthEditing(row); setGrowthOpen(true); }} onDelete={(id) => startTransition(async () => { const res = await deleteGrowthAssetAction(id); if (res.success) router.refresh(); })} />
     </div>
 
@@ -126,6 +130,83 @@ function IncomeSourcesCard({ rows, onCreate, onEdit, onDelete }: { rows: MoneyIn
     </>}
     <button onClick={onCreate} className="mt-3 flex w-full items-center gap-2.5 rounded-xl border border-dashed p-3 text-left"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100">+</span><span><p className="text-sm font-medium text-slate-700">เพิ่มแหล่งรายได้ใหม่</p><p className="text-xs text-slate-500">เพิ่มแหล่งรายได้</p></span></button>
   </section>;
+}
+
+
+function MonthlyIncomeOverviewCard({ rows, summary }: { rows: MoneyIncomeSourceRow[]; summary: MoneySummary }) {
+  const activeRows = rows.filter((row) => row.is_active !== false);
+  const largestIncomeSource = activeRows.reduce<MoneyIncomeSourceRow | null>((largest, row) => {
+    if (!largest) return row;
+    return Number(row.income_amount) > Number(largest.income_amount) ? row : largest;
+  }, null);
+  const chartData = activeRows
+    .filter((row) => Number(row.income_amount) > 0)
+    .map((row, index) => ({
+      name: row.name,
+      value: Number(row.income_amount),
+      color: incomeBreakdownColors[index % incomeBreakdownColors.length],
+      pct: summary.grossIncome > 0 ? (Number(row.income_amount) / summary.grossIncome) * 100 : 0,
+    }));
+
+  return <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6">
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Monthly Snapshot</p>
+        <h2 className="mt-1 text-xl font-semibold text-slate-900">Monthly Income Overview</h2>
+        <p className="mt-1 text-sm text-slate-500">ภาพรวมรายได้สุทธิและสัดส่วนแหล่งรายได้</p>
+      </div>
+      <span className="rounded-2xl bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">{activeRows.length} sources</span>
+    </div>
+
+    <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <IncomeOverviewMetric label="รายได้รวมต่อเดือน" value={thb.format(summary.grossIncome)} valueClass="text-slate-900" />
+      <IncomeOverviewMetric label="ค่าใช้จ่าย/หักออกจากรายได้" value={thb.format(summary.totalExpense)} valueClass="text-rose-600" />
+      <IncomeOverviewMetric label="รายได้สุทธิ" value={thb.format(summary.netIncome)} valueClass="text-emerald-600" />
+      <IncomeOverviewMetric label="จำนวนแหล่งรายได้" value={`${activeRows.length} แหล่ง`} valueClass="text-slate-900" />
+    </div>
+
+    <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">แหล่งรายได้หลักที่มากที่สุด</p>
+          <p className="mt-1 text-sm text-slate-500">{largestIncomeSource?.name ?? 'ยังไม่มีข้อมูลรายได้'}</p>
+        </div>
+        <p className="text-right text-lg font-semibold text-slate-900">{thb.format(Number(largestIncomeSource?.income_amount ?? 0))}</p>
+      </div>
+    </div>
+
+    <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-[150px_minmax(0,1fr)] lg:items-center">
+      <div>
+        <p className="text-sm font-semibold text-slate-900">Income Breakdown</p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-500">สัดส่วนรายได้แต่ละแหล่งในเดือนนี้</p>
+      </div>
+      {chartData.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-200 p-5 text-center text-sm text-slate-500">ยังไม่มีรายได้สำหรับแสดงกราฟ</div> : <div className="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+        <div className="h-[120px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={36} outerRadius={54} paddingAngle={3} stroke="none">
+                {chartData.map((item) => <Cell key={item.name} fill={item.color} />)}
+              </Pie>
+              <Tooltip formatter={(value: number) => thb.format(value)} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="space-y-2">
+          {chartData.map((item) => <div key={item.name} className="flex items-center justify-between gap-3 text-sm">
+            <div className="flex min-w-0 items-center gap-2"><span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} /><span className="truncate text-slate-600">{item.name}</span></div>
+            <div className="shrink-0 text-right"><p className="font-semibold text-slate-900">{compactThb(item.value)}</p><p className="text-[11px] text-slate-400">{item.pct.toFixed(1)}%</p></div>
+          </div>)}
+        </div>
+      </div>}
+    </div>
+  </section>;
+}
+
+function IncomeOverviewMetric({ label, value, valueClass }: { label: string; value: string; valueClass: string }) {
+  return <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.45)]">
+    <p className="text-xs font-medium text-slate-500">{label}</p>
+    <p className={`mt-1 text-lg font-semibold tracking-tight ${valueClass}`}>{value}</p>
+  </div>;
 }
 
 function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit, onDelete }: { rows: GrowthAssetRow[]; totalValue: number; totalProfitLoss: number; onCreate: () => void; onEdit: (row: GrowthAssetRow) => void; onDelete: (id: string) => void }) {
