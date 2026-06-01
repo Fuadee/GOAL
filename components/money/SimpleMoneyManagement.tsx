@@ -180,21 +180,21 @@ function MonthlyIncomeOverviewCard({ rows, summary }: { rows: MoneyIncomeSourceR
         <p className="text-sm font-semibold text-slate-900">Income Breakdown</p>
         <p className="mt-1 text-xs leading-relaxed text-slate-500">สัดส่วนรายได้แต่ละแหล่งในเดือนนี้</p>
       </div>
-      {chartData.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-200 p-5 text-center text-sm text-slate-500">ยังไม่มีรายได้สำหรับแสดงกราฟ</div> : <div className="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
-        <div className="h-[120px]">
+      {chartData.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-200 p-5 text-center text-sm text-slate-500">ยังไม่มีรายได้สำหรับแสดงกราฟ</div> : <div className="flex flex-col gap-5 rounded-2xl bg-white/70 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:p-4">
+        <div className="mx-auto h-[150px] w-[150px] shrink-0 sm:mx-0 sm:h-[160px] sm:w-[160px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={36} outerRadius={54} paddingAngle={3} stroke="none">
+              <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={44} outerRadius={68} paddingAngle={3} stroke="none">
                 {chartData.map((item) => <Cell key={item.name} fill={item.color} />)}
               </Pie>
               <Tooltip formatter={(value: number) => thb.format(value)} />
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="space-y-2">
-          {chartData.map((item) => <div key={item.name} className="flex items-center justify-between gap-3 text-sm">
-            <div className="flex min-w-0 items-center gap-2"><span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} /><span className="truncate text-slate-600">{item.name}</span></div>
-            <div className="shrink-0 text-right"><p className="font-semibold text-slate-900">{compactThb(item.value)}</p><p className="text-[11px] text-slate-400">{item.pct.toFixed(1)}%</p></div>
+        <div className="min-w-[min(100%,20rem)] flex-1 space-y-3 sm:max-w-none">
+          {chartData.map((item) => <div key={item.name} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 border-0 text-sm no-underline decoration-transparent">
+            <div className="flex min-w-0 items-start gap-2.5 border-0 no-underline decoration-transparent"><span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} /><span className="break-words text-sm leading-snug text-slate-700 no-underline decoration-transparent sm:text-base">{item.name}</span></div>
+            <div className="shrink-0 text-right"><p className="font-semibold leading-tight text-slate-900">{compactThb(item.value)}</p><p className="mt-0.5 text-sm leading-tight text-slate-500">{item.pct.toFixed(1)}%</p></div>
           </div>)}
         </div>
       </div>}
