@@ -3,7 +3,7 @@ import { supabaseRestRequest } from '@/lib/supabase/rest';
 import { CreatePersonalTraitInput, PersonalTraitRow, UpdatePersonalTraitInput } from './types';
 
 export async function listPersonalTraits() {
-  return supabaseRestRequest<PersonalTraitRow[]>('personal_traits?select=*&order=sort_order.asc,created_at.asc', 'GET');
+  return supabaseRestRequest<PersonalTraitRow[]>('personal_traits?select=id,title,description,is_active,sort_order,created_at,updated_at&order=sort_order.asc,created_at.asc', 'GET');
 }
 
 export async function createPersonalTrait(input: CreatePersonalTraitInput) {
@@ -18,7 +18,7 @@ export async function createPersonalTrait(input: CreatePersonalTraitInput) {
 }
 
 export async function togglePersonalTraitActive(id: string) {
-  const rows = await supabaseRestRequest<PersonalTraitRow[]>(`personal_traits?id=eq.${id}&select=*`, 'GET');
+  const rows = await supabaseRestRequest<PersonalTraitRow[]>(`personal_traits?id=eq.${id}&select=id,title,description,is_active,sort_order,created_at,updated_at`, 'GET');
   const trait = rows[0];
 
   if (!trait) return null;

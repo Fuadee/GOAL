@@ -57,18 +57,18 @@ const mapLog = (row: RunnerRunLogRow): RunnerRunLog => ({
 const todayDate = () => new Date().toISOString().slice(0, 10);
 
 export async function getRunnerLevels(): Promise<RunnerLevel[]> {
-  const rows = await supabaseRestRequest<RunnerLevelRow[]>('runner_levels?order=sort_order.asc', 'GET');
+  const rows = await supabaseRestRequest<RunnerLevelRow[]>('runner_levels?select=id,level_number,title,distance_target_km,pace_target_seconds_per_km,sort_order,created_at&order=sort_order.asc', 'GET');
   return rows.map(mapLevel);
 }
 
 export async function getRunnerProgress(): Promise<RunnerLevelProgress[]> {
-  const rows = await supabaseRestRequest<RunnerLevelProgressRow[]>('runner_level_progress?order=updated_at.asc', 'GET');
+  const rows = await supabaseRestRequest<RunnerLevelProgressRow[]>('runner_level_progress?select=id,level_id,status,best_distance_km,best_pace_seconds_per_km,best_no_stop_distance_km,passed_at,reward_title,reward_description,reward_emotional_copy,reward_image_url,reward_status,reward_claimed_at,updated_at&order=updated_at.asc', 'GET');
   return rows.map(mapProgress);
 }
 
 export async function getRunnerRunLogs(limit = 50): Promise<RunnerRunLog[]> {
   const rows = await supabaseRestRequest<RunnerRunLogRow[]>(
-    `runner_run_logs?select=*,level:runner_levels(id,level_number,title)&order=run_date.desc,created_at.desc&limit=${limit}`,
+    `runner_run_logs?select=id,level_id,run_date,distance_km,duration_seconds,pace_seconds_per_km,no_stop,note,effort,result,created_at,level:runner_levels(id,level_number,title)&order=run_date.desc,created_at.desc&limit=${limit}`,
     'GET'
   );
 
@@ -76,7 +76,7 @@ export async function getRunnerRunLogs(limit = 50): Promise<RunnerRunLog[]> {
 }
 
 export async function getRunnerRestDays(limit = 30): Promise<RunnerRestDay[]> {
-  return supabaseRestRequest<RunnerRestDayRow[]>(`runner_rest_days?order=rest_date.desc,created_at.desc&limit=${limit}`, 'GET');
+  return supabaseRestRequest<RunnerRestDayRow[]>(`runner_rest_days?select=id,rest_date,note,created_at&order=rest_date.desc,created_at.desc&limit=${limit}`, 'GET');
 }
 
 export async function getRunnerDashboardData(): Promise<RunnerDashboardData> {

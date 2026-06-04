@@ -23,12 +23,12 @@ import {
 } from '@/lib/smv/types';
 
 export async function getSmvDimensions() {
-  return supabaseRestRequest<SmvDimensionRow[]>('smv_dimensions?select=*&order=created_at.asc', 'GET');
+  return supabaseRestRequest<SmvDimensionRow[]>('smv_dimensions?select=id,key,label,description,color_token,created_at,updated_at&order=created_at.asc', 'GET');
 }
 
 export async function getSmvMetrics(dimensionId?: string) {
   const filter = dimensionId ? `&dimension_id=eq.${dimensionId}` : '';
-  return supabaseRestRequest<SmvMetricRow[]>(`smv_metrics?select=*&is_active=eq.true${filter}&order=created_at.asc`, 'GET');
+  return supabaseRestRequest<SmvMetricRow[]>(`smv_metrics?select=id,dimension_id,key,label,description,value_type,weight,is_required,config,is_active,created_at,updated_at&is_active=eq.true${filter}&order=created_at.asc`, 'GET');
 }
 
 export async function getSmvLevelDefinitions(dimensionId: string) {
@@ -39,7 +39,7 @@ export async function getSmvLevelDefinitions(dimensionId: string) {
 }
 
 export async function getSmvDimensionScores() {
-  return supabaseRestRequest<SmvDimensionScoreRow[]>('smv_dimension_scores?select=*', 'GET');
+  return supabaseRestRequest<SmvDimensionScoreRow[]>('smv_dimension_scores?select=dimension_id,score,evidence_count_30d,guard_summary,explanation,calculated_at,created_at,updated_at', 'GET');
 }
 
 export async function getSmvDimensionScore(dimensionId: string) {
@@ -86,7 +86,7 @@ export async function getSmvScoreHistory(dimensionId: string, limit = 20) {
 export async function getSmvEvidenceLogs(dimensionId?: string, limit = 20) {
   const filter = dimensionId ? `&dimension_id=eq.${dimensionId}` : '';
   return supabaseRestRequest<SmvEvidenceLogRow[]>(
-    `smv_evidence_logs?select=*&order=logged_at.desc${filter}&limit=${limit}`,
+    `smv_evidence_logs?select=id,dimension_id,logged_at,context,note,source,appearance_category,target_level,evidence_type,created_at,updated_at&order=logged_at.desc${filter}&limit=${limit}`,
     'GET'
   );
 }
@@ -152,7 +152,7 @@ export async function getLatestMetricValuesForDimension(metricIds: string[]) {
 }
 
 export async function getSmvImprovementTasks() {
-  return supabaseRestRequest<SmvImprovementTaskRow[]>('smv_improvement_tasks?select=*&status=neq.archived&order=priority.asc', 'GET');
+  return supabaseRestRequest<SmvImprovementTaskRow[]>('smv_improvement_tasks?select=id,dimension_id,title,description,priority,status,task_source,requirement,due_date,created_at,updated_at&status=neq.archived&order=priority.asc', 'GET');
 }
 
 export async function upsertImprovementTask(input: {
@@ -264,11 +264,11 @@ export async function upsertSmvAppearanceProgress(input: {
 }
 
 export async function getSocialLevels() {
-  return supabaseRestRequest<SocialLevelRow[]>('social_levels?select=*&order=id.asc', 'GET');
+  return supabaseRestRequest<SocialLevelRow[]>('social_levels?select=id,title,description,phase,score,created_at,updated_at&order=id.asc', 'GET');
 }
 
 export async function getSocialRequirements() {
-  return supabaseRestRequest<SocialRequirementRow[]>('social_requirements?select=*&order=level_id.asc,id.asc', 'GET');
+  return supabaseRestRequest<SocialRequirementRow[]>('social_requirements?select=id,level_id,requirement_text,requirement_type,required_value,created_at&order=level_id.asc,id.asc', 'GET');
 }
 
 export async function getSocialProgressByUser(userId: string) {
@@ -307,7 +307,7 @@ export async function getSocialEvidenceByUser(userId: string, limit = 100) {
 }
 
 export async function getSmvRealDateHistory() {
-  return supabaseRestRequest<SmvRealDateHistoryRow[]>('smv_real_date_history?select=*&order=date.desc&order=created_at.desc', 'GET');
+  return supabaseRestRequest<SmvRealDateHistoryRow[]>('smv_real_date_history?select=id,user_id,title,date,reflection,tags,created_at,updated_at&order=date.desc&order=created_at.desc&limit=20', 'GET');
 }
 
 export async function createSmvRealDateHistory(input: {

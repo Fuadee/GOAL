@@ -64,7 +64,7 @@ export async function deleteGrowthAsset(id: string): Promise<void> {
 }
 
 export async function findAssetMonthlySnapshotByMonth(snapshotMonth: string): Promise<{ id: string; snapshot_month: string; total_value: number; created_at: string; updated_at: string } | null> {
-  const rows = await supabaseRestRequest<{ id: string; snapshot_month: string; total_value: number; created_at: string; updated_at: string }[]>(`asset_monthly_snapshots?select=*&snapshot_month=eq.${snapshotMonth}&limit=1`, 'GET');
+  const rows = await supabaseRestRequest<{ id: string; snapshot_month: string; total_value: number; created_at: string; updated_at: string }[]>(`asset_monthly_snapshots?select=id,snapshot_month,total_value,created_at,updated_at&snapshot_month=eq.${snapshotMonth}&limit=1`, 'GET');
   return rows[0] ?? null;
 }
 

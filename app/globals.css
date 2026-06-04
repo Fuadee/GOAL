@@ -154,3 +154,34 @@ h6 {
 .smv-static * {
   animation: none !important;
 }
+
+.motion-reveal {
+  animation: motion-reveal-in 550ms ease-out both;
+}
+
+.float-motion {
+  animation: float-motion-y 6s ease-in-out infinite;
+}
+
+@keyframes motion-reveal-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes float-motion-y {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -6px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-reveal,
+  .float-motion {
+    animation: none;
+  }
+}
