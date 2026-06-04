@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useCallback, useMemo, useState, useTransition } from 'react';
 
 import {
   createSmvRealDateHistoryAction,
@@ -19,7 +19,7 @@ type DateFormState = {
 
 const EMPTY_FORM: DateFormState = { title: '', date: '', reflection: '', tags: '' };
 
-export function RelationshipMissionDashboard() {
+export function RelationshipMissionDashboard({ initialDateHistory = [] }: { initialDateHistory?: SmvRealDateHistoryRow[] }) {
   const [isReflectionOpen, setIsReflectionOpen] = useState(false);
   const [reflection, setReflection] = useState(
     'เริ่มเข้าใจแล้วว่าจริงๆ ตัวเองต้องการ connection แบบไหน และไม่อยากฝืนตัวเองไปอยู่ใน environment ที่ไม่ใช่'
@@ -27,18 +27,12 @@ export function RelationshipMissionDashboard() {
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formState, setFormState] = useState<DateFormState>(EMPTY_FORM);
-  const [dateHistory, setDateHistory] = useState<SmvRealDateHistoryRow[]>([]);
+  const [dateHistory, setDateHistory] = useState<SmvRealDateHistoryRow[]>(initialDateHistory);
   const [isPending, startTransition] = useTransition();
 
-  const loadHistory = () => {
-    startTransition(async () => {
-      const rows = await listSmvRealDateHistoryAction();
-      setDateHistory(rows);
-    });
-  };
-
-  useEffect(() => {
-    loadHistory();
+  const loadHistory = useCallback(async () => {
+    const rows = await listSmvRealDateHistoryAction();
+    setDateHistory(rows);
   }, []);
 
   const parsedTags = useMemo(

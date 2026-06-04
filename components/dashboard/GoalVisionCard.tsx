@@ -40,7 +40,7 @@ export function GoalVisionCard({ item, imageUrl, isUploading, isRemoving, onUplo
           src={imageUrl}
           alt={`${item.label} vision`}
           fill
-          sizes="(max-width: 768px) 100vw, 20vw"
+          sizes="(max-width: 767px) 50vw, (max-width: 1279px) 50vw, 20vw"
           className="absolute inset-0 object-cover transition duration-500 group-hover:scale-[1.02]"
         />
       ) : (

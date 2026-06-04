@@ -1,5 +1,11 @@
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
+type SupabaseRestOptions = {
+  /** Short-lived server cache for read-heavy dashboard queries. Mutations still bypass cache. */
+  revalidate?: number | false;
+  tags?: string[];
+};
+
 const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -12,12 +18,14 @@ const ensureEnv = () => {
 export async function supabaseRestRequest<TResponse>(
   path: string,
   method: HttpMethod,
-  body?: Record<string, unknown> | Record<string, unknown>[]
+  body?: Record<string, unknown> | Record<string, unknown>[],
+  options: SupabaseRestOptions = {}
 ): Promise<TResponse> {
   ensureEnv();
   const isUpsert = method === 'POST' && path.includes('on_conflict=');
   const preferHeader = isUpsert ? 'resolution=merge-duplicates,return=representation' : 'return=representation';
 
+  const shouldCache = method === 'GET' && options.revalidate !== false;
   const response = await fetch(`${baseUrl}/rest/v1/${path}`, {
     method,
     headers: {
@@ -26,7 +34,13 @@ export async function supabaseRestRequest<TResponse>(
       'Content-Type': 'application/json',
       Prefer: preferHeader
     },
-    cache: 'no-store',
+    cache: shouldCache ? 'force-cache' : 'no-store',
+    next: shouldCache
+      ? {
+          revalidate: options.revalidate ?? 60,
+          tags: options.tags ?? ['supabase']
+        }
+      : undefined,
     body: body ? JSON.stringify(body) : undefined
   });
 

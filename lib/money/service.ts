@@ -3,9 +3,11 @@ import { MoneyManagementPageData } from '@/lib/money/types';
 
 export async function getMoneyManagementData(): Promise<MoneyManagementPageData> {
   try {
-    const incomeSources = (await getMoneyIncomeSources()) ?? [];
-    const growthAssets = (await getGrowthAssets()) ?? [];
-    const assetSnapshots = (await getAssetMonthlySnapshots()) ?? [];
+    const [incomeSources, growthAssets, assetSnapshots] = await Promise.all([
+      getMoneyIncomeSources(),
+      getGrowthAssets(),
+      getAssetMonthlySnapshots()
+    ]);
 
     const summary = incomeSources.reduce(
       (acc, row) => {
