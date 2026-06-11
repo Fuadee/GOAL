@@ -7,9 +7,9 @@ export default function NewDiscoveryCandidatePage() {
       <Navbar />
       <section className="mx-auto w-full max-w-5xl space-y-5 px-4 py-5 md:px-6 md:py-6">
         <header className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Innovation / ไอเดีย</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">นวัตกรรม / ไอเดีย</p>
           <h1 className="text-2xl font-semibold text-slate-950 sm:text-3xl">เพิ่มไอเดียรอคัดเลือก</h1>
-          <p className="text-slate-500">หน้านี้ใช้บันทึก pain point หรือโอกาสในการสร้าง innovation ใหม่</p>
+          <p className="text-slate-500">หน้านี้ใช้บันทึก ปัญหา หรือโอกาสในการสร้าง นวัตกรรม ใหม่</p>
         </header>
 
         <DiscoveryCandidateCreateForm />

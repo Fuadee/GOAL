@@ -34,9 +34,9 @@ const emptyForm: FormState = {
 };
 
 const statusLabel: Record<NormalizedIncomeSource['status'], string> = {
-  stable: 'Stable',
-  unstable: 'Unstable',
-  building: 'Building'
+  stable: 'มั่นคง',
+  unstable: 'ไม่แน่นอน',
+  building: 'กำลังสร้าง'
 };
 
 const getIncomeIcon = (item: NormalizedIncomeSource) => {
@@ -114,12 +114,12 @@ export function MonthlyNetIncomeSystem({ incomeSources }: Props) {
       <section className="relative overflow-hidden rounded-[28px] border border-cyan-200/10 bg-gradient-to-br from-slate-900 via-slate-900 to-[#10233e] p-6 shadow-[0_20px_50px_rgba(2,8,20,0.48)] sm:p-8">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,0.12),transparent_45%),radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_40%)]" />
         <div className="relative">
-          <p className="text-[11px] font-semibold tracking-[0.18em] text-slate-400">MONTHLY NET INCOME</p>
+          <p className="text-[11px] font-semibold tracking-[0.18em] text-slate-400">รายได้สุทธิต่อเดือน</p>
           <p className="mt-3 text-5xl font-bold leading-none text-emerald-300 sm:text-6xl">{thb.format(totals.net)}</p>
           <p className="mt-3 text-sm text-slate-300">รายได้สุทธิที่เกิดขึ้นจริงต่อเดือน</p>
           <div className="mt-5 flex flex-wrap gap-2.5">
-            <span className="rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs text-slate-200">Gross {thb.format(totals.gross)}</span>
-            <span className="rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs text-slate-200">Costs {thb.format(totals.cost)}</span>
+            <span className="rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs text-slate-200">รายรับรวม {thb.format(totals.gross)}</span>
+            <span className="rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs text-slate-200">ต้นทุน {thb.format(totals.cost)}</span>
           </div>
         </div>
       </section>
@@ -127,7 +127,7 @@ export function MonthlyNetIncomeSystem({ incomeSources }: Props) {
       <section className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-100">Income Sources</h2>
+            <h2 className="text-lg font-semibold text-slate-100">แหล่งรายได้</h2>
             <p className="mt-1 text-sm text-slate-400">แต่ละทางเหลือเงินจริงเท่าไหร่</p>
           </div>
           <button type="button" onClick={() => setForm(emptyForm)} className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-300 to-emerald-300 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-[0_12px_30px_rgba(20,184,166,0.25)] transition hover:brightness-105">
@@ -138,7 +138,7 @@ export function MonthlyNetIncomeSystem({ incomeSources }: Props) {
         {activeItems.length > 0 ? (
           <div className="space-y-3">
             <div>
-              <h3 className="text-sm font-semibold text-slate-200">Active Income</h3>
+              <h3 className="text-sm font-semibold text-slate-200">รายได้หลัก</h3>
               <p className="text-sm text-slate-500">รายได้ที่เกิดขึ้นจริงตอนนี้</p>
             </div>
             <div className="space-y-3">{activeItems.map((item) => <IncomeCard key={item.id} item={item} />)}</div>
@@ -148,7 +148,7 @@ export function MonthlyNetIncomeSystem({ incomeSources }: Props) {
         {buildingItems.length > 0 ? (
           <div className="space-y-3 pt-2">
             <div>
-              <h3 className="text-sm font-semibold text-slate-200">Building Income</h3>
+              <h3 className="text-sm font-semibold text-slate-200">รายได้ที่กำลังสร้าง</h3>
               <p className="text-sm text-slate-500">กำลังสร้าง ยังไม่นับในยอดรวม</p>
             </div>
             <div className="space-y-3">{buildingItems.map((item) => <IncomeCard key={item.id} item={item} />)}</div>
@@ -163,7 +163,7 @@ export function MonthlyNetIncomeSystem({ incomeSources }: Props) {
       {form ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-xl rounded-xl border border-white/10 bg-slate-900 p-4">
-            <h3 className="text-lg font-semibold text-white">{form.id ? 'Edit income source' : 'Add income source'}</h3>
+            <h3 className="text-lg font-semibold text-white">{form.id ? 'แก้ไขแหล่งรายได้' : 'เพิ่มแหล่งรายได้'}</h3>
             <form className="mt-3 grid gap-2" action={(fd) => {
               if (form.id) fd.set('id', form.id);
               fd.set('name', form.name);
@@ -183,15 +183,15 @@ export function MonthlyNetIncomeSystem({ incomeSources }: Props) {
               });
             }}>
               <input className="theme-input" placeholder="Income name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-              <input className="theme-input" placeholder="Gross income" type="number" value={form.grossAmount} onChange={(e) => setForm({ ...form, grossAmount: e.target.value })} />
+              <input className="theme-input" placeholder="รายรับรวม income" type="number" value={form.grossAmount} onChange={(e) => setForm({ ...form, grossAmount: e.target.value })} />
               <input className="theme-input" placeholder="Direct cost" type="number" value={form.directCost} onChange={(e) => setForm({ ...form, directCost: e.target.value })} />
               <input className="theme-input" placeholder="Cost label" value={form.costLabel} onChange={(e) => setForm({ ...form, costLabel: e.target.value })} />
-              <select className="theme-input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as 'active' | 'building' })}><option value="active">Active Income</option><option value="building">Building Income</option></select>
-              <select className="theme-input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as 'stable' | 'unstable' | 'building' })}><option value="stable">Stable</option><option value="unstable">Unstable</option><option value="building">Building</option></select>
+              <select className="theme-input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as 'active' | 'building' })}><option value="active">รายได้หลัก</option><option value="building">รายได้ที่กำลังสร้าง</option></select>
+              <select className="theme-input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as 'stable' | 'unstable' | 'building' })}><option value="stable">มั่นคง</option><option value="unstable">ไม่แน่นอน</option><option value="building">กำลังสร้าง</option></select>
               <textarea className="theme-input" placeholder="Note" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
               <div className="flex gap-2">
-                <button className="theme-button-primary" disabled={isPending}>{form.id ? 'Save' : 'Create'}</button>
-                <button type="button" className="theme-button-secondary" onClick={() => setForm(null)}>Cancel</button>
+                <button className="theme-button-primary" disabled={isPending}>{form.id ? 'บันทึก' : 'สร้าง'}</button>
+                <button type="button" className="theme-button-secondary" onClick={() => setForm(null)}>ยกเลิก</button>
               </div>
             </form>
             {message ? <p className="mt-2 text-sm text-slate-300">{message}</p> : null}

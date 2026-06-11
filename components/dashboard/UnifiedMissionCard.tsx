@@ -79,15 +79,23 @@ const pillarColorMap: Record<UnifiedMissionCardData['key'], PillarColorConfig> =
   }
 };
 
+const toneLabel: Record<NonNullable<UnifiedMissionCardData['tone']>, string> = {
+  critical: 'สำคัญ',
+  warning: 'ต้องติดตาม',
+  info: 'ปกติ',
+  success: 'สำเร็จ'
+};
+
 export function UnifiedMissionCard({ card }: { card: UnifiedMissionCardData }) {
   const colors = pillarColorMap[card.key];
-  const toneClass = colors.badgeByTone[card.tone ?? 'info'];
+  const tone = card.tone ?? 'info';
+  const toneClass = colors.badgeByTone[tone];
 
   return (
     <article className={`premium-card h-full ${colors.border} ${colors.hoverGlow}`}>
       <div className="flex items-center justify-between gap-2">
         <p className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${colors.title}`}>{card.eyebrow}</p>
-        <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] ${toneClass}`}>{card.tone ?? 'info'}</span>
+        <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${toneClass}`}>{toneLabel[tone]}</span>
       </div>
 
       <div className="mt-3 space-y-3">

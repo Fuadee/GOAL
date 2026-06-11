@@ -168,12 +168,12 @@ export function BloodDonationDashboard({ initialData }: Props) {
               <div className="relative">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-100/75">Mission Progress</p>
+                    <p className="text-[11px] font-semibold tracking-[0.01em] text-[color:var(--text-secondary)]">ความคืบหน้าภารกิจ</p>
                     <h3 className="mt-1 text-2xl font-medium tracking-tight text-white sm:text-[1.7rem]">บริจาคเลือดปีนี้</h3>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium uppercase tracking-[0.12em] text-cyan-100/90">{completedRatioLabel} Completed</p>
-                    <p className="mt-1 text-xs text-slate-300/85">{summary.progressPercent}% complete</p>
+                    <p className="text-sm font-medium tracking-[0.01em] text-[color:var(--text-primary)]">{completedRatioLabel} เสร็จแล้ว</p>
+                    <p className="mt-1 text-xs text-[color:var(--text-muted)]">{summary.progressPercent}% สำเร็จ</p>
                   </div>
                 </div>
 
@@ -745,4 +745,3 @@ function RescheduleForm({
     </form>
   );
 }
-

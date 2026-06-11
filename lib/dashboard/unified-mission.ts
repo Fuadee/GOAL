@@ -25,11 +25,11 @@ export function getSmvUnifiedMissionCardData(smvOverview: Awaited<ReturnType<typ
 
   return {
     key: 'smv',
-    eyebrow: 'SMV',
+    eyebrow: 'ภารกิจชีวิต',
     title: 'สิ่งที่ต้องทำตอนนี้',
     focusLabel: 'คุณควรโฟกัส',
     primaryText: weakest?.dimension.label ?? 'ยังไม่มีมิติที่ต้องโฟกัสตอนนี้',
-    ctaLabel: 'ไปหน้า SMV',
+    ctaLabel: 'ไปหน้าภารกิจชีวิต',
     href: '/smv',
     tone: weakest ? 'critical' : 'info'
   };
@@ -40,12 +40,12 @@ export function getMoneyUnifiedMissionCardData(steps: ConstructionStepRow[]): Un
 
   return {
     key: 'money',
-    eyebrow: 'MONEY',
+    eyebrow: 'การเงิน',
     title: 'สถานะที่ต้องรอตอนนี้',
     focusLabel: 'ตอนนี้ติดอยู่ที่',
     primaryText: waitingSummary.currentStep,
     secondaryText: `รอ: ${waitingSummary.waitingOn}`,
-    ctaLabel: 'ไปหน้า Money',
+    ctaLabel: 'ไปหน้าการเงิน',
     href: '/money-management',
     tone: 'warning'
   };
@@ -56,7 +56,7 @@ export function getHealthUnifiedMissionCardData(data: RunnerDashboardData): Unif
 
   return {
     key: 'health',
-    eyebrow: 'HEALTH',
+    eyebrow: 'สุขภาพ',
     title: 'ภารกิจวันนี้',
     focusLabel: 'วันนี้คุณต้องทำ',
     primaryText: summary.primaryText,
@@ -72,12 +72,12 @@ export function getInnovationUnifiedMissionCardData(mission: InnovationCardViewM
 
   return {
     key: 'innovation',
-    eyebrow: 'INNOVATION',
+    eyebrow: 'นวัตกรรม',
     title: 'ภารกิจหลักตอนนี้',
     focusLabel: 'โปรเจคที่ต้องเดินต่อ',
     primaryText: summary.primaryText,
     secondaryText: summary.secondaryText,
-    ctaLabel: 'ไปหน้า Innovation',
+    ctaLabel: 'ไปหน้านวัตกรรม',
     href: '/innovation',
     tone: mission ? 'warning' : 'info'
   };
@@ -89,12 +89,12 @@ export function getWorldUnifiedMissionCardData(data: BloodDonationDashboardViewM
 
   return {
     key: 'world',
-    eyebrow: 'HEAL THE WORLD',
+    eyebrow: 'เพื่อสังคม',
     title: 'ภารกิจถัดไป',
     focusLabel: 'สิ่งที่ควรทำต่อ',
     primaryText: missionSummary.primaryText,
     secondaryText: missionSummary.secondaryText,
-    ctaLabel: 'ไปหน้า Heal the World',
+    ctaLabel: 'ไปหน้าเพื่อสังคม',
     href: '/heal-the-world',
     tone: currentPlan ? 'critical' : 'info'
   };

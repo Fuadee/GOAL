@@ -1,0 +1,42 @@
+
+> goal-foundation@0.1.0 dev
+> next dev -p 3000
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 3.3s
+ ○ Compiling / ...
+ ✓ Compiled / in 8s (557 modules)
+ GET / 500 in 8787ms
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 7.9s (784 modules)
+ ○ Compiling /money-management/expenses ...
+ ✓ Compiled /money-management/expenses in 1351ms (844 modules)
+ GET /innovation/discovery/new 200 in 1573ms
+ GET /money-management/expenses 307 in 1548ms
+ ○ Compiling /money-management ...
+ ✓ Compiled /money-management in 4.6s (1909 modules)
+ GET /innovation/discovery/new 200 in 4167ms
+ GET /money-management 500 in 22598ms
+ GET /innovation/discovery/new 200 in 59ms
+ ✓ Compiled in 2.1s (1051 modules)
+ ○ Compiling /innovation/discovery/new ...
+ ✓ Compiled /innovation/discovery/new in 512ms (341 modules)
+ GET /innovation/discovery/new 200 in 675ms
+ ✓ Compiled in 2.1s (1051 modules)
+ ✓ Compiled in 591ms (1003 modules)
+ ✓ Compiled in 1492ms (1003 modules)
+ ✓ Compiled in 837ms (989 modules)
+ ✓ Compiled in 640ms (1003 modules)
+ ✓ Compiled in 622ms (1003 modules)
+ ✓ Compiled in 597ms (1003 modules)
+ ✓ Compiled in 508ms (1003 modules)
+ ✓ Compiled in 635ms (1003 modules)
+ ✓ Compiled in 490ms (1003 modules)
+ ✓ Compiled / in 416ms (315 modules)
+ ✓ Compiled /_error in 394ms (1306 modules)
+ GET / 500 in 4022ms
+ GET / 500 in 13671ms

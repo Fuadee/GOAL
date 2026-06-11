@@ -20,7 +20,7 @@ export function HouseCard({ house }: HouseCardProps) {
     <article className="space-y-4 rounded-2xl border border-white/10 bg-slate-900/55 p-5 shadow-[0_0_30px_rgba(59,130,246,0.08)] backdrop-blur">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Mission #{house.targetOrder.toString().padStart(2, '0')}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">ภารกิจ #{house.targetOrder.toString().padStart(2, '0')}</p>
           <h3 className="mt-1 text-xl font-semibold text-white">{house.name}</h3>
         </div>
         <PipelineBadge stage={house.currentStage} />
@@ -28,7 +28,7 @@ export function HouseCard({ house }: HouseCardProps) {
 
       <div>
         <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
-          <span>Pipeline Progress</span>
+          <span>ความคืบหน้าไปป์ไลน์</span>
           <span>{Math.round(progressPercent)}%</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-slate-800">

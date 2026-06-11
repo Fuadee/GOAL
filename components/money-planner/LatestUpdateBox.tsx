@@ -16,23 +16,23 @@ type StatusConfig = {
 const STATUS_CONFIG: Record<LatestUpdateStatus, StatusConfig> = {
   waiting: {
     icon: '⚠️',
-    label: '⚠️ Waiting on external',
-    className: 'border-amber-500/40 bg-amber-500/10 text-amber-100 shadow-[0_0_0_1px_rgba(245,158,11,0.16)]'
+    label: 'รอข้อมูลภายนอก',
+    className: 'border-amber-200 bg-amber-50 text-amber-800 shadow-sm'
   },
   blocked: {
     icon: '⛔',
-    label: '🚫 Blocked',
-    className: 'border-red-500/40 bg-red-500/10 text-red-100 shadow-[0_0_0_1px_rgba(239,68,68,0.18)]'
+    label: 'ติดขัด',
+    className: 'border-red-200 bg-red-50 text-red-700 shadow-sm'
   },
   info: {
     icon: 'ℹ️',
-    label: 'ℹ️ Info',
-    className: 'border-blue-500/30 bg-blue-500/10 text-blue-100 shadow-[0_0_0_1px_rgba(59,130,246,0.16)]'
+    label: 'ข้อมูลล่าสุด',
+    className: 'border-blue-200 bg-blue-50 text-blue-700 shadow-sm'
   },
   done: {
     icon: '✅',
-    label: '✅ Clear',
-    className: 'border-green-500/30 bg-green-500/10 text-green-100 shadow-[0_0_0_1px_rgba(34,197,94,0.16)]'
+    label: 'เรียบร้อย',
+    className: 'border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm'
   }
 };
 
@@ -44,7 +44,7 @@ function renderHighlightedText(text: string): ReactNode {
   return segments.map((segment, index) => {
     if (segment.match(HIGHLIGHT_PATTERN)) {
       return (
-        <span key={`${segment}-${index}`} className="font-semibold text-white">
+        <span key={`${segment}-${index}`} className="font-semibold text-[color:var(--text-primary)]">
           {segment}
         </span>
       );
@@ -59,9 +59,9 @@ export function LatestUpdateBox({ status, text }: LatestUpdateBoxProps) {
 
   return (
     <div className={`w-full rounded-xl border px-4 py-3 ${config.className}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">{config.label}</p>
-      <p className="mt-1 text-xs text-white/65">Latest update:</p>
-      <p className="mt-1 flex items-start gap-2 text-base font-medium leading-relaxed text-white">
+      <p className="text-[11px] font-semibold tracking-[0.01em]">{config.label}</p>
+      <p className="mt-1 text-xs text-[color:var(--text-muted)]">อัปเดตล่าสุด:</p>
+      <p className="mt-1 flex items-start gap-2 text-base font-medium leading-relaxed text-[color:var(--text-primary)]">
         <span aria-hidden="true" className="leading-none">
           {config.icon}
         </span>

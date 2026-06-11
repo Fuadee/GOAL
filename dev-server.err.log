@@ -1,0 +1,493 @@
+ ⚠ fetch for https://hkygpleedgtsjgqtjuiw.supabase.co/rest/v1/goal_vision_images?user_id=eq.local-user&select=id,user_id,goal_key,image_path,created_at,updated_at&order=created_at.asc on / specified "cache: force-cache" and "revalidate: 60", only one should be specified.
+ ⚠ fetch for https://hkygpleedgtsjgqtjuiw.supabase.co/rest/v1/personal_traits?select=id,title,description,is_active,sort_order,created_at,updated_at&order=sort_order.asc,created_at.asc on / specified "cache: force-cache" and "revalidate: 60", only one should be specified.
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+ ⨯ Error: failed to pipe response
+    at er (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:388802)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async en.pipeToNodeResponse (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:390251)
+    at async sendRenderResult (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\send-payload.js:120:5)
+    at async DevServer.pipeImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\base-server.js:937:13)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\base-server.js:818:17)
+    at async C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-server.js:179:21)
+    at async handleRequest (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-server.js:359:24)
+    at async requestHandlerImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-server.js:383:13)
+    at async Server.requestListener (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\start-server.js:141:13) {
+  [cause]: TypeError: fetch failed
+      at node:internal/deps/undici/undici:15845:13
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+    [cause]: Error: self-signed certificate in certificate chain
+        at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+        at TLSSocket.emit (node:events:508:28)
+        at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+        at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+      code: 'SELF_SIGNED_CERT_IN_CHAIN'
+    }
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+ ⚠ fetch for https://hkygpleedgtsjgqtjuiw.supabase.co/rest/v1/money_income_sources?select=id,user_id,name,description,income_amount,expense_amount,expense_note,sort_order,is_active,created_at,updated_at&is_active=eq.true&order=sort_order.asc&order=created_at.asc on /money-management specified "cache: force-cache" and "revalidate: 60", only one should be specified.
+ ⚠ fetch for https://hkygpleedgtsjgqtjuiw.supabase.co/rest/v1/growth_assets?select=id,user_id,asset_name,asset_type,platform,current_value,invested_amount,profit_loss,return_percent,created_at,updated_at&order=created_at.asc on /money-management specified "cache: force-cache" and "revalidate: 60", only one should be specified.
+ ⚠ fetch for https://hkygpleedgtsjgqtjuiw.supabase.co/rest/v1/asset_monthly_snapshots?select=id,snapshot_month,total_value,created_at,updated_at&order=snapshot_month.desc&limit=24 on /money-management specified "cache: force-cache" and "revalidate: 60", only one should be specified.
+ ⚠ fetch for https://hkygpleedgtsjgqtjuiw.supabase.co/rest/v1/asset_monthly_snapshot_items?select=id,snapshot_id,asset_id,asset_name,asset_type,value,created_at&snapshot_id=in.(fc8e6362-3f6e-414f-b73d-d0787082d295)&order=created_at.asc on /money-management specified "cache: force-cache" and "revalidate: 60", only one should be specified.
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+ ⨯ unhandledRejection: TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+ ⨯ unhandledRejection: TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+ ⨯ Error: failed to pipe response
+    at er (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:388802)
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at runNextTicks (node:internal/process/task_queues:68:3)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+    at async en.pipeToNodeResponse (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:390251)
+    at async sendRenderResult (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\send-payload.js:120:5)
+    at async DevServer.pipeImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\base-server.js:937:13)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\base-server.js:818:17)
+    at async C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-server.js:179:21)
+    at async handleRequest (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-server.js:359:24)
+    at async requestHandlerImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-server.js:383:13)
+    at async Server.requestListener (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\start-server.js:141:13) {
+  [cause]: TypeError: fetch failed
+      at node:internal/deps/undici/undici:15845:13
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+    [cause]: Error: self-signed certificate in certificate chain
+        at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+        at TLSSocket.emit (node:events:508:28)
+        at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+        at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+      code: 'SELF_SIGNED_CERT_IN_CHAIN'
+    }
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+ ⚠ fetch for https://hkygpleedgtsjgqtjuiw.supabase.co/rest/v1/goal_vision_images?user_id=eq.local-user&select=id,user_id,goal_key,image_path,created_at,updated_at&order=created_at.asc on / specified "cache: force-cache" and "revalidate: 60", only one should be specified.
+ ⚠ fetch for https://hkygpleedgtsjgqtjuiw.supabase.co/rest/v1/personal_traits?select=id,title,description,is_active,sort_order,created_at,updated_at&order=sort_order.asc,created_at.asc on / specified "cache: force-cache" and "revalidate: 60", only one should be specified.
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js:33:42)
+    at JSON.parse (<anonymous>)
+digest: "501335231"
+TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js:33:42)
+    at require (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:40:20064)
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:108376
+    at ea (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:108583)
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:110813
+    at Object._fromJSON (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:111370)
+    at JSON.parse (<anonymous>)
+    at ec (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:109078)
+    at eo (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:108123)
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:115291
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:115308
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:115341
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:115358
+    at t (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:115581)
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js:33:42)
+    at require (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:40:20064)
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:108376
+    at ea (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:108583)
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:110813
+    at Object._fromJSON (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:111370)
+    at JSON.parse (<anonymous>)
+    at ec (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:109078)
+    at eo (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:108123)
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:115291
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:115308
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:115341
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:115358
+    at t (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:115581) {
+  page: '/'
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+ ⨯ Error: Cannot find module './682.js'
+Require stack:
+- C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js
+- C:\Users\506870\Desktop\innoV2\GOAL\.next\server\pages\_document.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\dev\hot-middleware.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\dev\hot-reloader-webpack.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\start-server.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1421:15)
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require-hook.js:55:36
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1059:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1064:22)
+    at Module._load (node:internal/modules/cjs/loader:1227:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1504:12)
+    at mod.require (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:152:16)
+    at __webpack_require__.f.require (C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js:198:28)
+    at C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js:111:40
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js:110:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js:162:22)
+    at C:\Users\506870\Desktop\innoV2\GOAL\.next\server\pages\_document.js:1:340
+    at Object.<anonymous> (C:\Users\506870\Desktop\innoV2\GOAL\.next\server\pages\_document.js:1:382)
+    at Module._compile (node:internal/modules/cjs/loader:1761:14)
+    at Object..js (node:internal/modules/cjs/loader:1893:10)
+    at Module.load (node:internal/modules/cjs/loader:1481:32)
+    at Module._load (node:internal/modules/cjs/loader:1300:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1504:12)
+    at mod.require (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:152:16)
+    at requirePage (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js:109:84)
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js:72:65
+    at async Promise.all (index 0)
+    at async loadComponentsImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js:71:33)
+    at async DevServer.findPageComponentsImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\next-server.js:714:36) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\.next\\server\\webpack-runtime.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\.next\\server\\pages\\_document.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\require.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\load-components.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\build\\utils.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\dev\\hot-middleware.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\dev\\hot-reloader-webpack.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\lib\\router-utils\\setup-dev-bundler.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\lib\\router-server.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\lib\\start-server.js'
+  ]
+}
+ ⚠ fetch for https://hkygpleedgtsjgqtjuiw.supabase.co/rest/v1/goal_vision_images?user_id=eq.local-user&select=id,user_id,goal_key,image_path,created_at,updated_at&order=created_at.asc on / specified "cache: force-cache" and "revalidate: 60", only one should be specified.
+ ⚠ fetch for https://hkygpleedgtsjgqtjuiw.supabase.co/rest/v1/personal_traits?select=id,title,description,is_active,sort_order,created_at,updated_at&order=sort_order.asc,created_at.asc on / specified "cache: force-cache" and "revalidate: 60", only one should be specified.
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+ ⨯ Error: failed to pipe response
+    at er (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:388802)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async en.pipeToNodeResponse (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:35:390251)
+    at async sendRenderResult (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\send-payload.js:120:5)
+    at async DevServer.pipeImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\base-server.js:937:13)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\base-server.js:818:17)
+    at async C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-server.js:179:21)
+    at async handleRequest (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-server.js:359:24)
+    at async requestHandlerImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-server.js:383:13)
+    at async Server.requestListener (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\start-server.js:141:13) {
+  [cause]: TypeError: fetch failed
+      at node:internal/deps/undici/undici:15845:13
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+    [cause]: Error: self-signed certificate in certificate chain
+        at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+        at TLSSocket.emit (node:events:508:28)
+        at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+        at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+      code: 'SELF_SIGNED_CERT_IN_CHAIN'
+    }
+  }
+}
+ ⨯ Error: Cannot find module './682.js'
+Require stack:
+- C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js
+- C:\Users\506870\Desktop\innoV2\GOAL\.next\server\pages\_document.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\dev\hot-middleware.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\dev\hot-reloader-webpack.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\router-server.js
+- C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\lib\start-server.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1421:15)
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require-hook.js:55:36
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1059:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1064:22)
+    at Module._load (node:internal/modules/cjs/loader:1227:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1504:12)
+    at mod.require (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:152:16)
+    at __webpack_require__.f.require (C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js:198:28)
+    at C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js:111:40
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js:110:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (C:\Users\506870\Desktop\innoV2\GOAL\.next\server\webpack-runtime.js:162:22)
+    at C:\Users\506870\Desktop\innoV2\GOAL\.next\server\pages\_document.js:1:340
+    at Object.<anonymous> (C:\Users\506870\Desktop\innoV2\GOAL\.next\server\pages\_document.js:1:382)
+    at Module._compile (node:internal/modules/cjs/loader:1761:14)
+    at Object..js (node:internal/modules/cjs/loader:1893:10)
+    at Module.load (node:internal/modules/cjs/loader:1481:32)
+    at Module._load (node:internal/modules/cjs/loader:1300:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1504:12)
+    at mod.require (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:152:16)
+    at requirePage (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js:109:84)
+    at C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js:72:65
+    at async Promise.all (index 0)
+    at async loadComponentsImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js:71:33)
+    at async DevServer.findPageComponentsImpl (C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\next-server.js:714:36) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\.next\\server\\webpack-runtime.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\.next\\server\\pages\\_document.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\require.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\load-components.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\build\\utils.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\dev\\hot-middleware.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\dev\\hot-reloader-webpack.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\lib\\router-utils\\setup-dev-bundler.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\lib\\router-server.js',
+    'C:\\Users\\506870\\Desktop\\innoV2\\GOAL\\node_modules\\next\\dist\\server\\lib\\start-server.js'
+  ]
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:15845:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  [cause]: Error: self-signed certificate in certificate chain
+      at TLSSocket.onConnectSecure (node:_tls_wrap:1631:34)
+      at TLSSocket.emit (node:events:508:28)
+      at TLSSocket._finishInit (node:_tls_wrap:1077:8)
+      at ssl.onhandshakedone (node:_tls_wrap:863:12) {
+    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+  }
+}
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'C:\Users\506870\Desktop\innoV2\GOAL\.next\server\pages'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../.next/server/pages/_app' in C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'C:\Users\506870\Desktop\innoV2\GOAL\.next\server\pages\_app.js', but to 'Error: Can't resolve '../../../../.next/server/pages/_app' in 'C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../.next/server/pages/_app (expected C:\Users\506870\Desktop\innoV2\GOAL\.next\server\pages\_app.js)
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../.next/server/app/money-management/page' in C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'C:\Users\506870\Desktop\innoV2\GOAL\.next\server\app\money-management\page.js', but to 'Error: Can't resolve '../../../../.next/server/app/money-management/page' in 'C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../.next/server/app/money-management/page (expected C:\Users\506870\Desktop\innoV2\GOAL\.next\server\app\money-management\page.js)
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../.next/server/app/innovation/discovery/new/page' in C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'C:\Users\506870\Desktop\innoV2\GOAL\.next\server\app\innovation\discovery\new\page.js', but to 'Error: Can't resolve '../../../../.next/server/app/innovation/discovery/new/page' in 'C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../.next/server/app/innovation/discovery/new/page (expected C:\Users\506870\Desktop\innoV2\GOAL\.next\server\app\innovation\discovery\new\page.js)
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'C:\Users\506870\Desktop\innoV2\GOAL\.next\server\pages'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../.next/server/pages/_app' in C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'C:\Users\506870\Desktop\innoV2\GOAL\.next\server\pages\_app.js', but to 'Error: Can't resolve '../../../../.next/server/pages/_app' in 'C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../.next/server/pages/_app (expected C:\Users\506870\Desktop\innoV2\GOAL\.next\server\pages\_app.js)
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\webpack\bundle5.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\webpack\bundle5.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\webpack\webpack.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\webpack\webpack.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\plugins\define-env-plugin.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\plugins\define-env-plugin.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\swc\index.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\swc\index.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-barrel-loader.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-barrel-loader.js
+<w>  at resolve commonjs C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-barrel-loader.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../.next/server/app/money-management/page' in C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'C:\Users\506870\Desktop\innoV2\GOAL\.next\server\app\money-management\page.js', but to 'Error: Can't resolve '../../../../.next/server/app/money-management/page' in 'C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../.next/server/app/money-management/page (expected C:\Users\506870\Desktop\innoV2\GOAL\.next\server\app\money-management\page.js)
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\webpack\bundle5.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\webpack\bundle5.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\webpack\webpack.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\webpack\webpack.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\plugins\define-env-plugin.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\plugins\define-env-plugin.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\swc\index.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\swc\index.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-barrel-loader.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-barrel-loader.js
+<w>  at resolve commonjs C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-barrel-loader.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../.next/server/app/innovation/discovery/new/page' in C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'C:\Users\506870\Desktop\innoV2\GOAL\.next\server\app\innovation\discovery\new\page.js', but to 'Error: Can't resolve '../../../../.next/server/app/innovation/discovery/new/page' in 'C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../.next/server/app/innovation/discovery/new/page (expected C:\Users\506870\Desktop\innoV2\GOAL\.next\server\app\innovation\discovery\new\page.js)
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\require.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\utils.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\webpack\bundle5.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\webpack\bundle5.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\webpack\webpack.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\compiled\webpack\webpack.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\plugins\define-env-plugin.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\plugins\define-env-plugin.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\swc\index.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\swc\index.js
+<w>  at file dependencies C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-barrel-loader.js
+<w>  at file C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-barrel-loader.js
+<w>  at resolve commonjs C:\Users\506870\Desktop\innoV2\GOAL\node_modules\next\dist\build\webpack\loaders\next-barrel-loader.js

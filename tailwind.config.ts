@@ -24,8 +24,9 @@ const config: Config = {
         }
       },
       fontFamily: {
-        heading: ['var(--font-heading)', 'var(--font-body)', 'Noto Sans Thai', 'sans-serif'],
-        body: ['var(--font-body)', 'Noto Sans Thai', 'sans-serif']
+        heading: ['var(--font-heading)', 'sans-serif'],
+        body: ['var(--font-body)', 'sans-serif'],
+        numeric: ['var(--font-numeric)', 'sans-serif']
       },
       borderRadius: {
         sm: 'var(--radius-sm)',

@@ -4,7 +4,7 @@ import { PageShell } from '@/components/ui/mission';
 
 export default function SleepCyclePage() {
   return (
-    <PageShell className="bg-[#0B1220]">
+    <PageShell>
       <Navbar />
       <SecretSaucePage />
     </PageShell>

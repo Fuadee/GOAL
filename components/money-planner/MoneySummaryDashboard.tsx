@@ -22,8 +22,8 @@ export function MoneySummaryDashboard({ data }: Props) {
     <section className="space-y-4 rounded-3xl border border-indigo-300/15 bg-slate-900/60 p-5 shadow-xl shadow-black/20 md:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-indigo-200/65">Summary Dashboard</p>
-          <h2 className="mt-2 text-2xl font-semibold text-white md:text-3xl">Income Planning System</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-indigo-200/65">แดชบอร์ดสรุป</p>
+          <h2 className="mt-2 text-2xl font-semibold text-white md:text-3xl">ระบบวางแผนรายได้</h2>
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -32,7 +32,7 @@ export function MoneySummaryDashboard({ data }: Props) {
           >
             Plan to 100K
           </Link>
-          <p className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-slate-200">Net progress: {data.progressPercent.toFixed(1)}%</p>
+          <p className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-slate-200">ความคืบหน้ารายได้สุทธิ: {data.progressPercent.toFixed(1)}%</p>
         </div>
       </div>
 
@@ -49,7 +49,7 @@ export function MoneySummaryDashboard({ data }: Props) {
           <div className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-cyan-300" style={{ width: `${progress}%` }} />
         </div>
         <p className={`text-sm ${data.netIncome <= 0 ? 'text-rose-300' : 'text-slate-300'}`}>
-          Remaining gap to 100K goal: <span className="font-semibold text-rose-300">{currency.format(data.gap)}</span>
+          ส่วนต่างถึงเป้าหมาย 100K: <span className="font-semibold text-rose-300">{currency.format(data.gap)}</span>
         </p>
       </div>
     </section>

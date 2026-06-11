@@ -13,7 +13,7 @@ function TopicPills({
   onSelect: (topicId: string) => void;
 }) {
   return (
-    <section className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0" aria-label="Topic selector">
+    <section className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0" aria-label="ตัวเลือกหัวข้อ">
       <div className="inline-flex min-w-full gap-2 sm:min-w-0">
         {SECRET_SAUCE_TOPICS.map((topic) => {
           const isActive = topic.id === activeTopicId;
@@ -77,7 +77,7 @@ function SituationModeSection({ situations }: { situations: typeof SECRET_SAUCE_
   return (
     <section className="space-y-3 sm:space-y-4">
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/95">Situation Mode</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/95">โหมดสถานการณ์</h2>
         <p className="mt-1 text-sm text-slate-400">กรณีพิเศษที่ควรจำไว้ เพื่อรับมือทันทีแบบไม่ต้องคิดเยอะ</p>
       </div>
       <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -99,7 +99,7 @@ function RuleOfDaySection({ rules }: { rules: [ { title: string; body: string },
   return (
     <section className="space-y-3 sm:space-y-4">
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/95">Rule of the Day</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/95">กฎประจำวัน</h2>
       </div>
       <div className="grid gap-3 sm:gap-4 xl:grid-cols-3">
         {rules.map((rule) => (
@@ -132,7 +132,7 @@ function MemorySection({ bullets }: { bullets: string[] }) {
 function DailyChecklistSection({ items }: { items: string[] }) {
   return (
     <section className="space-y-3 rounded-2xl border border-slate-700/70 bg-gradient-to-br from-slate-900/90 to-[#13213c]/80 p-4 sm:p-5">
-      <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/95">Daily Checklist</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/95">เช็กลิสต์ประจำวัน</h2>
       <div className="grid gap-2 sm:grid-cols-2">
         {items.map((item) => (
           <div key={item} className="flex items-start gap-2 rounded-xl border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-sm text-slate-200">

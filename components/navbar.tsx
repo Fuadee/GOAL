@@ -10,13 +10,13 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { label: 'Vision', href: '/' },
-  { label: 'SMV', href: '/smv' },
-  { label: 'Money', href: '/money-management' },
-  { label: 'Health', href: '/health' },
-  { label: 'Innovation', href: '/innovation' },
-  { label: 'Heal the World', href: '/heal-the-world' },
-  { label: 'Secret Sauce', href: '/secret-sauce/sleep-cycle' }
+  { label: 'วิสัยทัศน์', href: '/' },
+  { label: 'ภารกิจชีวิต', href: '/smv' },
+  { label: 'การเงิน', href: '/money-management' },
+  { label: 'สุขภาพ', href: '/health' },
+  { label: 'นวัตกรรม', href: '/innovation' },
+  { label: 'เพื่อสังคม', href: '/heal-the-world' },
+  { label: 'สูตรลับ', href: '/secret-sauce/sleep-cycle' }
 ];
 
 const isPathActive = (pathname: string, href: string) => {
@@ -45,25 +45,26 @@ export function Navbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-[90] border-b border-slate-200/90 bg-stone-50/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 md:h-[74px] md:px-6">
-        <Link href="/" className="theme-focus rounded-lg">
-          <span className="block text-xl font-semibold tracking-[0.07em] text-slate-900 md:text-2xl">GOAL</span>
-          <span className="block text-[11px] font-medium text-slate-500">Personal Operating Space</span>
+    <header className="sticky top-0 z-[90] border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-[72px] w-full max-w-7xl items-center justify-between gap-4 px-4 md:px-8">
+        <Link href="/" className="theme-focus group rounded-xl">
+          <span className="block text-xl font-bold tracking-normal text-slate-950 md:text-2xl">GOAL</span>
+          <span className="block text-[13px] font-normal text-slate-500 transition group-hover:text-slate-700">ระบบชีวิตส่วนตัว</span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Main menu">
+        <nav className="hidden items-center gap-1 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-1.5 md:flex" aria-label="Main menu">
           {menuItems.map((item) => {
             const isActive = isPathActive(pathname, item.href);
             return (
               <Link
                 key={item.label}
                 href={item.href}
-                className={`theme-focus rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                className={`theme-focus inline-flex items-center rounded-full border px-4 py-2 text-[13px] font-semibold transition-all duration-200 ${
                   isActive
-                    ? 'bg-slate-900 text-slate-50 shadow-sm'
-                    : 'text-slate-600 hover:bg-white hover:text-slate-900'
+                    ? 'border-blue-200 bg-blue-50 text-blue-700 shadow-sm'
+                    : 'border-transparent text-slate-600 hover:bg-white hover:text-slate-950'
                 }`}
+                aria-current={isActive ? 'page' : undefined}
               >
                 {item.label}
               </Link>
@@ -74,12 +75,12 @@ export function Navbar() {
         <button
           type="button"
           onClick={() => setIsMenuOpen((prev) => !prev)}
-          className="theme-focus inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-100 md:hidden"
+          className="theme-focus inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-950 md:hidden"
           aria-expanded={isMenuOpen}
           aria-controls="mobile-menu"
-          aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-label={isMenuOpen ? 'ปิดเมนู' : 'เปิดเมนู'}
         >
-          {isMenuOpen ? 'Close' : 'Menu'}
+          {isMenuOpen ? 'ปิด' : 'เมนู'}
         </button>
       </div>
 
@@ -87,12 +88,12 @@ export function Navbar() {
         <div className="md:hidden" id="mobile-menu">
           <button
             type="button"
-            className="fixed inset-0 z-[85] bg-slate-900/25"
-            aria-label="Close menu"
+            className="fixed inset-0 z-[85] bg-slate-950/20"
+            aria-label="ปิดเมนู"
             onClick={() => setIsMenuOpen(false)}
           />
           <nav
-            className="fixed inset-x-3 top-[4.5rem] z-[95] overflow-hidden rounded-2xl border border-slate-200/90 bg-stone-50 shadow-2xl"
+            className="fixed inset-x-3 top-[4.75rem] z-[95] overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-2xl"
             aria-label="Mobile main menu"
           >
             <div className="grid gap-1 p-2">
@@ -103,15 +104,15 @@ export function Navbar() {
                     key={item.label}
                     href={item.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className={`theme-focus inline-flex min-h-12 items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                    className={`theme-focus inline-flex min-h-12 items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
                       isActive
-                        ? 'bg-slate-900 text-slate-50 shadow-sm'
-                        : 'text-slate-700 hover:bg-white'
+                        ? 'border border-blue-200 bg-blue-50 text-blue-700'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
                     }`}
                     aria-current={isActive ? 'page' : undefined}
                   >
                     <span>{item.label}</span>
-                    {isActive ? <span className="text-xs opacity-80">Current</span> : null}
+                    {isActive ? <span className="text-xs text-slate-400">หน้าปัจจุบัน</span> : null}
                   </Link>
                 );
               })}

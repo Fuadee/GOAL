@@ -10,6 +10,7 @@ type GoalVisionUploadButtonProps = {
 
 export function GoalVisionUploadButton({ label, disabled = false, onFileSelected }: GoalVisionUploadButtonProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const displayLabel = label === 'Change' ? 'เปลี่ยน' : 'อัปโหลด';
 
   return (
     <>
@@ -35,9 +36,9 @@ export function GoalVisionUploadButton({ label, disabled = false, onFileSelected
           event.stopPropagation();
           inputRef.current?.click();
         }}
-        className="rounded-full border border-white/30 bg-slate-950/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-100 transition hover:border-cyan-300/70 hover:text-cyan-100 disabled:opacity-60"
+        className="rounded-full border border-slate-200 bg-white/95 px-3 py-1.5 text-[11px] font-semibold tracking-[0.01em] text-[color:var(--text-primary)] shadow-sm transition hover:border-blue-300 hover:text-[color:var(--accent)] disabled:opacity-60"
       >
-        {label}
+        {displayLabel}
       </button>
     </>
   );

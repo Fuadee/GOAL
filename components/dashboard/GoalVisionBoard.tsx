@@ -14,7 +14,6 @@ type GoalVisionBoardProps = {
 };
 
 type StateByKey = Partial<Record<GoalVisionKey, GoalVisionImageRow & { image_url: string }>>;
-
 type BusyByKey = Partial<Record<GoalVisionKey, boolean>>;
 
 type PersonalTrait = {
@@ -24,6 +23,18 @@ type PersonalTrait = {
   isActive: boolean;
   sortOrder: number;
 };
+
+const VISION_TRAIT_TITLE_TRANSLATIONS: Record<string, string> = {
+  'Kill Mini Entertainment': 'ลดความบันเทิงไร้สาระ',
+  'Kill Your Wrong Happiness': 'ลดความสุขผิดทาง',
+  'SLEEP CYCLE': 'วงจรการนอน',
+  'Sleep Cycle': 'วงจรการนอน',
+  'FULL WATER': 'ดื่มน้ำให้พอ',
+  'FULL WATER ALL DAY': 'ดื่มน้ำให้พอตลอดวัน',
+  '100 THINK': 'คิดให้ชัดก่อนทำ'
+};
+
+const translateVisionTraitTitle = (title: string) => VISION_TRAIT_TITLE_TRANSLATIONS[title] ?? title;
 
 const mapTraitRowToUi = (row: PersonalTraitRow): PersonalTrait => ({
   id: row.id,
@@ -61,7 +72,7 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
 
     startTransition(async () => {
       try {
-        if (!file.type.startsWith('image/')) throw new Error('Only image files are allowed.');
+        if (!file.type.startsWith('image/')) throw new Error('อัปโหลดได้เฉพาะไฟล์รูปภาพ');
 
         const formData = new FormData();
         formData.set('goalKey', goalKey);
@@ -76,12 +87,12 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
         };
 
         if (!response.ok || !payload.success || !payload.data) {
-          throw new Error(payload.message ?? 'Upload failed.');
+          throw new Error(payload.message ?? 'อัปโหลดไม่สำเร็จ');
         }
 
         setImagesByKey((prev) => ({ ...prev, [goalKey]: payload.data as GoalVisionImageRow & { image_url: string } }));
       } catch (error) {
-        setMessage(error instanceof Error ? error.message : 'Upload failed.');
+        setMessage(error instanceof Error ? error.message : 'อัปโหลดไม่สำเร็จ');
       } finally {
         setBusy(setUploading, goalKey, false);
       }
@@ -103,7 +114,7 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
         const payload = (await response.json()) as { success: boolean; message?: string };
 
         if (!response.ok || !payload.success) {
-          throw new Error(payload.message ?? 'Remove failed.');
+          throw new Error(payload.message ?? 'ลบรูปไม่สำเร็จ');
         }
 
         setImagesByKey((prev) => {
@@ -112,7 +123,7 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
           return next;
         });
       } catch (error) {
-        setMessage(error instanceof Error ? error.message : 'Remove failed.');
+        setMessage(error instanceof Error ? error.message : 'ลบรูปไม่สำเร็จ');
       } finally {
         setBusy(setRemoving, goalKey, false);
       }
@@ -134,14 +145,14 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
         const payload = (await response.json()) as { success: boolean; message?: string; data?: PersonalTraitRow };
 
         if (!response.ok || !payload.success || !payload.data) {
-          throw new Error(payload.message ?? 'Toggle trait failed.');
+          throw new Error(payload.message ?? 'อัปเดตคุณสมบัติไม่สำเร็จ');
         }
 
         const nextRow = mapTraitRowToUi(payload.data);
         setTraits((prev) => prev.map((trait) => (trait.id === traitId ? nextRow : trait)));
       } catch (error) {
         setTraits(snapshot);
-        setMessage(error instanceof Error ? error.message : 'Toggle trait failed.');
+        setMessage(error instanceof Error ? error.message : 'อัปเดตคุณสมบัติไม่สำเร็จ');
       }
     });
   };
@@ -166,7 +177,7 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
         const payload = (await response.json()) as { success: boolean; message?: string; data?: PersonalTraitRow };
         const createdTrait = payload.data;
         if (!response.ok || !payload.success || !createdTrait) {
-          throw new Error(payload.message ?? 'Create trait failed.');
+          throw new Error(payload.message ?? 'สร้างคุณสมบัติไม่สำเร็จ');
         }
 
         setTraits((prev) => [...prev, mapTraitRowToUi(createdTrait)]);
@@ -174,7 +185,7 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
         setNewTraitDescription('');
         setIsTraitModalOpen(false);
       } catch (error) {
-        setMessage(error instanceof Error ? error.message : 'Create trait failed.');
+        setMessage(error instanceof Error ? error.message : 'สร้างคุณสมบัติไม่สำเร็จ');
       }
     });
   };
@@ -183,7 +194,7 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
     <section className="hero-panel overflow-visible border-[color:var(--border-strong)]/45 p-5 md:p-7">
       <div className="relative z-10 space-y-6">
         <div className="mb-1">
-          <h1 className="text-base font-semibold tracking-[0.14em] text-white/95 sm:text-lg">GOAL VISION BOARD</h1>
+          <h1 className="text-base font-semibold tracking-[0.01em] text-[color:var(--text-primary)] sm:text-lg">บอร์ดวิสัยทัศน์</h1>
         </div>
 
         <div className="grid grid-cols-2 gap-3 pt-1 sm:gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -201,16 +212,16 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
           ))}
         </div>
 
-        <div className="space-y-4 rounded-3xl border border-white/10 bg-slate-950/30 p-4 md:p-5">
+        <div className="space-y-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="space-y-1">
-              <h2 className="text-xl font-semibold text-white">คุณสมบัติของตัวตน (Personal Traits)</h2>
-              <p className="text-sm text-[color:var(--text-muted)]">เลือกโหมดชีวิตที่อยากเป็นในช่วงนี้ โดยไม่ผูกกับ task หรือคะแนน</p>
+              <h2 className="text-xl font-semibold text-[color:var(--text-primary)]">คุณสมบัติของตัวตน</h2>
+              <p className="text-sm text-[color:var(--text-secondary)]">เลือกโหมดชีวิตที่อยากเป็นในช่วงนี้ โดยไม่ผูกกับงานหรือคะแนน</p>
             </div>
             <button
               type="button"
               onClick={() => setIsTraitModalOpen(true)}
-              className="inline-flex items-center justify-center rounded-2xl border border-cyan-300/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:border-cyan-200/60 hover:bg-cyan-400/15"
+              className="theme-button-primary rounded-2xl"
             >
               + เพิ่มคุณสมบัติ
             </button>
@@ -224,23 +235,23 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
                 onClick={() => toggleTrait(trait.id)}
                 className={`group relative min-h-[120px] max-h-[140px] rounded-2xl border p-4 text-left transition-all duration-200 ease-out active:scale-[0.98] ${
                   trait.isActive
-                    ? 'border-violet-300/25 bg-gradient-to-br from-blue-950/80 via-indigo-900/70 to-violet-900/70 text-white shadow-[0_0_0_1px_rgba(129,140,248,0.12),0_0_16px_rgba(99,102,241,0.18)]'
-                    : 'border-white/10 bg-slate-900/80 text-slate-200 opacity-70'
+                    ? 'border-violet-200 bg-violet-50 text-[color:var(--text-primary)] shadow-sm'
+                    : 'border-slate-200 bg-white text-[color:var(--text-primary)] shadow-sm hover:border-blue-200 hover:bg-blue-50/40'
                 }`}
               >
                 <span
-                  className={`absolute right-3 top-3 rounded-full border px-2 py-1 text-xs font-semibold uppercase tracking-[0.08em] ${
+                  className={`absolute right-3 top-3 rounded-full border px-2 py-1 text-xs font-semibold ${
                     trait.isActive
-                      ? 'border-emerald-300/50 bg-emerald-400/15 text-emerald-100'
-                      : 'border-slate-400/35 bg-slate-500/20 text-slate-300'
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-slate-200 bg-slate-50 text-slate-600'
                   }`}
                 >
-                  {trait.isActive ? 'Active' : 'Off'}
+                  {trait.isActive ? 'เปิดใช้' : 'ปิดอยู่'}
                 </span>
                 <div className="flex h-full flex-col justify-end gap-1.5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.03em] md:text-base">{trait.title}</h3>
-                  <p className={`text-xs leading-relaxed ${trait.isActive ? 'text-slate-100/70' : 'text-slate-400/70'}`}>
-                    {trait.description || 'คุณสมบัตินี้พร้อมเปิดใช้งานเมื่อคุณต้องการ'}
+                  <h3 className="text-sm font-semibold tracking-[0.01em] md:text-base">{translateVisionTraitTitle(trait.title)}</h3>
+                  <p className={`text-xs leading-relaxed ${trait.isActive ? 'text-[color:var(--text-secondary)]' : 'text-[color:var(--text-muted)]'}`}>
+                    {trait.description || 'คุณสมบัตินี้พร้อมเปิดใช้เมื่อคุณต้องการ'}
                   </p>
                 </div>
               </button>
@@ -248,28 +259,28 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
           </div>
         </div>
 
-        {message ? <p className="text-sm text-rose-300">{message}</p> : null}
+        {message ? <p className="text-sm text-red-600">{message}</p> : null}
       </div>
 
       {isTraitModalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8" role="dialog" aria-modal="true">
           <button
             type="button"
-            aria-label="Close modal backdrop"
-            className="absolute inset-0 bg-slate-950/75 backdrop-blur-sm"
+            aria-label="ปิดหน้าต่างเพิ่มคุณสมบัติ"
+            className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
             onClick={() => setIsTraitModalOpen(false)}
           />
-          <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/15 bg-slate-950/95 p-5 shadow-2xl">
-            <h3 className="text-lg font-semibold text-white">เพิ่มคุณสมบัติของตัวตน</h3>
+          <div className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <h3 className="text-lg font-semibold text-[color:var(--text-primary)]">เพิ่มคุณสมบัติของตัวตน</h3>
             <p className="mt-1 text-sm text-[color:var(--text-secondary)]">โฟกัสสิ่งที่อยากเป็น ไม่ใช่สิ่งที่ต้องทำ</p>
 
             <form className="mt-4 space-y-3" onSubmit={submitTrait}>
               <label className="block space-y-1">
-                <span className="text-xs font-medium uppercase tracking-[0.1em] text-slate-300">Title</span>
+                <span className="text-xs font-medium text-[color:var(--text-secondary)]">ชื่อคุณสมบัติ</span>
                 <input
                   value={newTraitTitle}
                   onChange={(event) => setNewTraitTitle(event.target.value)}
-                  placeholder="เช่น EARLY RISER"
+                  placeholder="เช่น ตื่นเช้าเป็นธรรมชาติ"
                   className="theme-input"
                   maxLength={60}
                   required
@@ -277,11 +288,11 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
               </label>
 
               <label className="block space-y-1">
-                <span className="text-xs font-medium uppercase tracking-[0.1em] text-slate-300">Description</span>
+                <span className="text-xs font-medium text-[color:var(--text-secondary)]">คำอธิบาย</span>
                 <textarea
                   value={newTraitDescription}
                   onChange={(event) => setNewTraitDescription(event.target.value)}
-                  placeholder="คำอธิบายสั้น ๆ ว่า trait นี้หมายถึงอะไรสำหรับคุณ"
+                  placeholder="คำอธิบายสั้น ๆ ว่าคุณสมบัตินี้หมายถึงอะไรสำหรับคุณ"
                   className="theme-textarea min-h-[100px]"
                   maxLength={220}
                 />

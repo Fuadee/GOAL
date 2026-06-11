@@ -22,11 +22,11 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cx('hero-panel space-y-2', className)}>
-      <div className="space-y-2">
+    <header className={cx('hero-panel space-y-3', className)}>
+      <div className="space-y-3">
         {kicker ? <p className="page-kicker">{kicker}</p> : null}
         <h1 className="page-title">{title}</h1>
-        {description ? <p className="text-sm text-slate-200">{description}</p> : null}
+        {description ? <p className="max-w-3xl text-[15px] leading-7 text-[color:var(--text-secondary)]">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
     </header>
@@ -50,7 +50,7 @@ export function SectionHeader({
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
         <h2 className={cx('section-title', titleClassName)}>{title}</h2>
-        {subtitle ? <p className={cx('mt-1 text-sm text-[color:var(--text-secondary)]', subtitleClassName)}>{subtitle}</p> : null}
+        {subtitle ? <p className={cx('mt-1 text-[15px] text-[color:var(--text-secondary)]', subtitleClassName)}>{subtitle}</p> : null}
       </div>
       {action}
     </div>
