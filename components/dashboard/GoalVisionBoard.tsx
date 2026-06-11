@@ -221,7 +221,7 @@ export function GoalVisionBoard({ initialImages, initialTraits, userId = DEFAULT
             <button
               type="button"
               onClick={() => setIsTraitModalOpen(true)}
-              className="theme-button-primary rounded-2xl"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm font-semibold text-[color:var(--accent-blue)] shadow-sm transition-colors duration-200 hover:border-blue-100 hover:bg-slate-50"
             >
               + เพิ่มคุณสมบัติ
             </button>

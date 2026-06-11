@@ -70,7 +70,7 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
               </div>
               {error ? <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
               <div className="grid gap-2 sm:grid-cols-3">
-                <Link href={`/innovation/${mission.id}`} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-950 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-slate-800 hover:shadow-md">ทำภารกิจต่อ</Link>
+                <Link href={`/innovation/${mission.id}`} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[color:var(--accent-blue)] px-4 py-2 text-center text-sm font-semibold !text-[#FFFFFF] shadow-sm transition hover:-translate-y-px hover:bg-[#1D4ED8] hover:shadow-md">ทำภารกิจต่อ</Link>
                 <button type="button" disabled={isPending || !mission.nextStep} onClick={() => {
                   if (!mission.nextStep) return;
                   setError(null);
@@ -82,7 +82,7 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
                     }
                     router.refresh();
                   });
-                }} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-px hover:bg-slate-50 disabled:opacity-50">{isPending ? 'กำลังบันทึก...' : 'ขั้นตอนนี้เสร็จแล้ว'}</button>
+                }} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-600 bg-emerald-600 px-4 py-2 text-sm font-semibold !text-[#FFFFFF] shadow-sm transition hover:-translate-y-px hover:border-emerald-700 hover:bg-emerald-700 disabled:opacity-50">{isPending ? 'กำลังบันทึก...' : 'ขั้นตอนนี้เสร็จแล้ว'}</button>
                 <button
                   type="button"
                   disabled={isPending || isTerminating}
@@ -90,7 +90,7 @@ export function CurrentMissionSection({ mission }: CurrentMissionSectionProps) {
                     setError(null);
                     setIsConfirmOpen(true);
                   }}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:-translate-y-px hover:bg-rose-100 disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-600 bg-white px-4 py-2 text-sm font-semibold !text-[#BE123C] transition hover:-translate-y-px hover:border-rose-700 hover:bg-rose-50 hover:!text-[#9F1239] disabled:opacity-50"
                 >
                   ยุติภารกิจ
                 </button>

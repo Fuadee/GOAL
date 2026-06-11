@@ -3,7 +3,7 @@
 import { FormEvent, ReactNode, useMemo, useState } from 'react';
 
 import { RewardFormModal } from '@/components/rewards/RewardFormModal';
-import { RewardPreviewCard } from '@/components/heal-the-world/RewardPreviewCard';
+import { RewardPreviewCard } from '@/components/rewards/RewardPreviewCard';
 import {
   BloodDonationPlanDisplayStatus,
   getBloodDonationPlanDisplayStatus,
@@ -31,6 +31,16 @@ const displayStatusMeta: Record<BloodDonationPlanDisplayStatus, { label: string;
   OVERDUE: { label: 'เลยกำหนด', className: 'bg-red-500/12 text-red-100 border border-red-300/20' },
   COMPLETED: { label: 'ทำแล้ว', className: 'bg-emerald-500/20 text-emerald-100 border border-emerald-300/40' },
   CANCELLED: { label: 'ยกเลิกแล้ว', className: 'bg-slate-500/30 text-slate-200 border border-slate-300/30' }
+};
+
+const readableDisplayStatusClass: Record<BloodDonationPlanDisplayStatus, string> = {
+  CURRENT: 'bg-cyan-100 border border-cyan-300 !text-[#155E75]',
+  TODAY: 'bg-cyan-100 border border-cyan-300 !text-[#155E75]',
+  SOON: 'bg-cyan-100 border border-cyan-300 !text-[#155E75]',
+  UPCOMING: 'bg-slate-100 border border-slate-300 !text-[#334155]',
+  OVERDUE: 'bg-red-100 border border-red-300 !text-[#B91C1C]',
+  COMPLETED: 'bg-emerald-100 border border-emerald-300 !text-[#047857]',
+  CANCELLED: 'bg-slate-100 border border-slate-300 !text-[#475569]'
 };
 
 
@@ -142,11 +152,16 @@ export function BloodDonationDashboard({ initialData }: Props) {
           />
           <RewardPreviewCard
             missionTitle={data.currentMission?.title}
+            emptyTitle="ภารกิจนี้ยังไม่มีรางวัล"
+            emptyDescription="ลองเพิ่มภาพ Moment ที่คุณอยากได้เมื่อทำสำเร็จ"
+            lockedCta="ทำภารกิจเพื่อปลดล็อก"
             reward={data.currentMission?.reward}
             isMissionCompleted={isCurrentMissionCompleted}
             onAddReward={() => setModal('reward')}
             onDeleteReward={() => setModal('deleteReward')}
             isClaimingReward={loading}
+            improveLockedContrast
+            preserveImageAspectRatio
             onClaimReward={() =>
               submit(async () => {
                 if (!currentPlan) return;
@@ -157,36 +172,25 @@ export function BloodDonationDashboard({ initialData }: Props) {
           />
 
           <section className="pt-0.5">
-            <article className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a1422]/95 via-[#0f1b2c]/95 to-[#121c2f]/95 p-5 shadow-[0_20px_44px_-38px_rgba(15,23,42,0.75)] transition duration-500 hover:border-cyan-300/20 hover:shadow-[0_24px_48px_-40px_rgba(45,212,191,0.25)] md:p-6">
-              <div className="pointer-events-none absolute inset-0">
-                <div className="absolute -top-28 right-[-5rem] h-72 w-72 rounded-full bg-cyan-300/6 blur-3xl transition duration-500 group-hover:bg-cyan-300/10" />
-                <div className="absolute -bottom-28 left-[-4rem] h-64 w-64 rounded-full bg-slate-500/10 blur-3xl" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(255,255,255,0.13),transparent_52%)]" />
-              </div>
-              <div className="pointer-events-none absolute inset-[1px] rounded-[calc(1.5rem-1px)] border border-white/10" />
-
-              <div className="relative">
+            <article className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6">
+              <div>
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <p className="text-[11px] font-semibold tracking-[0.01em] text-[color:var(--text-secondary)]">ความคืบหน้าภารกิจ</p>
-                    <h3 className="mt-1 text-2xl font-medium tracking-tight text-white sm:text-[1.7rem]">บริจาคเลือดปีนี้</h3>
+                    <p className="text-[11px] font-semibold tracking-[0.01em] text-slate-500">ความคืบหน้าภารกิจ</p>
+                    <h3 className="mt-1 text-2xl font-medium tracking-tight text-slate-950 sm:text-[1.7rem]">บริจาคเลือดปีนี้</h3>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium tracking-[0.01em] text-[color:var(--text-primary)]">{completedRatioLabel} เสร็จแล้ว</p>
-                    <p className="mt-1 text-xs text-[color:var(--text-muted)]">{summary.progressPercent}% สำเร็จ</p>
+                    <p className="text-sm font-medium tracking-[0.01em] text-slate-900">{completedRatioLabel} เสร็จแล้ว</p>
+                    <p className="mt-1 text-xs text-slate-500">{summary.progressPercent}% สำเร็จ</p>
                   </div>
                 </div>
 
                 <div className="relative mt-4">
-                  <div className="h-5 rounded-full bg-white/10 p-[2px] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-8px_16px_rgba(15,23,42,0.65)]">
+                  <div className="h-3 overflow-hidden rounded-full bg-slate-200">
                     <div
-                      className="relative h-full rounded-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-1000 ease-out"
+                      className="h-full rounded-full bg-[color:var(--accent-blue)] transition-all duration-1000 ease-out"
                       style={{ width: `${summary.progressPercent}%` }}
-                    >
-                      {summary.progressPercent > 0 ? (
-                        <div className="absolute inset-0 rounded-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.38),transparent_65%)] shadow-[0_0_10px_rgba(45,212,191,0.45)]" />
-                      ) : null}
-                    </div>
+                    />
                   </div>
                 </div>
 
@@ -198,8 +202,8 @@ export function BloodDonationDashboard({ initialData }: Props) {
                         key={index}
                         className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition ${
                           isCompleted
-                            ? 'border-cyan-300/25 bg-cyan-400/10 text-cyan-100'
-                            : 'border-slate-300/20 bg-slate-800/55 text-slate-300'
+                            ? 'border-blue-200 bg-blue-50 !text-[#1D4ED8]'
+                            : 'border-slate-200 bg-slate-100 text-slate-600'
                         }`}
                       >
                         {isCompleted ? '✓' : '○'} ครั้งที่ {index + 1}
@@ -245,18 +249,18 @@ export function BloodDonationDashboard({ initialData }: Props) {
           )}
         </article>
 
-        <article className="rounded-2xl border border-white/15 bg-slate-900/65 p-5 shadow-[0_20px_50px_-40px_rgba(15,23,42,1)] transition duration-300 hover:-translate-y-0.5 hover:border-cyan-200/30 hover:border-cyan-300/15">
-          <h3 className="text-xl font-medium text-white">Donation History</h3>
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)]">
+          <h3 className="text-xl font-medium text-slate-950">Donation History</h3>
           {!data.history.length ? (
-            <p className="mt-4 text-sm text-slate-400">ยังไม่มีประวัติ completed</p>
+            <p className="mt-4 text-sm text-slate-500">ยังไม่มีประวัติ completed</p>
           ) : (
             <ul className="mt-4 space-y-3">
               {data.history.map((event) => (
-                <li key={event.id} className="rounded-xl border border-white/10 bg-slate-950/45 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition hover:border-white/20">
-                  <p className="text-lg font-semibold text-white">{formatDate(event.actual_date)}</p>
+                <li key={event.id} className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 transition hover:bg-white">
+                  <p className="text-lg font-semibold text-slate-950">{formatDate(event.actual_date)}</p>
                   {event.planned_date ? <p className="text-xs text-slate-500">จากแผน: {formatDate(event.planned_date)}</p> : null}
-                  <p className="mt-1 text-xs text-slate-400">{event.location || 'ไม่ระบุสถานที่'}</p>
-                  {event.note ? <p className="mt-1 text-sm text-slate-300">{event.note}</p> : null}
+                  <p className="mt-1 text-xs text-slate-500">{event.location || 'ไม่ระบุสถานที่'}</p>
+                  {event.note ? <p className="mt-1 text-sm text-slate-700">{event.note}</p> : null}
                 </li>
               ))}
             </ul>
@@ -277,20 +281,20 @@ export function BloodDonationDashboard({ initialData }: Props) {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => setModal('goal')} className="rounded-full border border-cyan-400/25 bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">
+            <button onClick={() => setModal('goal')} className="theme-button-primary rounded-full px-4 py-2 text-sm !text-[#FFFFFF]">
               {data.goal ? 'สร้าง Goal ใหม่' : 'สร้าง Goal แรก'}
             </button>
             <button
               onClick={() => setModal('planned')}
               disabled={!canManageEvents}
-              className="rounded-full border border-white/10 bg-slate-800/85 px-4 py-2 text-sm font-medium text-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className="theme-button-secondary rounded-full px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
             >
               + วางแผนบริจาค
             </button>
             <button
               onClick={() => setModal('completed')}
               disabled={!canManageEvents}
-              className="rounded-full border border-white/10 bg-slate-800/85 px-4 py-2 text-sm font-medium text-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className="theme-button-secondary rounded-full px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
             >
               + บันทึกว่าบริจาคแล้ว
             </button>
@@ -501,68 +505,70 @@ function BloodDonationNextMissionCard({
   onCancel: (event: BloodDonationEventViewModel) => void;
 }) {
   const missionSummary = getNextBloodDonationMissionSummary(currentPlan);
+  const displayStatus = currentPlan ? getBloodDonationPlanDisplayStatus(currentPlan, currentPlan, now) : null;
+  const lightStatusClass: Record<BloodDonationPlanDisplayStatus, string> = {
+    CURRENT: 'border border-cyan-200 bg-cyan-50 text-cyan-800',
+    TODAY: 'border border-cyan-200 bg-cyan-50 text-cyan-800',
+    SOON: 'border border-cyan-200 bg-cyan-50 text-cyan-800',
+    UPCOMING: 'border border-slate-200 bg-slate-100 text-slate-700',
+    OVERDUE: 'border border-rose-200 bg-rose-50 text-rose-700',
+    COMPLETED: 'border border-emerald-200 bg-emerald-50 text-emerald-700',
+    CANCELLED: 'border border-slate-200 bg-slate-100 text-slate-600'
+  };
 
   return (
-    <article className="relative overflow-hidden rounded-[1.75rem] border border-cyan-400/15 bg-gradient-to-br from-[#081321] via-[#0d1828] to-[#121f31] p-4 shadow-[0_14px_36px_-30px_rgba(45,212,191,0.35)] sm:p-5">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-20 right-[-4rem] h-56 w-56 rounded-full bg-cyan-300/8 blur-3xl" />
-        <div className="absolute -bottom-24 left-[-3rem] h-52 w-52 rounded-full bg-slate-500/10 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_12%,rgba(255,255,255,0.11),transparent_52%)]" />
-      </div>
-      <div className="pointer-events-none absolute inset-[1px] rounded-[calc(1.75rem-1px)] border border-white/10" />
-      <div className="pointer-events-none absolute inset-0 rounded-[1.75rem] shadow-[inset_0_1px_0_rgba(255,255,255,0.16),inset_0_-28px_56px_rgba(2,6,23,0.62)]" />
-
-      <div className="relative">
+    <article className="rounded-[24px] border border-slate-200/80 bg-white p-4 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] sm:p-5">
+      <div>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-100/80">Next Mission</p>
-            <h3 className="mt-1.5 text-[1.6rem] font-semibold tracking-tight text-white sm:text-[1.72rem]">ภารกิจถัดไป</h3>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-200/85">{missionSummary.primaryText}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Next Mission</p>
+            <h3 className="mt-1.5 text-[1.6rem] font-semibold tracking-tight text-slate-950 sm:text-[1.72rem]">ภารกิจถัดไป</h3>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">{missionSummary.primaryText}</p>
           </div>
         </div>
 
         {!currentPlan ? (
-          <div className="mt-4 rounded-xl border border-dashed border-white/20 bg-slate-950/35 p-4">
-            <p className="text-lg font-medium text-white">ยังไม่มีแผนถัดไป</p>
-            <p className="mt-1 text-sm text-slate-300">ครบทุกแผนแล้ว หรือยังไม่ได้สร้างแผนใหม่</p>
+          <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50/80 p-4">
+            <p className="text-lg font-medium text-slate-900">ยังไม่มีแผนถัดไป</p>
+            <p className="mt-1 text-sm text-slate-600">ครบทุกแผนแล้ว หรือยังไม่ได้สร้างแผนใหม่</p>
           </div>
         ) : (
           <div className="mt-4 space-y-3.5">
             <div className="flex items-end justify-between gap-3">
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-cyan-100/70">Remaining</p>
-                <p className="mt-0.5 text-[2rem] font-semibold leading-none tracking-tight text-cyan-100 sm:text-[2.2rem]">{getCountdownLabel(currentPlan.planned_date, now)}</p>
+                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500">Remaining</p>
+                <p className="mt-0.5 text-[2rem] font-semibold leading-none tracking-tight text-slate-950 sm:text-[2.2rem]">{getCountdownLabel(currentPlan.planned_date, now)}</p>
               </div>
-              <p className="pb-1 text-right text-base font-semibold leading-tight text-white sm:text-lg">{formatDate(currentPlan.planned_date)}</p>
+              <p className="pb-1 text-right text-base font-semibold leading-tight text-slate-900 sm:text-lg">{formatDate(currentPlan.planned_date)}</p>
             </div>
 
-            <div className="h-px w-full bg-gradient-to-r from-white/45 via-white/20 to-transparent" />
+            <div className="h-px w-full bg-slate-200" />
 
-            <p className="text-sm text-slate-100/95">{missionSummary.secondaryText || 'ไม่ระบุสถานที่'}</p>
-            {currentPlan.note ? <p className="text-xs leading-relaxed text-slate-300">{currentPlan.note}</p> : null}
+            <p className="text-sm text-slate-700">{missionSummary.secondaryText || 'ไม่ระบุสถานที่'}</p>
+            {currentPlan.note ? <p className="text-xs leading-relaxed text-slate-500">{currentPlan.note}</p> : null}
 
             <div className="pt-0.5">
-              <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-medium ${displayStatusMeta[getBloodDonationPlanDisplayStatus(currentPlan, currentPlan, now)].className}`}>
-                {displayStatusMeta[getBloodDonationPlanDisplayStatus(currentPlan, currentPlan, now)].label}
+              <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-medium ${displayStatus ? lightStatusClass[displayStatus] : ''}`}>
+                {displayStatus ? displayStatusMeta[displayStatus].label : ''}
               </span>
             </div>
 
             <div className="space-y-2 pt-1 text-sm">
               <button
-                className="w-full rounded-xl border border-cyan-400/25 bg-cyan-500 px-4 py-2.5 font-medium text-slate-950 shadow-[0_8px_18px_-14px_rgba(45,212,191,0.5)] transition hover:brightness-105 active:translate-y-px"
+                className="w-full rounded-xl border border-blue-600 bg-blue-600 px-4 py-2.5 font-medium !text-[#FFFFFF] shadow-[0_14px_28px_-20px_rgba(37,99,235,0.7)] transition hover:bg-blue-700 active:translate-y-px"
                 onClick={() => onMarkDone(currentPlan)}
               >
                 ทำจริงแล้ว
               </button>
               <div className="grid grid-cols-2 gap-2">
                 <button
-                  className="rounded-lg border border-white/10 bg-slate-800/80 px-3 py-2 text-[13px] font-medium text-slate-200 transition hover:bg-slate-700/80 active:translate-y-px"
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-[13px] font-medium text-slate-700 transition hover:bg-slate-50 active:translate-y-px"
                   onClick={() => onReschedule(currentPlan)}
                 >
                   เลื่อนแผน
                 </button>
                 <button
-                  className="rounded-lg border border-slate-200/20 bg-slate-300/10 px-3 py-2 text-[13px] font-medium text-slate-100 transition hover:bg-slate-300/20 active:translate-y-px"
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-[13px] font-medium text-slate-700 transition hover:bg-slate-50 active:translate-y-px"
                   onClick={() => onCancel(currentPlan)}
                 >
                   ยกเลิก
@@ -606,19 +612,19 @@ function BloodDonationPlanCard({
         </div>
 
         <div className="flex flex-col items-end gap-1">
-          <span className={`rounded-full px-3 py-1 text-xs ${statusMeta.className}`}>{statusMeta.label}</span>
-          {isCurrent ? <span className="text-[11px] text-cyan-200/80">โฟกัสตอนนี้</span> : null}
+          <span className={`rounded-full px-3 py-1 text-xs ${readableDisplayStatusClass[status]}`}>{statusMeta.label}</span>
+          {isCurrent ? <span className="text-[11px] !text-[#A5F3FC]">โฟกัสตอนนี้</span> : null}
         </div>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
-        <button className="rounded-full bg-emerald-500/20 px-3 py-1 text-emerald-200" onClick={onMarkDone}>
+        <button className="rounded-full border border-emerald-300 bg-emerald-100 px-3 py-1 !text-[#047857]" onClick={onMarkDone}>
           ทำจริงแล้ว
         </button>
-        <button className="rounded-full bg-blue-500/20 px-3 py-1 text-blue-100" onClick={onReschedule}>
+        <button className="rounded-full border border-blue-300 bg-blue-100 px-3 py-1 !text-[#1D4ED8]" onClick={onReschedule}>
           เลื่อนแผน
         </button>
-        <button className="rounded-full bg-slate-500/30 px-3 py-1 text-slate-200" onClick={onCancel}>
+        <button className="rounded-full border border-slate-300 bg-slate-100 px-3 py-1 !text-[#334155]" onClick={onCancel}>
           ยกเลิก
         </button>
       </div>

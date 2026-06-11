@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { deleteGrowthAssetAction, deleteMoneyIncomeSourceAction, saveAssetMonthlySnapshotAction, upsertGrowthAssetAction, upsertMoneyIncomeSourceAction } from '@/app/money-management/actions';
 import { AssetMonthlySnapshotRow, GrowthAssetRow, GrowthAssetType, MoneyManagementPageData, MoneyIncomeSourceRow, MoneySummary } from '@/lib/money/types';
+import { RewardFormModal } from '@/components/rewards/RewardFormModal';
+import { RewardPreviewCard } from '@/components/rewards/RewardPreviewCard';
 
 const thb = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 });
 const enMonthLabel = new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' });
@@ -56,13 +58,18 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
   const [growthOpen, setGrowthOpen] = useState(false);
   const [growthEditing, setGrowthEditing] = useState<GrowthAssetRow | null>(null);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
+  const [moneyRewardOpen, setMoneyRewardOpen] = useState(false);
+  const [moneyReward, setMoneyReward] = useState({
+    title: 'Las Vegas Trip',
+    description: 'ปลดล็อกเมื่อสร้าง Passive Income เพิ่มครบ +฿10,000/เดือน',
+    imageUrl: ''
+  });
 
   const rows = useMemo(() => data.incomeSources ?? [], [data.incomeSources]);
   const growthRows = useMemo(() => data.growthAssets ?? [], [data.growthAssets]);
   const snapshots = useMemo(() => data.assetSnapshots ?? [], [data.assetSnapshots]);
   const currentPassiveIncomeMonthly = 0;
   const progressPercent = Math.min((currentPassiveIncomeMonthly / targetPassiveIncomeMonthly) * 100, 100);
-  const rewardUnlocked = progressPercent >= 100;
   const onDelete = (id: string) => startTransition(async () => {
     const result = await deleteMoneyIncomeSourceAction(id);
     if (!result.success) return;
@@ -89,12 +96,11 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
           <h1 className="mt-3 text-[32px] font-bold leading-tight text-slate-950">การเงิน</h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-7 text-slate-600">ติดตามสินทรัพย์ รายได้ รายได้ทางอ้อม และการเติบโตของมูลค่าสุทธิในที่เดียว</p>
         </div>
-        <button onClick={() => setSnapshotOpen(true)} className="theme-button-primary w-full sm:w-auto">อัปเดตมูลค่าสุทธิ</button>
+        <button onClick={() => setSnapshotOpen(true)} className="theme-button-primary w-full !text-[#FFFFFF] sm:w-auto" style={{ color: '#FFFFFF' }}>อัปเดตมูลค่าสุทธิ</button>
       </div>
-      <div className="relative mt-8 grid grid-cols-1 gap-3 md:grid-cols-4">
+      <div className="relative mt-8 grid grid-cols-1 gap-3 md:grid-cols-3">
         <WealthMetric label="สินทรัพย์ทั้งหมด" value={thb.format(latestAssetValue)} highlight />
-        <WealthMetric label="รายได้ต่อเดือน" value={thb.format(data.summary.grossIncome)} />
-        <WealthMetric label="รายได้ทางอ้อม" value={thb.format(currentPassiveIncomeMonthly)} />
+        <WealthMetric label="รายได้สุทธิ" value={thb.format(data.summary.netIncome)} />
         <WealthMetric label="การเติบโตมูลค่าสุทธิ" value={`${assetGrowth >= 0 ? '+' : ''}${thb.format(assetGrowth)}${previousSnapshot ? ` (${assetGrowthPct.toFixed(1)}%)` : ''}`} tone={assetGrowth >= 0 ? 'success' : 'danger'} />
       </div>
     </section>
@@ -103,9 +109,27 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
         <h2 className="text-xl font-semibold text-slate-900">ภารกิจการเงินประจำปี</h2>
         <p className="text-sm text-slate-500">เป้าหมายหลักของปีนี้: สร้าง Passive Income เพิ่ม และให้รางวัลตัวเองเมื่อทำสำเร็จ</p>
       </div>
-      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="mt-5 grid grid-cols-1 gap-4">
         <AnnualGoalCard currentPassiveIncomeMonthly={currentPassiveIncomeMonthly} progressPercent={progressPercent} />
-        <AnnualRewardCard rewardUnlocked={rewardUnlocked} progressPercent={progressPercent} />
+      </div>
+      <div className="mt-5">
+        <h3 className="text-sm font-semibold text-slate-900">รางวัลภารกิจ</h3>
+        <RewardPreviewCard
+          missionTitle="ภารกิจการเงินประจำปี"
+          emptyTitle="รางวัลภารกิจ"
+          emptyDescription="ตั้งรางวัลให้ภารกิจนี้ เพื่อเพิ่มแรงจูงใจในการทำให้สำเร็จ"
+          lockedCta="ปลดล็อกเมื่อสร้าง Passive Income เพิ่มครบ +฿10,000/เดือน"
+          reward={{
+            title: moneyReward.title,
+            description: moneyReward.description,
+            imageUrl: moneyReward.imageUrl,
+            status: null
+          }}
+          isMissionCompleted={progressPercent >= 100}
+          onAddReward={() => setMoneyRewardOpen(true)}
+          improveLockedContrast
+          preserveImageAspectRatio
+        />
       </div>
     </section>
 
@@ -126,13 +150,30 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
         <div className="min-w-0 md:flex-1"><p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700/70">โฟกัสระยะยาว</p><h2 className="mt-1 text-xl font-semibold tracking-tight text-amber-950 md:text-2xl">แหล่งรายได้ถัดไป</h2><p className="mt-1 text-xs text-amber-900/70 md:text-sm">สร้างแหล่งรายได้ใหม่เพื่อรองรับภารกิจธุรกิจในอนาคต</p></div>
         <div className="hidden h-12 w-px bg-gradient-to-b from-transparent via-amber-300/80 to-transparent md:block" />
         <div className="grid flex-1 gap-2 text-sm text-slate-700 md:max-w-[340px]"><p><span className="font-medium text-amber-900">โหมดปัจจุบัน:</span> สำรวจโอกาส</p><p><span className="font-medium text-amber-900">โฟกัส:</span> แหล่งรายได้ใหม่</p></div>
-        <article className="relative overflow-hidden rounded-xl border border-amber-300/70 bg-gradient-to-br from-[#FFF7E2] to-[#F8E4BF] px-3.5 py-3 shadow-[0_12px_22px_-20px_rgba(120,86,20,0.45)] md:min-w-[210px]"><div className="relative"><div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold text-amber-900">🎰 รางวัลลาสเวกัส</p><span className="rounded-full border border-amber-400/70 bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">ยังล็อกอยู่</span></div><p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-amber-700/80">ปลดล็อกเมื่อถึง</p><p className="text-sm font-semibold text-amber-950">฿100,000/เดือน</p></div></article>
+        <article className="relative overflow-hidden rounded-xl border border-amber-300/70 bg-gradient-to-br from-[#FFF7E2] to-[#F8E4BF] px-3.5 py-3 shadow-[0_12px_22px_-20px_rgba(120,86,20,0.45)] md:min-w-[210px]"><div className="relative"><div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold !text-[#1F2937]">🎰 รางวัลลาสเวกัส</p><span className="rounded-full border border-amber-400/70 bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide !text-[#374151]">ยังล็อกอยู่</span></div><p className="mt-2 text-[11px] font-medium uppercase tracking-wide !text-[#4B5563]">ปลดล็อกเมื่อถึง</p><p className="text-sm font-semibold !text-[#111827]">฿100,000/เดือน</p></div></article>
       </div>
     </section>
 
     {open ? <MoneyForm row={editing} onClose={() => setOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await upsertMoneyIncomeSourceAction(fd); if (res.success) { setOpen(false); router.refresh(); } })} /> : null}
     {growthOpen ? <GrowthAssetForm row={growthEditing} onClose={() => setGrowthOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await upsertGrowthAssetAction(fd); if (res.success) { setGrowthOpen(false); setGrowthEditing(null); router.refresh(); } })} /> : null}
     {snapshotOpen ? <AssetSnapshotForm assets={growthRows} snapshots={snapshots} onClose={() => setSnapshotOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await saveAssetMonthlySnapshotAction(fd); if (res.success) { setSnapshotOpen(false); router.refresh(); } })} /> : null}
+    <RewardFormModal
+      open={moneyRewardOpen}
+      levelId="money-management-annual-reward"
+      defaultValues={{
+        title: moneyReward.title,
+        imageUrl: moneyReward.imageUrl
+      }}
+      onClose={() => setMoneyRewardOpen(false)}
+      onSubmit={(fd) => {
+        setMoneyReward((current) => ({
+          ...current,
+          title: String(fd.get('title') ?? current.title),
+          imageUrl: String(fd.get('image_url') ?? current.imageUrl)
+        }));
+        setMoneyRewardOpen(false);
+      }}
+    />
   </div>;
 }
 
@@ -310,7 +351,7 @@ function AssetSnapshotForm({ assets, snapshots, onClose, onSubmit }: { assets: G
           <div className="mt-5 space-y-3">{rows.map((asset) => <div key={`${month}-${asset.id}`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 sm:grid sm:grid-cols-[1fr_170px] sm:items-center sm:gap-3"><div><p className="font-medium text-slate-900">{asset.asset_name}</p><p className="mt-1 text-xs text-slate-500">{categoryMeta[asset.asset_type].label}</p><input type="hidden" name="asset_id" value={asset.id} /><input type="hidden" name="asset_name" value={asset.asset_name} /><input type="hidden" name="asset_type" value={asset.asset_type} /></div><label className="mt-3 block sm:mt-0"><span className="text-xs font-medium text-slate-500">มูลค่าปัจจุบัน</span><input className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-right text-slate-900 focus:border-slate-400 focus:outline-none" type="number" min="0" step="0.01" name="value" defaultValue={asset.snapshotValue} required /></label></div>)}</div>
           {rows.length === 0 ? <div className="mt-5 rounded-2xl border border-dashed p-6 text-center text-sm text-slate-500">ยังไม่มีสินทรัพย์ในตารางปัจจุบัน</div> : null}
         </div>
-        <div className="sticky bottom-0 z-10 flex flex-col gap-2 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:px-6"><button disabled={rows.length === 0} className="w-full rounded-2xl bg-[#12233f] px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300 sm:flex-1">บันทึก Snapshot</button><button type="button" onClick={onClose} className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 sm:w-auto">ยกเลิก</button></div>
+        <div className="sticky bottom-0 z-10 flex flex-col gap-2 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:px-6"><button disabled={rows.length === 0} className="h-12 w-full rounded-2xl bg-[color:var(--accent-blue)] px-4 text-sm font-semibold text-[#FFFFFF] shadow-[0_14px_28px_-18px_rgba(37,99,235,0.85)] transition-colors hover:bg-blue-700 hover:text-[#FFFFFF] active:text-[#FFFFFF] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-[#FFFFFF] disabled:shadow-none sm:flex-1">บันทึก Snapshot</button><button type="button" onClick={onClose} className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 sm:w-auto">ยกเลิก</button></div>
       </form>
     </div>
   </div>;
@@ -319,7 +360,6 @@ function AssetSnapshotForm({ assets, snapshots, onClose, onSubmit }: { assets: G
 function SummaryCard({ label, value, cls = 'text-slate-900' }: { label: string; value: string; cls?: string }) { return <article className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_16px_36px_-28px_rgba(15,23,42,0.45)]"><p className="text-xs font-normal uppercase tracking-wide text-slate-500">{label}</p><p className={`font-numeric mt-2 text-2xl tracking-tight ${cls}`}>{value}</p></article>; }
 function ChartShell({ title, description, children }: { title: string; description: string; children: React.ReactNode }) { return <article className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 shadow-[0_16px_34px_-30px_rgba(15,23,42,0.45)]"><div><h3 className="text-lg font-semibold text-slate-900">{title}</h3><p className="text-sm text-slate-500">{description}</p></div><div className="mt-4 h-72 w-full sm:h-80">{children}</div></article>; }
 function AnnualGoalCard({ currentPassiveIncomeMonthly, progressPercent }: { currentPassiveIncomeMonthly: number; progressPercent: number }) { return <article className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">เป้าหมายประจำปี</p><h3 className="mt-2 text-lg font-semibold text-slate-900">เป้าหมายประจำปี</h3><p className="mt-2 text-sm font-medium text-slate-800">สร้าง Passive Income เพิ่ม +฿10,000/เดือน</p><p className="mt-2 text-sm leading-relaxed text-slate-600">เพิ่มรายได้แบบไม่ต้องแลกเวลาด้วยงานประจำ เช่น บ้านเช่า การลงทุน หรือธุรกิจที่เริ่มสร้างกระแสเงินสดได้จริง</p><div className="mt-4 rounded-xl border border-slate-200 bg-white p-3"><div className="flex items-center justify-between text-sm"><span className="text-slate-500">เป้าหมาย</span><span className="font-semibold text-slate-800">+฿10,000 / เดือน</span></div><div className="mt-1.5 flex items-center justify-between text-sm"><span className="text-slate-500">ปัจจุบัน</span><span className="font-semibold text-emerald-600">{thb.format(currentPassiveIncomeMonthly)} / เดือน</span></div><div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${progressPercent}%` }} /></div><p className="mt-2 text-right text-xs font-medium text-slate-500">{progressPercent.toFixed(1)}%</p></div><p className="mt-4 rounded-xl bg-emerald-50 px-3 py-2 text-xs text-emerald-700">“ทุก +฿1,000/เดือน คืออิสรภาพที่เพิ่มขึ้นปีละ ฿12,000”</p></article>; }
-function AnnualRewardCard({ rewardUnlocked, progressPercent }: { rewardUnlocked: boolean; progressPercent: number }) { return <article className="reward-card relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-indigo-50 via-sky-50 to-cyan-50 p-4 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.45)] sm:p-5"><div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/40 blur-2xl" /><div className="relative"><div className="mb-2 flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">รางวัลประจำปี</p><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${rewardUnlocked ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>{rewardUnlocked ? 'ปลดล็อกแล้ว' : 'ยังล็อกอยู่'}</span></div><h3 className="text-lg font-semibold text-slate-900">รางวัลเมื่อทำสำเร็จ</h3><p className="mt-2 text-sm font-medium text-slate-800">ทริป Las Vegas / รางวัลใหญ่ให้ตัวเอง</p><p className="mt-2 text-sm leading-relaxed text-slate-600">ปลดล็อกเมื่อ Passive Income เพิ่มขึ้นครบเป้าหมาย +฿10,000/เดือน</p><div className="mt-4 rounded-xl border border-white/80 bg-white/70 p-3"><div className="flex items-center justify-between text-sm"><span className="text-slate-500">ความคืบหน้า</span><span className="font-semibold text-slate-800">{progressPercent.toFixed(1)}%</span></div><div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-sky-500 transition-all" style={{ width: `${progressPercent}%` }} /></div></div></div></article>; }
 
 function MoneyForm({ row, onClose, onSubmit }: { row: MoneyIncomeSourceRow | null; onClose: () => void; onSubmit: (fd: FormData) => void }) {
   const [name, setName] = useState(row?.name ?? ''); const [description, setDescription] = useState(row?.description ?? ''); const [income, setIncome] = useState(row ? String(row.income_amount) : ''); const [expense, setExpense] = useState(row ? String(row.expense_amount) : ''); const [note, setNote] = useState(row?.expense_note ?? '');

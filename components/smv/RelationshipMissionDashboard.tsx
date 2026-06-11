@@ -92,29 +92,6 @@ export function RelationshipMissionDashboard({ initialDateHistory = [] }: { init
 
   return (
     <section className="mx-auto w-full max-w-[1440px] space-y-6 px-4 pb-8 pt-6 md:px-6 md:pt-8">
-      <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-gradient-to-br from-[#0B1733] via-[#13244A] to-[#0A1630] p-6 text-white shadow-[0_20px_45px_-26px_rgba(15,23,42,0.75)] md:p-7">
-        <div className="pointer-events-none absolute -top-14 right-0 h-44 w-44 rounded-full bg-teal-300/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 left-6 h-40 w-40 rounded-full bg-blue-300/10 blur-3xl" />
-        <div className="relative grid gap-5 lg:grid-cols-[1fr_320px] lg:items-start">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.02em] text-slate-300">ภารกิจปัจจุบัน</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white md:text-4xl">ออกเดทจริง 1 ครั้ง</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-200 md:text-base">เป้าหมายตอนนี้ไม่ใช่การมีแฟนทันที แต่คือการเปิดชีวิตตัวเองออกไปเจอคนจริง</p>
-            <span className="mt-4 inline-flex rounded-full border border-emerald-300/35 bg-emerald-300/10 px-3 py-1 text-xs font-medium tracking-wide text-emerald-100">กำลังดำเนินการ</span>
-          </div>
-          <aside className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm">
-            <p className="text-[11px] font-semibold tracking-[0.02em] text-slate-300">สถานะปัจจุบัน</p>
-            <p className="mt-2 text-base font-medium text-white">พร้อมสร้างความสัมพันธ์จริง</p>
-          </aside>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-[0_12px_34px_-26px_rgba(15,23,42,0.35)] backdrop-blur-sm md:p-5">
-        <p className="text-xs font-semibold tracking-[0.02em] text-slate-500">เงื่อนไขความสำเร็จ</p>
-        <p className="mt-2 text-lg font-semibold text-slate-900">ประวัติเดทจริง</p>
-        <p className="mt-1 text-sm leading-relaxed text-slate-600">ภารกิจสำเร็จ = ออกไปเดทจริงอย่างน้อย 1 ครั้ง แล้วบันทึกประสบการณ์ลงในระบบ</p>
-      </section>
-
       <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <article className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5">

@@ -195,7 +195,7 @@ export function RunnerQuestLogForm({ currentLevel }: RunnerQuestLogFormProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="theme-button-primary w-full disabled:opacity-60"
+          className="theme-button-primary w-full !text-[#FFFFFF] hover:!text-[#FFFFFF] active:!text-[#FFFFFF] disabled:!text-[#FFFFFF] disabled:opacity-60"
         >
           {isPending ? 'กำลังบันทึก...' : 'บันทึกผลวิ่ง'}
         </button>
