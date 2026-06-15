@@ -1,14 +1,20 @@
 'use client';
 
+import Image from 'next/image';
 import { useCallback, useMemo, useState, useTransition } from 'react';
 
 import {
+  claimSmvRewardAction,
   createSmvRealDateHistoryAction,
+  deleteSmvRewardAction,
   deleteSmvRealDateHistoryAction,
   listSmvRealDateHistoryAction,
+  startNewSmvRewardRoundAction,
+  upsertSmvRewardAction,
   updateSmvRealDateHistoryAction
 } from '@/app/smv/actions';
-import { SmvRealDateHistoryRow } from '@/lib/smv/types';
+import { RewardFormModal } from '@/components/rewards/RewardFormModal';
+import { SmvMissionRewardRow, SmvRealDateHistoryRow } from '@/lib/smv/types';
 
 type DateFormState = {
   title: string;
@@ -19,7 +25,13 @@ type DateFormState = {
 
 const EMPTY_FORM: DateFormState = { title: '', date: '', reflection: '', tags: '' };
 
-export function RelationshipMissionDashboard({ initialDateHistory = [] }: { initialDateHistory?: SmvRealDateHistoryRow[] }) {
+export function RelationshipMissionDashboard({
+  initialDateHistory = [],
+  initialReward = null
+}: {
+  initialDateHistory?: SmvRealDateHistoryRow[];
+  initialReward?: SmvMissionRewardRow | null;
+}) {
   const [isReflectionOpen, setIsReflectionOpen] = useState(false);
   const [reflection, setReflection] = useState(
     'เริ่มเข้าใจแล้วว่าจริง ๆ ตัวเองต้องการความสัมพันธ์แบบไหน และไม่อยากฝืนตัวเองไปอยู่ในสภาพแวดล้อมที่ไม่ใช่'
@@ -28,6 +40,9 @@ export function RelationshipMissionDashboard({ initialDateHistory = [] }: { init
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formState, setFormState] = useState<DateFormState>(EMPTY_FORM);
   const [dateHistory, setDateHistory] = useState<SmvRealDateHistoryRow[]>(initialDateHistory);
+  const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
+  const [reward, setReward] = useState<SmvMissionRewardRow | null>(initialReward);
+  const [rewardError, setRewardError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const loadHistory = useCallback(async () => {
@@ -87,50 +102,155 @@ export function RelationshipMissionDashboard({ initialDateHistory = [] }: { init
     });
   };
 
-  const progressPercent = Math.min((dateHistory.length / 1) * 100, 100);
-  const rewardUnlocked = progressPercent >= 100;
+  const targetCount = Math.max(reward?.target_count ?? 1, 1);
+  const missionTitle = `เดทจริง ${targetCount} ครั้ง`;
+  const progressPercent = Math.min((dateHistory.length / targetCount) * 100, 100);
+  const isRewardClaimed = reward?.status === 'claimed';
+  const rewardUnlocked = !isRewardClaimed && dateHistory.length >= targetCount;
+  const unlockText = `ออกเดตจริง ${targetCount} ครั้งเพื่อปลดล็อก`;
+  const refreshAfterRewardChange = () => {
+    setRewardError(null);
+    window.location.reload();
+  };
 
   return (
     <section className="mx-auto w-full max-w-[1440px] space-y-6 px-4 pb-8 pt-6 md:px-6 md:pt-8">
-      <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <article className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
-            <p className="text-xs font-semibold tracking-[0.02em] text-slate-500">ความคืบหน้าภารกิจ</p>
-            <h2 className="mt-2 text-lg font-semibold text-slate-900">ประวัติเดทจริง</h2>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600">เดินหน้าอย่างต่อเนื่องด้วยการออกไปเดทจริง บันทึกประสบการณ์ และมองเห็นการเติบโตของตัวเองแบบชัดเจน</p>
-            <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">เป้าหมาย</span>
-                <span className="font-semibold text-slate-800">เดทจริง 1 ครั้ง</span>
+      <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.32)] md:p-6">
+        <article className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-slate-50 p-5 shadow-[0_18px_40px_-32px_rgba(16,185,129,0.55)] sm:p-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold tracking-[0.08em] text-emerald-700">MISSION TRACKING</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">ประวัติเดทจริง</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                เดินหน้าอย่างต่อเนื่องด้วยการออกไปเดทจริง บันทึกประสบการณ์ และมองเห็นการเติบโตของตัวเองแบบชัดเจน
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:min-w-[320px]">
+              <div className="rounded-2xl border border-white bg-white/85 p-4 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.35)]">
+                <p className="text-xs font-medium text-slate-500">เป้าหมาย</p>
+                <p className="mt-1 text-lg font-semibold text-slate-950">{missionTitle}</p>
               </div>
-              <div className="mt-1.5 flex items-center justify-between text-sm">
-                <span className="text-slate-500">ปัจจุบัน</span>
-                <span className="font-semibold text-emerald-600">{dateHistory.length} ครั้ง</span>
-              </div>
-              <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
-                <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${progressPercent}%` }} />
+              <div className="rounded-2xl border border-white bg-white/85 p-4 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.35)]">
+                <p className="text-xs font-medium text-slate-500">ปัจจุบัน</p>
+                <p className="mt-1 text-lg font-semibold text-emerald-700">{dateHistory.length} ครั้ง</p>
               </div>
             </div>
-          </article>
+          </div>
+          <div className="mt-6">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium text-slate-600">Progress</span>
+              <span className="font-semibold text-emerald-700">{progressPercent.toFixed(0)}%</span>
+            </div>
+            <div className="mt-2 h-4 overflow-hidden rounded-full bg-slate-200">
+              <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${progressPercent}%` }} />
+            </div>
+          </div>
+        </article>
+      </section>
 
-          <article className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-indigo-50 via-sky-50 to-cyan-50 p-4 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.45)] sm:p-5">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-xs font-semibold tracking-[0.02em] text-slate-600">รางวัล</p>
-              <span className="rounded-full border border-white/70 bg-white/70 px-2.5 py-1 text-[10px] font-semibold text-slate-600">รางวัลส่วนตัว</span>
+      <section className="overflow-hidden rounded-[24px] border border-slate-200/80 bg-white shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)]">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(260px,0.9fr)_minmax(0,1.1fr)]">
+          <div className="relative min-h-[230px] bg-slate-100 md:min-h-[330px]">
+            {reward?.image_url && !isRewardClaimed ? (
+              <Image src={reward.image_url} alt="" fill unoptimized className="object-cover object-center" sizes="(min-width: 768px) 44vw, 100vw" />
+            ) : (
+              <div className="flex h-full min-h-[230px] items-center justify-center bg-gradient-to-br from-slate-100 via-emerald-50 to-slate-200 px-6 text-center text-sm font-medium text-slate-500 md:min-h-[330px]">
+                {isRewardClaimed ? 'รับรางวัลรอบนี้แล้ว' : 'ยังไม่มีรูปภาพรางวัล'}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col justify-between gap-5 p-5 md:p-6">
+            <div>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold tracking-[0.02em] text-slate-500">รางวัลภารกิจชีวิต</p>
+                  <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
+                    {isRewardClaimed ? 'รับรางวัลแล้ว' : reward ? reward.title : 'ยังไม่มีรางวัล'}
+                  </h2>
+                </div>
+                <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${isRewardClaimed ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : rewardUnlocked ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
+                  {isRewardClaimed ? 'claimed' : rewardUnlocked ? 'unlocked' : 'locked'}
+                </span>
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-xs font-semibold tracking-[0.02em] text-slate-500">เงื่อนไขปลดล็อก</p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">{unlockText}</p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  {isRewardClaimed ? `รอบภารกิจ ${missionTitle} ถูกปิดแล้ว` : reward?.emotional_copy || reward?.description || 'ตั้งรางวัลส่วนตัวเพื่อให้ภารกิจชีวิตนี้มีแรงดึงดูดมากขึ้น'}
+                </p>
+              </div>
+
+              {!isRewardClaimed ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => setIsRewardModalOpen(true)} className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">
+                    {reward ? 'แก้ไขรางวัล' : '+ เพิ่มรางวัล'}
+                  </button>
+                  {reward ? (
+                    <button type="button" onClick={() => {
+                      if (!confirm('ลบรางวัลนี้ออกจากภารกิจชีวิต?')) return;
+                      startTransition(async () => {
+                        const result = await deleteSmvRewardAction();
+                        if (!result.success) {
+                          setRewardError(result.message);
+                          return;
+                        }
+                        setReward(null);
+                      });
+                    }} className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100">
+                      ลบรางวัล
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
-            <div className="h-28 rounded-xl border border-white/70 bg-[linear-gradient(120deg,rgba(20,184,166,0.12),rgba(245,158,11,0.16)),url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center" />
-            <h3 className="mt-3 text-xl font-semibold text-slate-900">เที่ยวคนเดียว</h3>
-            <p className="mt-1 text-sm leading-relaxed text-slate-600">ให้รางวัลกับตัวเองเมื่อกล้าเปิดชีวิตจริง</p>
-            <div className="mt-3 flex flex-wrap gap-1.5 text-[11px]">
-              {['รีเซ็ต', 'อิสระ', 'การเติบโต', 'ประสบการณ์ใหม่'].map((tag) => (
-                <span key={tag} className="rounded-full border border-slate-200/80 bg-white/70 px-2.5 py-1 text-slate-500">{tag}</span>
-              ))}
-            </div>
-            <div className={`mt-3 flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-medium ${rewardUnlocked ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-100 text-slate-600'}`}>
-              <span>{rewardUnlocked ? 'ปลดล็อกแล้ว' : 'ยังล็อกอยู่'}</span>
-              <span>{progressPercent.toFixed(0)}%</span>
-            </div>
-          </article>
+
+            {!isRewardClaimed && reward ? (
+              <button type="button" disabled={!rewardUnlocked || isPending} onClick={() => {
+                startTransition(async () => {
+                  const result = await claimSmvRewardAction();
+                  if (!result.success) {
+                    setRewardError(result.message);
+                    return;
+                  }
+                  refreshAfterRewardChange();
+                });
+              }} className="w-full rounded-xl bg-[#12233f] px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55">
+                {rewardUnlocked ? 'ยืนยันรับรางวัล' : unlockText}
+              </button>
+            ) : null}
+
+            {rewardError ? <p className="text-xs text-rose-600">{rewardError}</p> : null}
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-[20px] border border-emerald-200 bg-emerald-50 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">รอบถัดไป</p>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">
+              {isRewardClaimed ? 'เปิดเป้าหมายใหม่เพื่อปลดล็อกรางวัลรอบใหม่' : 'รับรางวัลรอบนี้ก่อน แล้วค่อยเริ่มรอบใหม่'}
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={!isRewardClaimed || isPending}
+            onClick={() => {
+              startTransition(async () => {
+                const result = await startNewSmvRewardRoundAction();
+                if (!result.success) {
+                  setRewardError(result.message);
+                  return;
+                }
+                refreshAfterRewardChange();
+              });
+            }}
+            className="rounded-xl bg-[#12233f] px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            เริ่มภารกิจเดตรอบใหม่
+          </button>
         </div>
       </section>
 
@@ -144,7 +264,11 @@ export function RelationshipMissionDashboard({ initialDateHistory = [] }: { init
         </div>
 
         <div className="mt-5 space-y-2.5">
-          {dateHistory.length === 0 && !isPending ? <article className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-5 text-center text-sm text-slate-500">ยังไม่มีประวัติเดท เริ่มบันทึกประสบการณ์จริงครั้งแรกของคุณ</article> : null}
+          {dateHistory.length === 0 && !isPending ? (
+            <article className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-5 text-center text-sm text-slate-500">
+              ยังไม่มีประวัติเดท เริ่มบันทึกประสบการณ์จริงครั้งแรกของคุณ
+            </article>
+          ) : null}
           {dateHistory.map((item) => (
             <article key={item.id} className="rounded-2xl border border-slate-200/80 bg-slate-50/65 px-4 py-3.5 transition hover:bg-white">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -172,6 +296,27 @@ export function RelationshipMissionDashboard({ initialDateHistory = [] }: { init
         <p className="mt-5 border-l-2 border-slate-300 pl-4 text-base italic leading-8 text-slate-700">“{reflection}”</p>
         <p className="mt-4 text-xs tracking-[0.02em] text-slate-500">24 พฤษภาคม 2026</p>
       </section>
+
+      <RewardFormModal
+        open={isRewardModalOpen}
+        levelId="smv_reward"
+        defaultValues={{
+          title: reward?.title ?? 'เที่ยวคนเดียว',
+          description: reward?.description ?? 'ให้รางวัลกับตัวเองเมื่อกล้าเปิดชีวิตจริง',
+          emotionalCopy: reward?.emotional_copy ?? 'ปลดล็อกเมื่อออกเดทจริงสำเร็จ 1 ครั้ง',
+          imageUrl: reward?.image_url
+        }}
+        onClose={() => setIsRewardModalOpen(false)}
+        onSubmit={(fd) => startTransition(async () => {
+          const result = await upsertSmvRewardAction(fd);
+          if (!result.success) {
+            setRewardError(result.message);
+            return;
+          }
+          setIsRewardModalOpen(false);
+          refreshAfterRewardChange();
+        })}
+      />
 
       {isDateModalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">

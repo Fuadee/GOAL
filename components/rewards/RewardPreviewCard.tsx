@@ -58,7 +58,7 @@ export function RewardPreviewCard({
   const rewardStatus = reward?.status === 'claimed' ? 'claimed' : isMissionCompleted ? 'unlocked' : 'locked';
   const isLocked = rewardStatus === 'locked';
   const isClaimed = rewardStatus === 'claimed';
-  const useDarkLockedText = improveLockedContrast && isLocked;
+  const useDarkRewardText = improveLockedContrast;
 
   return (
     <section className="pt-2 sm:pt-3">
@@ -69,22 +69,22 @@ export function RewardPreviewCard({
           <div className="relative flex flex-col gap-5 p-5 sm:p-6">
             <div className="space-y-5">
               <div className="flex items-start justify-between gap-3">
-                <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${isClaimed ? 'border-emerald-300/40 bg-emerald-300/20 text-emerald-100' : isLocked ? useDarkLockedText ? 'border-amber-500/45 bg-amber-200/70 text-[#1F2937]' : 'border-amber-300/35 bg-amber-300/20 text-amber-100' : 'border-amber-200/45 bg-amber-300/30 text-amber-50'}`}>
+                <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${isClaimed ? useDarkRewardText ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-emerald-300/40 bg-emerald-300/20 text-emerald-100' : isLocked ? useDarkRewardText ? 'border-amber-500/45 bg-amber-200/70 text-[#1F2937]' : 'border-amber-300/35 bg-amber-300/20 text-amber-100' : useDarkRewardText ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-amber-200/45 bg-amber-300/30 text-amber-50'}`}>
                   {isClaimed ? 'รับรางวัลแล้ว' : isLocked ? 'รางวัลยังล็อกอยู่' : 'รางวัลปลดล็อกแล้ว'}
                 </span>
                 <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-2.5">
                   {onDeleteReward ? (
-                    <button type="button" onClick={onDeleteReward} className={`min-h-9 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${useDarkLockedText ? 'border-rose-700/50 bg-rose-50/75 text-rose-800 hover:border-rose-800/70 hover:bg-rose-100 hover:text-rose-900' : 'border-rose-300/20 bg-rose-400/5 text-rose-100/75 hover:border-rose-300/35 hover:bg-rose-400/15 hover:text-rose-50'}`}>ลบรางวัล</button>
+                    <button type="button" onClick={onDeleteReward} className={`min-h-9 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${useDarkRewardText ? 'border-rose-700/50 bg-rose-50/75 text-rose-800 hover:border-rose-800/70 hover:bg-rose-100 hover:text-rose-900' : 'border-rose-300/20 bg-rose-400/5 text-rose-100/75 hover:border-rose-300/35 hover:bg-rose-400/15 hover:text-rose-50'}`}>ลบรางวัล</button>
                   ) : null}
                   {onAddReward ? (
-                    <button type="button" onClick={onAddReward} className={`min-h-9 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${useDarkLockedText ? 'border-amber-800/50 bg-amber-50/80 text-amber-950 hover:border-amber-900/70 hover:bg-amber-100 hover:text-amber-950' : 'border-amber-200/20 bg-amber-300/5 text-amber-100/80 hover:border-amber-200/35 hover:bg-amber-300/15 hover:text-amber-50'}`}>แก้ไขรางวัล</button>
+                    <button type="button" onClick={onAddReward} className={`min-h-9 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${useDarkRewardText ? 'border-amber-800/50 bg-amber-50/80 text-amber-950 hover:border-amber-900/70 hover:bg-amber-100 hover:text-amber-950' : 'border-amber-200/20 bg-amber-300/5 text-amber-100/80 hover:border-amber-200/35 hover:bg-amber-300/15 hover:text-amber-50'}`}>แก้ไขรางวัล</button>
                   ) : null}
                 </div>
               </div>
               <div className="space-y-2">
-                <p className={`text-2xl font-semibold leading-tight sm:text-[1.75rem] ${useDarkLockedText ? 'text-[#111827]' : 'text-amber-50'}`}>{reward?.title}</p>
-                <p className={`text-sm ${useDarkLockedText ? 'text-[#374151]' : 'text-amber-100/75'}`}>{missionTitle || 'ภารกิจปัจจุบัน'}</p>
-                <p className={`text-sm italic leading-relaxed ${useDarkLockedText ? 'text-[#1F2937]' : 'text-amber-100/90'}`}>
+                <p className={`text-2xl font-semibold leading-tight sm:text-[1.75rem] ${useDarkRewardText ? 'text-[#111827]' : 'text-amber-50'}`}>{reward?.title}</p>
+                <p className={`text-sm ${useDarkRewardText ? 'text-[#374151]' : 'text-amber-100/75'}`}>{missionTitle || 'ภารกิจปัจจุบัน'}</p>
+                <p className={`text-sm italic leading-relaxed ${useDarkRewardText ? 'text-[#1F2937]' : 'text-amber-100/90'}`}>
                   {reward?.emotionalCopy || reward?.description || 'ทำภารกิจนี้ให้สำเร็จ แล้วปลดล็อกช่วงเวลาที่ตั้งใจไว้ให้ตัวเอง'}
                 </p>
               </div>

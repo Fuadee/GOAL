@@ -435,6 +435,8 @@ export function BloodDonationDashboard({ initialData }: Props) {
             levelId={currentPlan.id}
             defaultValues={{
               title: currentPlan.reward_title,
+              description: currentPlan.reward_description,
+              emotionalCopy: currentPlan.reward_emotional_copy,
               imageUrl: currentPlan.reward_image_url
             }}
             onClose={() => setModal(null)}
@@ -445,6 +447,8 @@ export function BloodDonationDashboard({ initialData }: Props) {
                   location: currentPlan.location ?? '',
                   note: currentPlan.note ?? '',
                   reward_title: String(fd.get('title') ?? ''),
+                  reward_description: String(fd.get('description') ?? ''),
+                  reward_emotional_copy: String(fd.get('emotional_copy') ?? ''),
                   reward_image_url: String(fd.get('image_url') ?? ''),
                   reward_status: String(currentPlan.reward_status ?? 'locked')
                 };

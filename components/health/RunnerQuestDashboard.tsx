@@ -60,6 +60,8 @@ export function RunnerQuestDashboard({ data }: { data: RunnerDashboardData }) {
         levelId={currentLevel.id}
         defaultValues={{
           title: reward?.title,
+          description: reward?.description,
+          emotionalCopy: reward?.emotionalCopy,
           imageUrl: reward?.imageUrl
         }}
         onClose={() => setOpen(false)}

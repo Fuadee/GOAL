@@ -1,42 +1,37 @@
 
 > goal-foundation@0.1.0 dev
-> next dev -p 3000
+> next dev
 
   ▲ Next.js 14.2.35
   - Local:        http://localhost:3000
   - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 3.3s
- ○ Compiling / ...
- ✓ Compiled / in 8s (557 modules)
- GET / 500 in 8787ms
+ ✓ Ready in 7.1s
+ ○ Compiling /smv ...
+ ✓ Compiled /smv in 5s (605 modules)
+ GET /smv 200 in 5695ms
  ○ Compiling /_error ...
- ✓ Compiled /_error in 7.9s (784 modules)
- ○ Compiling /money-management/expenses ...
- ✓ Compiled /money-management/expenses in 1351ms (844 modules)
- GET /innovation/discovery/new 200 in 1573ms
- GET /money-management/expenses 307 in 1548ms
- ○ Compiling /money-management ...
- ✓ Compiled /money-management in 4.6s (1909 modules)
- GET /innovation/discovery/new 200 in 4167ms
- GET /money-management 500 in 22598ms
- GET /innovation/discovery/new 200 in 59ms
- ✓ Compiled in 2.1s (1051 modules)
- ○ Compiling /innovation/discovery/new ...
- ✓ Compiled /innovation/discovery/new in 512ms (341 modules)
- GET /innovation/discovery/new 200 in 675ms
- ✓ Compiled in 2.1s (1051 modules)
- ✓ Compiled in 591ms (1003 modules)
- ✓ Compiled in 1492ms (1003 modules)
- ✓ Compiled in 837ms (989 modules)
- ✓ Compiled in 640ms (1003 modules)
- ✓ Compiled in 622ms (1003 modules)
- ✓ Compiled in 597ms (1003 modules)
- ✓ Compiled in 508ms (1003 modules)
- ✓ Compiled in 635ms (1003 modules)
- ✓ Compiled in 490ms (1003 modules)
- ✓ Compiled / in 416ms (315 modules)
- ✓ Compiled /_error in 394ms (1306 modules)
- GET / 500 in 4022ms
- GET / 500 in 13671ms
+ ✓ Compiled /_error in 1884ms (832 modules)
+ GET /_next/image?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1507525428034-b723cf961d3e%3Fauto%3Dformat%26fit%3Dcrop%26w%3D1200%26q%3D80&w=828&q=75 500 in 2431ms
+ GET /_next/image?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1507525428034-b723cf961d3e%3Fauto%3Dformat%26fit%3Dcrop%26w%3D1200%26q%3D80&w=828&q=75 500 in 2207ms
+ GET /smv 200 in 193ms
+ GET /_next/image?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1507525428034-b723cf961d3e%3Fauto%3Dformat%26fit%3Dcrop%26w%3D1200%26q%3D80&w=828&q=75 500 in 85ms
+ GET /_next/image?url=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1507525428034-b723cf961d3e%3Fauto%3Dformat%26fit%3Dcrop%26w%3D1200%26q%3D80&w=828&q=75 500 in 8ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 732ms (819 modules)
+ GET /smv 404 in 893ms
+ GET /_next/static/css/app/layout.css?v=1781515646002 404 in 28ms
+ GET /_next/static/chunks/main-app.js?v=1781515646002 404 in 25ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 27ms
+ ✓ Compiled in 2.9s (795 modules)
+ ✓ Compiled in 1080ms (828 modules)
+ ✓ Compiled /_error in 293ms (816 modules)
+ ✓ Compiled in 747ms (830 modules)
+ GET /smv 500 in 46702ms
+ GET /smv 500 in 15916ms
+ ✓ Compiled in 976ms (830 modules)
+ ✓ Compiled /_not-found in 323ms (819 modules)
+ GET /_next/static/webpack/2e7222f5caa81510.webpack.hot-update.json 404 in 373ms
+ GET /smv 500 in 23495ms
+ GET /smv 500 in 23881ms

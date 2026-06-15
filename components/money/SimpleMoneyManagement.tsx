@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { deleteGrowthAssetAction, deleteMoneyIncomeSourceAction, saveAssetMonthlySnapshotAction, upsertGrowthAssetAction, upsertMoneyIncomeSourceAction } from '@/app/money-management/actions';
@@ -50,6 +50,17 @@ function chartMonth(value: string) {
   return shortMonthLabel.format(parseSnapshotDate(value));
 }
 
+function sortAssetSnapshotsByMonth(snapshots: AssetMonthlySnapshotRow[]) {
+  return [...snapshots].sort((a, b) => a.snapshot_month.localeCompare(b.snapshot_month));
+}
+
+function getLatestAssetSnapshot(snapshots: AssetMonthlySnapshotRow[]) {
+  return snapshots.reduce<AssetMonthlySnapshotRow | null>((latest, snapshot) => {
+    if (!latest) return snapshot;
+    return snapshot.snapshot_month > latest.snapshot_month ? snapshot : latest;
+  }, null);
+}
+
 export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -80,12 +91,27 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
 
   const openCreate = () => { setEditing(null); setOpen(true); };
   const openEdit = (row: MoneyIncomeSourceRow) => { setEditing(row); setOpen(true); };
-  const latestSnapshot = snapshots[0];
-  const previousSnapshot = snapshots[1];
-  const latestAssetValue = Number(latestSnapshot?.total_value ?? data.growthSummary.totalValue ?? 0);
+  const latestSnapshot = getLatestAssetSnapshot(snapshots);
+  const sortedSnapshots = useMemo(() => sortAssetSnapshotsByMonth(snapshots), [snapshots]);
+  const latestSnapshotIndex = latestSnapshot ? sortedSnapshots.findIndex((snapshot) => snapshot.id === latestSnapshot.id) : -1;
+  const previousSnapshot = latestSnapshotIndex > 0 ? sortedSnapshots[latestSnapshotIndex - 1] : null;
+  const latestAssetValue = Number(latestSnapshot?.total_value ?? 0);
   const previousAssetValue = Number(previousSnapshot?.total_value ?? 0);
   const assetGrowth = previousSnapshot ? latestAssetValue - previousAssetValue : data.growthSummary.totalProfitLoss;
   const assetGrowthPct = previousAssetValue > 0 ? (assetGrowth / previousAssetValue) * 100 : 0;
+
+  useEffect(() => {
+    if (!latestSnapshot) return;
+    const summaryTotal = Number(data.growthSummary.totalValue ?? 0);
+    const snapshotTotal = Number(latestSnapshot.total_value ?? 0);
+    if (summaryTotal !== snapshotTotal) {
+      console.warn('[Money Management] Summary total differs from latest asset snapshot total.', {
+        latestSnapshotMonth: latestSnapshot.snapshot_month,
+        summaryTotal,
+        latestSnapshotTotal: snapshotTotal
+      });
+    }
+  }, [data.growthSummary.totalValue, latestSnapshot]);
 
   return <div className="mx-auto w-full max-w-7xl space-y-8 px-4 pb-8 pt-7 md:px-8">
     <section className="relative overflow-hidden rounded-[20px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_64px_-42px_rgba(15,23,42,0.36)] md:p-8">
@@ -162,6 +188,8 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
       levelId="money-management-annual-reward"
       defaultValues={{
         title: moneyReward.title,
+        description: moneyReward.description,
+        emotionalCopy: moneyReward.description,
         imageUrl: moneyReward.imageUrl
       }}
       onClose={() => setMoneyRewardOpen(false)}
@@ -169,6 +197,7 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
         setMoneyReward((current) => ({
           ...current,
           title: String(fd.get('title') ?? current.title),
+          description: String(fd.get('description') ?? current.description),
           imageUrl: String(fd.get('image_url') ?? current.imageUrl)
         }));
         setMoneyRewardOpen(false);
@@ -302,11 +331,13 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit,
 }
 
 function AssetGrowthTimeline({ rows, snapshots, onOpenSnapshot }: { rows: GrowthAssetRow[]; snapshots: AssetMonthlySnapshotRow[]; onOpenSnapshot: () => void }) {
-  const latest = snapshots.at(-1);
-  const previous = snapshots.at(-2);
+  const sortedSnapshots = useMemo(() => sortAssetSnapshotsByMonth(snapshots), [snapshots]);
+  const latest = getLatestAssetSnapshot(snapshots);
+  const latestIndex = latest ? sortedSnapshots.findIndex((snapshot) => snapshot.id === latest.id) : -1;
+  const previous = latestIndex > 0 ? sortedSnapshots[latestIndex - 1] : null;
   const delta = latest && previous ? Number(latest.total_value) - Number(previous.total_value) : 0;
   const deltaPct = previous && Number(previous.total_value) > 0 ? (delta / Number(previous.total_value)) * 100 : 0;
-  const chartData = snapshots.map((snapshot) => {
+  const chartData = sortedSnapshots.map((snapshot) => {
     const categoryTotals = assetCategories.reduce((acc, key) => ({ ...acc, [key]: 0 }), {} as Record<AssetCategory, number>);
     snapshot.items.forEach((item) => { categoryTotals[item.asset_type] += Number(item.value); });
     return { month: chartMonth(snapshot.snapshot_month), monthFull: displaySnapshotMonth(snapshot.snapshot_month), total: Number(snapshot.total_value), ...categoryTotals };

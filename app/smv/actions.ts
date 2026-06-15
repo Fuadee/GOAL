@@ -7,11 +7,17 @@ import {
   createSmvRealDateHistory,
   createSmvActionLog,
   createSmvScoreHistory,
+  deleteSmvMissionReward,
   deleteSmvRealDateHistory,
   getSmvDimensionScore,
   getSmvDimensions,
   getSmvMetrics,
+  getSmvMissionReward,
   getSmvRealDateHistory,
+  SMV_REWARD_KEY,
+  startNewSmvMissionRewardRound,
+  updateSmvMissionRewardStatus,
+  upsertSmvMissionReward,
   updateSmvRealDateHistory,
   upsertSmvDimensionScore
 } from '@/lib/smv/repository';
@@ -343,6 +349,64 @@ export async function deleteSmvRealDateHistoryAction(id: string): Promise<{ succ
     return { success: true, message: 'Deleted.' };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : 'Could not delete real date history.' };
+  }
+}
+
+export async function upsertSmvRewardAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+  const title = String(formData.get('title') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
+  const emotionalCopy = String(formData.get('emotional_copy') ?? '').trim();
+  const imageUrl = String(formData.get('image_url') ?? '').trim();
+
+  if (!title) return { success: false, message: 'Reward title is required.' };
+
+  try {
+    const current = await getSmvMissionReward(SMV_REWARD_KEY);
+    await upsertSmvMissionReward({
+      reward_key: SMV_REWARD_KEY,
+      title,
+      description: description || 'ให้รางวัลกับตัวเองเมื่อกล้าเปิดชีวิตจริง',
+      emotional_copy: emotionalCopy || 'ปลดล็อกเมื่อออกเดทจริงสำเร็จ 1 ครั้ง',
+      image_url: imageUrl,
+      status: 'unclaimed',
+      target_count: current?.target_count ?? 1,
+      round_number: current?.round_number ?? 1
+    });
+    revalidatePath('/smv');
+    return { success: true, message: 'Reward saved.' };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'Could not save SMV reward.' };
+  }
+}
+
+export async function deleteSmvRewardAction(): Promise<{ success: boolean; message: string }> {
+  try {
+    await deleteSmvMissionReward(SMV_REWARD_KEY);
+    revalidatePath('/smv');
+    return { success: true, message: 'Reward deleted.' };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'Could not delete SMV reward.' };
+  }
+}
+
+export async function startNewSmvRewardRoundAction(): Promise<{ success: boolean; message: string }> {
+  try {
+    const dateHistory = await getSmvRealDateHistory();
+    await startNewSmvMissionRewardRound(SMV_REWARD_KEY, dateHistory.length);
+    revalidatePath('/smv');
+    return { success: true, message: 'New reward round started.' };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'Could not start new SMV reward round.' };
+  }
+}
+
+export async function claimSmvRewardAction(): Promise<{ success: boolean; message: string }> {
+  try {
+    await updateSmvMissionRewardStatus(SMV_REWARD_KEY, 'claimed');
+    revalidatePath('/smv');
+    return { success: true, message: 'Reward claimed.' };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'Could not claim SMV reward.' };
   }
 }
 

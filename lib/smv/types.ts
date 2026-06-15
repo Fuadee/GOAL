@@ -212,6 +212,23 @@ export type SmvRealDateHistoryRow = {
   updated_at: string;
 };
 
+export type SmvMissionRewardStatus = 'locked' | 'unlocked' | 'unclaimed' | 'claimed';
+
+export type SmvMissionRewardRow = {
+  id: string;
+  reward_key: string;
+  title: string;
+  description: string | null;
+  emotional_copy: string | null;
+  image_url: string | null;
+  status: SmvMissionRewardStatus | null;
+  target_count: number | null;
+  round_number: number | null;
+  claimed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type SmvMetricInputValue = {
   metricId: string;
   key: string;
