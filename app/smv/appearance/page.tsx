@@ -13,7 +13,7 @@ export default async function SmvAppearancePage() {
   return (
     <main className="app-shell">
       <Navbar />
-      <section className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
+      <section className="page-container space-y-6">
         <Link href="/smv" className="text-sm text-cyan-200 hover:text-cyan-100">← กลับไปหน้า /smv</Link>
 
         <header className="rounded-3xl border border-cyan-300/30 bg-gradient-to-br from-slate-900 via-cyan-950/20 to-slate-900 p-6">

@@ -1,5 +1,5 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
-import { GrowthAssetRow, GrowthAssetType, MoneyIncomeSourceRow } from '@/lib/money/types';
+import { ConstructionCategoryRow, ConstructionCategoryStatus, ConstructionCostType, ConstructionExpenseRow, ConstructionOperationChecklistItem, ConstructionProjectRow, GrowthAssetRow, GrowthAssetType, MoneyIncomeSourceRow } from '@/lib/money/types';
 
 export async function createMoneyIncomeSource(payload: {
   name: string;
@@ -85,4 +85,85 @@ export async function replaceAssetMonthlySnapshotItems(
   await supabaseRestRequest(`asset_monthly_snapshot_items?snapshot_id=eq.${snapshotId}`, 'DELETE');
   if (items.length === 0) return;
   await supabaseRestRequest('asset_monthly_snapshot_items', 'POST', items.map((item) => ({ ...item, snapshot_id: snapshotId })));
+}
+
+export async function createConstructionProject(payload: {
+  name: string;
+  description?: string | null;
+  status: string;
+  total_budget?: number;
+}): Promise<ConstructionProjectRow> {
+  const rows = await supabaseRestRequest<ConstructionProjectRow[]>('construction_projects', 'POST', payload);
+  return rows[0];
+}
+
+export async function createConstructionCategory(payload: {
+  project_id: string;
+  name: string;
+  budget: number;
+  labor_budget?: number;
+  status: ConstructionCategoryStatus;
+  operation_detail?: string | null;
+  operation_note?: string | null;
+  operation_checklist?: ConstructionOperationChecklistItem[];
+  sort_order?: number;
+}): Promise<ConstructionCategoryRow> {
+  const rows = await supabaseRestRequest<ConstructionCategoryRow[]>('construction_categories', 'POST', payload);
+  return rows[0];
+}
+
+export async function updateConstructionCategory(
+  id: string,
+  payload: {
+    name: string;
+    budget: number;
+    labor_budget: number;
+    status: ConstructionCategoryStatus;
+    operation_detail?: string | null;
+    operation_note?: string | null;
+    operation_checklist?: ConstructionOperationChecklistItem[];
+  }
+): Promise<ConstructionCategoryRow> {
+  const rows = await supabaseRestRequest<ConstructionCategoryRow[]>(`construction_categories?id=eq.${id}`, 'PATCH', payload);
+  return rows[0];
+}
+
+export async function clearConstructionExpenseCategory(categoryId: string): Promise<void> {
+  await supabaseRestRequest<ConstructionExpenseRow[]>(`construction_expenses?category_id=eq.${categoryId}`, 'PATCH', { category_id: null });
+}
+
+export async function deleteConstructionCategory(id: string): Promise<void> {
+  await supabaseRestRequest<ConstructionCategoryRow[]>(`construction_categories?id=eq.${id}`, 'DELETE');
+}
+
+export async function createConstructionExpense(payload: {
+  project_id: string;
+  category_id: string | null;
+  cost_type: ConstructionCostType;
+  expense_date: string;
+  title: string;
+  amount: number;
+  note?: string | null;
+}): Promise<ConstructionExpenseRow> {
+  const rows = await supabaseRestRequest<ConstructionExpenseRow[]>('construction_expenses', 'POST', payload);
+  return rows[0];
+}
+
+export async function updateConstructionExpense(
+  id: string,
+  payload: {
+    category_id: string | null;
+    cost_type: ConstructionCostType;
+    expense_date: string;
+    title: string;
+    amount: number;
+    note?: string | null;
+  }
+): Promise<ConstructionExpenseRow> {
+  const rows = await supabaseRestRequest<ConstructionExpenseRow[]>(`construction_expenses?id=eq.${id}`, 'PATCH', payload);
+  return rows[0];
+}
+
+export async function deleteConstructionExpense(id: string): Promise<void> {
+  await supabaseRestRequest<ConstructionExpenseRow[]>(`construction_expenses?id=eq.${id}`, 'DELETE');
 }

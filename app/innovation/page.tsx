@@ -29,7 +29,7 @@ export default async function InnovationPage() {
   return (
     <PageShell>
       <Navbar />
-      <section className="page-container mx-auto max-w-5xl space-y-5 sm:space-y-6">
+      <section className="page-container space-y-5 sm:space-y-6">
         {innovations.length === 0 ? (
           <>
             <section className="premium-card border-dashed p-10 text-center"><p className="text-[color:var(--text-secondary)]">ยังไม่มี Innovation เริ่มบันทึกไอเดียแรกเพื่อสร้างอนาคตของคุณ</p></section>

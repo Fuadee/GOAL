@@ -2,6 +2,8 @@ import { Navbar } from '@/components/navbar';
 import { SimpleMoneyManagement } from '@/components/money/SimpleMoneyManagement';
 import { getMoneyManagementData } from '@/lib/money/service';
 
+export const dynamic = 'force-dynamic';
+
 export default async function MoneyManagementPage() {
   const data = await getMoneyManagementData();
 

@@ -114,7 +114,7 @@ export function RelationshipMissionDashboard({
   };
 
   return (
-    <section className="mx-auto w-full max-w-[1440px] space-y-6 px-4 pb-8 pt-6 md:px-6 md:pt-8">
+    <section className="mx-auto w-full max-w-[1440px] space-y-6 px-8 pb-8 pt-6 md:pt-8">
       <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.32)] md:p-6">
         <article className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-slate-50 p-5 shadow-[0_18px_40px_-32px_rgba(16,185,129,0.55)] sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">

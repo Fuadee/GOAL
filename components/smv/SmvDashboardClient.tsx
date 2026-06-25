@@ -67,7 +67,7 @@ export function SmvDashboardClient({ data }: SmvDashboardClientProps) {
   };
 
   return (
-    <section className="mx-auto w-full max-w-7xl space-y-6 px-4 py-10 md:px-8 md:py-12">
+    <section className="mx-auto w-full max-w-[1440px] space-y-6 px-8 py-10 md:py-12">
       <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <article className="rounded-3xl border border-white/10 bg-white/5 p-6">
           <p className="text-xs uppercase tracking-[0.2em] text-cyan-200/80">SMV Score</p>

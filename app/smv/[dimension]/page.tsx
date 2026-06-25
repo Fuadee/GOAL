@@ -62,7 +62,7 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
     return (
       <main className="app-shell">
         <Navbar />
-        <section className="mx-auto w-full max-w-5xl space-y-6 px-4 py-8 md:px-8">
+        <section className="page-container space-y-6">
           <Link href="/smv" className="text-sm text-cyan-200 hover:text-cyan-100">
             ← กลับไปหน้า /smv
           </Link>
@@ -151,7 +151,7 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
     return (
       <main className="app-shell">
         <Navbar />
-        <section className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
+        <section className="page-container space-y-6">
           <Link href="/smv" className="text-sm text-cyan-200 hover:text-cyan-100">
             ← กลับไปหน้า /smv
           </Link>
@@ -276,7 +276,7 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
     return (
       <main className="app-shell">
         <Navbar />
-        <section className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
+        <section className="page-container space-y-6">
           <Link href="/smv" className="text-sm text-cyan-200 hover:text-cyan-100">
             ← กลับไปหน้า /smv
           </Link>
@@ -394,7 +394,7 @@ export default async function SmvDimensionPage({ params }: { params: { dimension
   return (
     <main className="app-shell">
       <Navbar />
-      <section className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-8">
+      <section className="page-container space-y-6">
         <Link href="/smv" className="text-sm text-cyan-200 hover:text-cyan-100">
           ← กลับไปหน้า /smv
         </Link>

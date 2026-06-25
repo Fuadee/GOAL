@@ -156,7 +156,7 @@ export function SecretSaucePage() {
   if (!activeTopic) return null;
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8 lg:py-10">
+    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-8 py-6 sm:gap-8 sm:py-8 lg:py-10">
       <TopicPills activeTopicId={activeTopic.id} onSelect={setActiveTopicId} />
 
       <AnimatePresence mode="wait">

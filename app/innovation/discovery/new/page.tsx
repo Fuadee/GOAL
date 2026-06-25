@@ -5,7 +5,7 @@ export default function NewDiscoveryCandidatePage() {
   return (
     <main className="min-h-screen bg-slate-100/70">
       <Navbar />
-      <section className="mx-auto w-full max-w-5xl space-y-5 px-4 py-5 md:px-6 md:py-6">
+      <section className="page-container space-y-5">
         <header className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">นวัตกรรม / ไอเดีย</p>
           <h1 className="text-2xl font-semibold text-slate-950 sm:text-3xl">เพิ่มไอเดียรอคัดเลือก</h1>

@@ -1,12 +1,13 @@
-import { getAssetMonthlySnapshots, getGrowthAssets, getMoneyIncomeSources } from '@/lib/money/queries';
+import { getAssetMonthlySnapshots, getConstructionInvestmentProjects, getGrowthAssets, getMoneyIncomeSources } from '@/lib/money/queries';
 import { MoneyManagementPageData } from '@/lib/money/types';
 
 export async function getMoneyManagementData(): Promise<MoneyManagementPageData> {
   try {
-    const [incomeSources, growthAssets, assetSnapshots] = await Promise.all([
+    const [incomeSources, growthAssets, assetSnapshots, constructionProjects] = await Promise.all([
       getMoneyIncomeSources(),
       getGrowthAssets(),
-      getAssetMonthlySnapshots()
+      getAssetMonthlySnapshots(),
+      getConstructionInvestmentProjects()
     ]);
 
     const summary = incomeSources.reduce(
@@ -34,13 +35,14 @@ export async function getMoneyManagementData(): Promise<MoneyManagementPageData>
         ? (growthSummary.totalProfitLoss / growthSummary.totalInvested) * 100
         : 0;
 
-    return { incomeSources, growthAssets, assetSnapshots, summary, growthSummary };
+    return { incomeSources, growthAssets, assetSnapshots, constructionProjects, summary, growthSummary };
   } catch (error) {
     console.error('[money-management load failed]', error);
     return {
       incomeSources: [],
       growthAssets: [],
       assetSnapshots: [],
+      constructionProjects: { projects: [], categories: [], expenses: [] },
       summary: { grossIncome: 0, totalExpense: 0, netIncome: 0 },
       growthSummary: { totalValue: 0, totalProfitLoss: 0, totalInvested: 0, totalReturnPercent: 0 }
     };
