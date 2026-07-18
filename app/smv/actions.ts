@@ -4,24 +4,142 @@ import { revalidatePath } from 'next/cache';
 
 import { addSocialEvidence, createEvidenceAndRecalculate, markConfidenceStagePassed, markSocialLevelCompleted, updateAppearanceLevel } from '@/lib/smv/service';
 import {
-  createSmvRealDateHistory,
   createSmvActionLog,
   createSmvScoreHistory,
-  deleteSmvMissionReward,
-  deleteSmvRealDateHistory,
   getSmvDimensionScore,
   getSmvDimensions,
   getSmvMetrics,
-  getSmvMissionReward,
-  getSmvRealDateHistory,
-  SMV_REWARD_KEY,
-  startNewSmvMissionRewardRound,
-  updateSmvMissionRewardStatus,
-  upsertSmvMissionReward,
-  updateSmvRealDateHistory,
   upsertSmvDimensionScore
 } from '@/lib/smv/repository';
 import { APPEARANCE_CATEGORY_KEYS } from '@/lib/smv/appearance-config';
+import { createSmvProject, deleteSmvProject, updateSmvProject } from '@/lib/smv/projects';
+import { createProjectMilestone, deleteProjectMilestone, updateProjectMilestone } from '@/lib/smv/milestones';
+import { createMilestoneChecklist, deleteMilestoneChecklist, setMilestoneChecklistCompleted, updateMilestoneChecklist } from '@/lib/smv/checklists';
+
+function validateChecklistForm(formData: FormData) {
+  const id = String(formData.get('id') ?? '').trim();
+  const projectId = String(formData.get('project_id') ?? '').trim();
+  const milestoneId = String(formData.get('milestone_id') ?? '').trim();
+  const title = String(formData.get('title') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
+  if (!projectId || !milestoneId) return { success: false as const, message: 'ไม่พบ Milestone ที่ต้องการ' };
+  if (!title) return { success: false as const, message: 'กรุณากรอกชื่อรายการ' };
+  if (title.length > 160) return { success: false as const, message: 'ชื่อรายการต้องไม่เกิน 160 ตัวอักษร' };
+  if (description.length > 2000) return { success: false as const, message: 'รายละเอียดต้องไม่เกิน 2,000 ตัวอักษร' };
+  return { success: true as const, id, projectId, milestoneId, title, description };
+}
+
+export async function saveSmvMilestoneChecklistAction(formData: FormData) {
+  const input = validateChecklistForm(formData);
+  if (!input.success) return input;
+  try {
+    const checklist = input.id
+      ? await updateMilestoneChecklist({ id: input.id, milestoneId: input.milestoneId, title: input.title, description: input.description })
+      : await createMilestoneChecklist({ milestoneId: input.milestoneId, title: input.title, description: input.description });
+    revalidatePath(`/smv/${input.projectId}`);
+    revalidatePath(`/smv/${input.projectId}/milestones/${input.milestoneId}`);
+    return { success: true as const, message: input.id ? 'แก้ไขรายการแล้ว' : 'เพิ่มรายการแล้ว', checklist };
+  } catch {
+    return { success: false as const, message: 'ไม่สามารถบันทึกรายการได้ กรุณาลองใหม่อีกครั้ง' };
+  }
+}
+
+export async function toggleSmvMilestoneChecklistAction(id: string, milestoneId: string, projectId: string, isCompleted: boolean) {
+  if (!id || !milestoneId || !projectId) return { success: false as const, message: 'ข้อมูลรายการไม่ครบถ้วน' };
+  try {
+    const checklist = await setMilestoneChecklistCompleted({ id, milestoneId, isCompleted });
+    revalidatePath(`/smv/${projectId}`);
+    revalidatePath(`/smv/${projectId}/milestones/${milestoneId}`);
+    return { success: true as const, message: 'อัปเดตสถานะแล้ว', checklist };
+  } catch {
+    return { success: false as const, message: 'ไม่สามารถอัปเดตสถานะได้ กรุณาลองใหม่อีกครั้ง' };
+  }
+}
+
+export async function deleteSmvMilestoneChecklistAction(id: string, milestoneId: string, projectId: string) {
+  if (!id || !milestoneId || !projectId) return { success: false as const, message: 'ข้อมูลรายการไม่ครบถ้วน' };
+  try {
+    await deleteMilestoneChecklist({ id, milestoneId });
+    revalidatePath(`/smv/${projectId}`);
+    revalidatePath(`/smv/${projectId}/milestones/${milestoneId}`);
+    return { success: true as const, message: 'ลบรายการแล้ว' };
+  } catch {
+    return { success: false as const, message: 'ไม่สามารถลบรายการได้ กรุณาลองใหม่อีกครั้ง' };
+  }
+}
+
+function validateMilestoneForm(formData: FormData) {
+  const id = String(formData.get('id') ?? '').trim();
+  const projectId = String(formData.get('project_id') ?? '').trim();
+  const title = String(formData.get('title') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
+  if (!projectId) return { success: false as const, message: 'ไม่พบโปรเจกต์ที่ต้องการ' };
+  if (!title) return { success: false as const, message: 'กรุณากรอกชื่อ Milestone' };
+  if (title.length > 160) return { success: false as const, message: 'ชื่อ Milestone ต้องไม่เกิน 160 ตัวอักษร' };
+  if (description.length > 2000) return { success: false as const, message: 'รายละเอียดต้องไม่เกิน 2,000 ตัวอักษร' };
+  return { success: true as const, id, projectId, title, description };
+}
+
+export async function saveSmvProjectMilestoneAction(formData: FormData) {
+  const input = validateMilestoneForm(formData);
+  if (!input.success) return input;
+  try {
+    const milestone = input.id
+      ? await updateProjectMilestone({ id: input.id, projectId: input.projectId, title: input.title, description: input.description })
+      : await createProjectMilestone({ projectId: input.projectId, title: input.title, description: input.description });
+    revalidatePath(`/smv/${input.projectId}`);
+    return { success: true as const, message: input.id ? 'อัปเดต Milestone แล้ว' : 'สร้าง Milestone แล้ว', milestone };
+  } catch {
+    return { success: false as const, message: 'ไม่สามารถบันทึก Milestone ได้ กรุณาลองใหม่อีกครั้ง' };
+  }
+}
+
+export async function deleteSmvProjectMilestoneAction(id: string, projectId: string) {
+  if (!id || !projectId) return { success: false as const, message: 'ข้อมูล Milestone ไม่ครบถ้วน' };
+  try {
+    await deleteProjectMilestone({ id, projectId });
+    revalidatePath(`/smv/${projectId}`);
+    return { success: true as const, message: 'ลบ Milestone แล้ว' };
+  } catch {
+    return { success: false as const, message: 'ไม่สามารถลบ Milestone ได้ กรุณาลองใหม่อีกครั้ง' };
+  }
+}
+
+export async function createSmvProjectAction(formData: FormData) {
+  return saveSmvProjectAction(formData);
+}
+
+export async function saveSmvProjectAction(formData: FormData) {
+  const id = String(formData.get('id') ?? '').trim();
+  const title = String(formData.get('title') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
+
+  if (!title) return { success: false as const, message: 'กรุณากรอกชื่อโปรเจกต์' };
+  if (title.length > 160) return { success: false as const, message: 'ชื่อโปรเจกต์ต้องไม่เกิน 160 ตัวอักษร' };
+  if (description.length > 2000) return { success: false as const, message: 'รายละเอียดต้องไม่เกิน 2,000 ตัวอักษร' };
+
+  try {
+    const project = id
+      ? await updateSmvProject({ id, title, description })
+      : await createSmvProject({ title, description });
+    revalidatePath('/smv');
+    if (id) revalidatePath(`/smv/${id}`);
+    return { success: true as const, message: id ? 'แก้ไขโปรเจกต์แล้ว' : 'สร้างโปรเจกต์แล้ว', project };
+  } catch {
+    return { success: false as const, message: 'ไม่สามารถบันทึกโปรเจกต์ได้ กรุณาลองใหม่อีกครั้ง' };
+  }
+}
+
+export async function deleteSmvProjectAction(id: string) {
+  if (!id) return { success: false as const, message: 'ไม่พบโปรเจกต์ที่ต้องการลบ' };
+  try {
+    await deleteSmvProject(id);
+    revalidatePath('/smv');
+    return { success: true as const, message: 'ลบโปรเจกต์แล้ว' };
+  } catch {
+    return { success: false as const, message: 'ไม่สามารถลบโปรเจกต์ได้ กรุณาลองใหม่อีกครั้ง' };
+  }
+}
 
 export async function completeSmvChecklistItemAction(formData: FormData): Promise<{ success: boolean; message: string }> {
   const dimensionId = String(formData.get('dimension_id') ?? '').trim();
@@ -297,116 +415,6 @@ export async function updateAppearanceLevelAction(formData: FormData): Promise<{
       success: false,
       message: error instanceof Error ? error.message : 'ไม่สามารถอัปเดตด่านได้'
     };
-  }
-}
-
-type RealDatePayload = { title: string; date: string; reflection?: string; tags?: string[] };
-
-function validateRealDatePayload(input: RealDatePayload): string | null {
-  if (!input.title.trim()) return 'Date title is required.';
-  if (!input.date) return 'Date is required.';
-  return null;
-}
-
-export async function listSmvRealDateHistoryAction() {
-  return getSmvRealDateHistory();
-}
-
-export async function createSmvRealDateHistoryAction(input: RealDatePayload): Promise<{ success: boolean; message: string }> {
-  const validationError = validateRealDatePayload(input);
-  if (validationError) return { success: false, message: validationError };
-
-  try {
-    await createSmvRealDateHistory(input);
-    revalidatePath('/smv');
-    return { success: true, message: 'Saved.' };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : 'Could not save real date history.' };
-  }
-}
-
-export async function updateSmvRealDateHistoryAction(
-  id: string,
-  input: RealDatePayload
-): Promise<{ success: boolean; message: string }> {
-  const validationError = validateRealDatePayload(input);
-  if (validationError) return { success: false, message: validationError };
-
-  try {
-    await updateSmvRealDateHistory(id, input);
-    revalidatePath('/smv');
-    return { success: true, message: 'Updated.' };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : 'Could not update real date history.' };
-  }
-}
-
-export async function deleteSmvRealDateHistoryAction(id: string): Promise<{ success: boolean; message: string }> {
-  if (!id.trim()) return { success: false, message: 'Invalid record id.' };
-  try {
-    await deleteSmvRealDateHistory(id);
-    revalidatePath('/smv');
-    return { success: true, message: 'Deleted.' };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : 'Could not delete real date history.' };
-  }
-}
-
-export async function upsertSmvRewardAction(formData: FormData): Promise<{ success: boolean; message: string }> {
-  const title = String(formData.get('title') ?? '').trim();
-  const description = String(formData.get('description') ?? '').trim();
-  const emotionalCopy = String(formData.get('emotional_copy') ?? '').trim();
-  const imageUrl = String(formData.get('image_url') ?? '').trim();
-
-  if (!title) return { success: false, message: 'Reward title is required.' };
-
-  try {
-    const current = await getSmvMissionReward(SMV_REWARD_KEY);
-    await upsertSmvMissionReward({
-      reward_key: SMV_REWARD_KEY,
-      title,
-      description: description || 'ให้รางวัลกับตัวเองเมื่อกล้าเปิดชีวิตจริง',
-      emotional_copy: emotionalCopy || 'ปลดล็อกเมื่อออกเดทจริงสำเร็จ 1 ครั้ง',
-      image_url: imageUrl,
-      status: 'unclaimed',
-      target_count: current?.target_count ?? 1,
-      round_number: current?.round_number ?? 1
-    });
-    revalidatePath('/smv');
-    return { success: true, message: 'Reward saved.' };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : 'Could not save SMV reward.' };
-  }
-}
-
-export async function deleteSmvRewardAction(): Promise<{ success: boolean; message: string }> {
-  try {
-    await deleteSmvMissionReward(SMV_REWARD_KEY);
-    revalidatePath('/smv');
-    return { success: true, message: 'Reward deleted.' };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : 'Could not delete SMV reward.' };
-  }
-}
-
-export async function startNewSmvRewardRoundAction(): Promise<{ success: boolean; message: string }> {
-  try {
-    const dateHistory = await getSmvRealDateHistory();
-    await startNewSmvMissionRewardRound(SMV_REWARD_KEY, dateHistory.length);
-    revalidatePath('/smv');
-    return { success: true, message: 'New reward round started.' };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : 'Could not start new SMV reward round.' };
-  }
-}
-
-export async function claimSmvRewardAction(): Promise<{ success: boolean; message: string }> {
-  try {
-    await updateSmvMissionRewardStatus(SMV_REWARD_KEY, 'claimed');
-    revalidatePath('/smv');
-    return { success: true, message: 'Reward claimed.' };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : 'Could not claim SMV reward.' };
   }
 }
 

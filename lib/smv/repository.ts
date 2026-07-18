@@ -14,39 +14,12 @@ import {
   SmvStageStatus,
   SmvActionLogRow,
   SmvAppearanceProgressRow,
-  SmvMissionRewardRow,
-  SmvMissionRewardStatus,
-  SmvRealDateHistoryRow,
   SocialEvidenceRow,
   SocialEvidenceType,
   SocialLevelRow,
   SocialProgressRow,
   SocialRequirementRow
 } from '@/lib/smv/types';
-
-export const SMV_REWARD_KEY = 'smv_reward';
-
-const defaultSmvReward: Omit<SmvMissionRewardRow, 'id' | 'created_at' | 'updated_at'> = {
-  reward_key: SMV_REWARD_KEY,
-  title: 'เที่ยวคนเดียว',
-  description: 'ให้รางวัลกับตัวเองเมื่อกล้าเปิดชีวิตจริง',
-  emotional_copy: 'ปลดล็อกเมื่อออกเดทจริงสำเร็จ 1 ครั้ง',
-  image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
-  status: 'unclaimed',
-  target_count: 1,
-  round_number: 1,
-  claimed_at: null
-};
-
-export function getDefaultSmvReward(): SmvMissionRewardRow {
-  const now = new Date().toISOString();
-  return {
-    id: SMV_REWARD_KEY,
-    ...defaultSmvReward,
-    created_at: now,
-    updated_at: now
-  };
-}
 
 export async function getSmvDimensions() {
   return supabaseRestRequest<SmvDimensionRow[]>('smv_dimensions?select=id,key,label,description,color_token,created_at,updated_at&order=created_at.asc', 'GET');
@@ -332,117 +305,3 @@ export async function getSocialEvidenceByUser(userId: string, limit = 100) {
   return supabaseRestRequest<SocialEvidenceRow[]>(`social_evidence?user_id=eq.${userId}&order=created_at.desc&limit=${limit}`, 'GET');
 }
 
-export async function getSmvRealDateHistory() {
-  return supabaseRestRequest<SmvRealDateHistoryRow[]>('smv_real_date_history?select=id,user_id,title,date,reflection,tags,created_at,updated_at&order=date.desc&order=created_at.desc&limit=20', 'GET');
-}
-
-export async function createSmvRealDateHistory(input: {
-  user_id?: string | null;
-  title: string;
-  date: string;
-  reflection?: string;
-  tags?: string[];
-}) {
-  const rows = await supabaseRestRequest<SmvRealDateHistoryRow[]>('smv_real_date_history', 'POST', {
-    user_id: input.user_id ?? null,
-    title: input.title.trim(),
-    date: input.date,
-    reflection: input.reflection?.trim() ? input.reflection.trim() : null,
-    tags: input.tags ?? []
-  });
-  return rows[0];
-}
-
-export async function updateSmvRealDateHistory(
-  id: string,
-  input: { title: string; date: string; reflection?: string; tags?: string[] }
-) {
-  const rows = await supabaseRestRequest<SmvRealDateHistoryRow[]>(`smv_real_date_history?id=eq.${id}`, 'PATCH', {
-    title: input.title.trim(),
-    date: input.date,
-    reflection: input.reflection?.trim() ? input.reflection.trim() : null,
-    tags: input.tags ?? [],
-    updated_at: new Date().toISOString()
-  });
-  return rows[0];
-}
-
-export async function deleteSmvRealDateHistory(id: string) {
-  await supabaseRestRequest<SmvRealDateHistoryRow[]>(`smv_real_date_history?id=eq.${id}`, 'DELETE');
-}
-
-export async function getSmvMissionReward(rewardKey = SMV_REWARD_KEY) {
-  try {
-    const rows = await supabaseRestRequest<SmvMissionRewardRow[]>(
-      `smv_mission_rewards?select=id,reward_key,title,description,emotional_copy,image_url,status,target_count,round_number,claimed_at,created_at,updated_at&reward_key=eq.${rewardKey}&limit=1`,
-      'GET'
-    );
-    return rows[0] ?? null;
-  } catch {
-    return rewardKey === SMV_REWARD_KEY ? getDefaultSmvReward() : null;
-  }
-}
-
-export async function upsertSmvMissionReward(input: {
-  reward_key?: string;
-  title: string;
-  description?: string | null;
-  emotional_copy?: string | null;
-  image_url?: string | null;
-  status?: SmvMissionRewardStatus | null;
-  target_count?: number | null;
-  round_number?: number | null;
-}) {
-  const rows = await supabaseRestRequest<SmvMissionRewardRow[]>(
-    'smv_mission_rewards?on_conflict=reward_key',
-    'POST',
-    {
-      reward_key: input.reward_key ?? SMV_REWARD_KEY,
-      title: input.title.trim(),
-      description: input.description?.trim() ? input.description.trim() : null,
-      emotional_copy: input.emotional_copy?.trim() ? input.emotional_copy.trim() : null,
-      image_url: input.image_url?.trim() ? input.image_url.trim() : null,
-      status: input.status ?? 'unclaimed',
-      target_count: input.target_count ?? 1,
-      round_number: input.round_number ?? 1,
-      claimed_at: input.status === 'claimed' ? new Date().toISOString() : null,
-      updated_at: new Date().toISOString()
-    }
-  );
-  return rows[0];
-}
-
-export async function deleteSmvMissionReward(rewardKey = SMV_REWARD_KEY) {
-  await supabaseRestRequest<SmvMissionRewardRow[]>(`smv_mission_rewards?reward_key=eq.${rewardKey}`, 'DELETE');
-}
-
-export async function updateSmvMissionRewardStatus(rewardKey: string, status: SmvMissionRewardStatus) {
-  const rows = await supabaseRestRequest<SmvMissionRewardRow[]>(
-    `smv_mission_rewards?reward_key=eq.${rewardKey}`,
-    'PATCH',
-    {
-      status,
-      claimed_at: status === 'claimed' ? new Date().toISOString() : null,
-      updated_at: new Date().toISOString()
-    }
-  );
-  return rows[0];
-}
-
-export async function startNewSmvMissionRewardRound(rewardKey = SMV_REWARD_KEY, completedDateCount = 0) {
-  const current = await getSmvMissionReward(rewardKey);
-  const previousTarget = current?.target_count ?? 1;
-  const nextTarget = Math.max(previousTarget + 1, completedDateCount + 1);
-  const nextRound = (current?.round_number ?? 1) + 1;
-
-  return upsertSmvMissionReward({
-    reward_key: rewardKey,
-    title: current?.title ?? defaultSmvReward.title,
-    description: current?.description ?? defaultSmvReward.description,
-    emotional_copy: current?.emotional_copy ?? defaultSmvReward.emotional_copy,
-    image_url: current?.image_url ?? defaultSmvReward.image_url,
-    status: 'unclaimed',
-    target_count: nextTarget,
-    round_number: nextRound
-  });
-}

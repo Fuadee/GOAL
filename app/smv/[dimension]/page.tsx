@@ -3,8 +3,12 @@ import { notFound, redirect } from 'next/navigation';
 
 import { addSocialEvidenceAction, markSocialLevelCompletedAction } from '@/app/smv/actions';
 import { Navbar } from '@/components/navbar';
+import { ProjectDetailHeader } from '@/components/smv/ProjectDetailHeader';
+import { ProjectMilestones } from '@/components/smv/ProjectMilestones';
 import { StatusIncomeActions } from '@/components/smv/StatusIncomeActions';
 import { SMV_DIMENSION_LABELS } from '@/lib/smv/definitions';
+import { getSmvProjectById } from '@/lib/smv/projects';
+import { getProjectMilestones } from '@/lib/smv/milestones';
 import { getConfidenceDetailData, getSmvDimensionDetailByKey, getSocialDetailData, getStatusDetailData } from '@/lib/smv/service';
 import { SMV_DIMENSION_KEYS, SmvDimensionKey, SmvLevelDefinitionRow } from '@/lib/smv/types';
 
@@ -45,6 +49,20 @@ function getLevelProgress(score: number, levelDefinitions: SmvLevelDefinitionRow
 }
 
 export default async function SmvDimensionPage({ params }: { params: { dimension: string } }) {
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.dimension)) {
+    const [project, milestones] = await Promise.all([getSmvProjectById(params.dimension), getProjectMilestones(params.dimension)]);
+    if (!project) notFound();
+    return (
+      <main className="flex min-h-screen flex-col bg-white">
+        <Navbar />
+        <section className="mx-auto w-full max-w-[960px] flex-1 px-5 py-8 sm:px-8 sm:py-10">
+          <ProjectDetailHeader initialProject={project} />
+          <ProjectMilestones projectId={project.id} initialMilestones={milestones} />
+        </section>
+      </main>
+    );
+  }
+
   const key = params.dimension as SmvDimensionKey;
   if (!SMV_DIMENSION_KEYS.includes(key)) notFound();
 

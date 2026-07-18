@@ -201,30 +201,34 @@ export type SocialEvidenceRow = {
   created_at: string;
 };
 
-export type SmvRealDateHistoryRow = {
+export type SmvProjectRow = {
   id: string;
-  user_id: string | null;
   title: string;
-  date: string;
-  reflection: string | null;
-  tags: string[];
+  description: string | null;
   created_at: string;
   updated_at: string;
 };
 
-export type SmvMissionRewardStatus = 'locked' | 'unlocked' | 'unclaimed' | 'claimed';
+export type SmvProjectWithSummary = SmvProjectRow & {
+  smv_project_milestones?: Array<Pick<SmvProjectMilestoneRow, 'id' | 'is_completed'>>;
+};
 
-export type SmvMissionRewardRow = {
+export type SmvProjectMilestoneRow = {
   id: string;
-  reward_key: string;
+  project_id: string;
   title: string;
   description: string | null;
-  emotional_copy: string | null;
-  image_url: string | null;
-  status: SmvMissionRewardStatus | null;
-  target_count: number | null;
-  round_number: number | null;
-  claimed_at: string | null;
+  is_completed: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SmvMilestoneChecklistRow = {
+  id: string;
+  milestone_id: string;
+  title: string;
+  description: string | null;
+  is_completed: boolean;
   created_at: string;
   updated_at: string;
 };
