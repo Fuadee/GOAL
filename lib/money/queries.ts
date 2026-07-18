@@ -1,5 +1,5 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
-import { AssetMonthlySnapshotItemRow, AssetMonthlySnapshotRow, ConstructionCategoryRow, ConstructionExpenseRow, ConstructionInvestmentProjectsData, ConstructionProjectRow, GrowthAssetRow, MoneyIncomeSourceRow } from '@/lib/money/types';
+import { AssetMonthlySnapshotItemRow, AssetMonthlySnapshotRow, ConstructionCategoryRow, ConstructionExpenseRow, ConstructionInvestmentProjectsData, ConstructionProjectBudgetData, ConstructionProjectRow, GrowthAssetRow, MoneyIncomeSourceRow, normalizeConstructionCategoryStatus } from '@/lib/money/types';
 
 export async function getMoneyIncomeSources(): Promise<MoneyIncomeSourceRow[]> {
   return supabaseRestRequest<MoneyIncomeSourceRow[]>('money_income_sources?select=id,user_id,name,description,income_amount,expense_amount,expense_note,sort_order,is_active,created_at,updated_at&is_active=eq.true&order=sort_order.asc&order=created_at.asc', 'GET');
@@ -56,5 +56,24 @@ export async function getConstructionInvestmentProjects(): Promise<ConstructionI
     )
   ]);
 
-  return { projects, categories, expenses };
+  return { projects, categories: categories.map((category) => ({ ...category, status: normalizeConstructionCategoryStatus(category.status) })), expenses };
+}
+
+export async function getConstructionProjectBudget(projectId: string): Promise<ConstructionProjectBudgetData> {
+  const encodedProjectId = encodeURIComponent(projectId);
+  const [projects, categories, expenses] = await Promise.all([
+    supabaseRestRequest<ConstructionProjectRow[]>(
+      `construction_projects?select=id,name,description,status,total_budget,created_at,updated_at&id=eq.${encodedProjectId}&limit=1`,
+      'GET', undefined, { revalidate: false }
+    ),
+    supabaseRestRequest<ConstructionCategoryRow[]>(
+      `construction_categories?select=id,project_id,name,budget,labor_budget,status,operation_detail,operation_note,operation_checklist,sort_order,created_at,updated_at&project_id=eq.${encodedProjectId}&order=sort_order.asc&order=created_at.asc`,
+      'GET', undefined, { revalidate: false }
+    ),
+    supabaseRestRequest<ConstructionExpenseRow[]>(
+      `construction_expenses?select=id,project_id,category_id,cost_type,expense_date,title,amount,note,receipt_url,created_at,updated_at&project_id=eq.${encodedProjectId}&order=expense_date.desc&order=created_at.desc`,
+      'GET', undefined, { revalidate: false }
+    )
+  ]);
+  return { project: projects[0] ?? null, categories: categories.map((category) => ({ ...category, status: normalizeConstructionCategoryStatus(category.status) })), expenses };
 }

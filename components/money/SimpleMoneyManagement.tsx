@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { createConstructionExpenseAction, createConstructionProjectAction, deleteConstructionCategoryAction, deleteConstructionExpenseAction, deleteGrowthAssetAction, deleteMoneyIncomeSourceAction, saveAssetMonthlySnapshotAction, updateConstructionExpenseAction, upsertConstructionCategoryAction, upsertGrowthAssetAction, upsertMoneyIncomeSourceAction } from '@/app/money-management/actions';
 import { AssetMonthlySnapshotRow, ConstructionCategoryRow, ConstructionCategoryStatus, ConstructionCostType, ConstructionExpenseRow, ConstructionInvestmentProjectsData, ConstructionOperationChecklistItem, ConstructionProjectBudgetData, ConstructionProjectRow, GrowthAssetRow, GrowthAssetType, MoneyManagementPageData, MoneyIncomeSourceRow, MoneySummary } from '@/lib/money/types';
 import { RewardFormModal } from '@/components/rewards/RewardFormModal';
 import { RewardPreviewCard } from '@/components/rewards/RewardPreviewCard';
+import { FinancialAnalysisDialog } from '@/components/money/FinancialAnalysisDialog';
 
 const thb = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 });
 const enMonthLabel = new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' });
@@ -23,12 +26,12 @@ const assetCategories = Object.keys(categoryMeta) as AssetCategory[];
 const incomeBreakdownColors = ['#2563EB', '#0D9488', '#7C3AED', '#059669', '#E11D48', '#475569'];
 type CategoryManageMode = 'create' | 'edit' | 'operation';
 type ExpenseFilter = 'all' | ConstructionCostType;
-const constructionStatusOptions: ConstructionCategoryStatus[] = ['not_started', 'in_progress', 'done', 'warning'];
+type CategoryStatusFilter = 'all' | ConstructionCategoryStatus;
+const constructionStatusOptions: ConstructionCategoryStatus[] = ['not_started', 'in_progress', 'completed'];
 const constructionStatusLabel: Record<ConstructionCategoryStatus, string> = {
   not_started: 'ยังไม่เริ่ม',
   in_progress: 'กำลังทำ',
-  done: 'เสร็จแล้ว',
-  warning: 'ใกล้เกินงบ',
+  completed: 'เสร็จแล้ว',
 };
 const projectStatusOptions = ['planning', 'active', 'completed', 'paused'] as const;
 const projectStatusLabel: Record<(typeof projectStatusOptions)[number], string> = {
@@ -37,6 +40,20 @@ const projectStatusLabel: Record<(typeof projectStatusOptions)[number], string> 
   completed: 'เสร็จสิ้น',
   paused: 'พักโครงการ',
 };
+
+function CategoryStatusFilterButton({ value, label, count, active, onSelect }: { value: CategoryStatusFilter; label: string; count: number; active: boolean; onSelect: (value: CategoryStatusFilter) => void }) {
+  return <button
+    type="button"
+    onClick={() => onSelect(value)}
+    aria-pressed={active}
+    className={`inline-flex min-w-0 items-center justify-center rounded-full border px-5 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 active:scale-[0.98] ${active
+      ? 'border-blue-600 bg-blue-600 !text-white shadow-[0_10px_22px_-14px_rgba(37,99,235,0.9)] hover:border-blue-700 hover:bg-blue-700 [&_*]:!text-white'
+      : 'border-slate-200 bg-white text-slate-700 shadow-sm hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
+    }`}
+  >
+    <span className="break-words">{label} ({count})</span>
+  </button>;
+}
 
 function financialColorClass(value: number) {
   if (value > 0) return 'text-emerald-600';
@@ -85,14 +102,7 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
   const [growthOpen, setGrowthOpen] = useState(false);
   const [growthEditing, setGrowthEditing] = useState<GrowthAssetRow | null>(null);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [projectCreateOpen, setProjectCreateOpen] = useState(false);
-  const [selectedCostCategory, setSelectedCostCategory] = useState<string | null>(null);
-  const [actualExpenseOpen, setActualExpenseOpen] = useState<ConstructionCostType | null>(null);
-  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
-  const [deleteExpenseId, setDeleteExpenseId] = useState<string | null>(null);
-  const [categoryManageState, setCategoryManageState] = useState<{ mode: CategoryManageMode; categoryId?: string } | null>(null);
-  const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
   const [moneyRewardOpen, setMoneyRewardOpen] = useState(false);
   const [moneyReward, setMoneyReward] = useState({
     title: 'Las Vegas Trip',
@@ -104,7 +114,6 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
   const growthRows = useMemo(() => data.growthAssets ?? [], [data.growthAssets]);
   const snapshots = useMemo(() => data.assetSnapshots ?? [], [data.assetSnapshots]);
   const constructionProjects = data.constructionProjects;
-  const selectedProjectBudget = getProjectBudgetData(constructionProjects, selectedProjectId);
   const currentPassiveIncomeMonthly = 0;
   const progressPercent = Math.min((currentPassiveIncomeMonthly / targetPassiveIncomeMonthly) * 100, 100);
   const onDelete = (id: string) => startTransition(async () => {
@@ -161,10 +170,6 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
     <InvestmentProjectsSection
       data={constructionProjects}
       onCreate={() => setProjectCreateOpen(true)}
-      onOpenProject={(projectId) => {
-        setSelectedProjectId(projectId);
-        setSelectedCostCategory(null);
-      }}
     />
 
     <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6">
@@ -220,94 +225,12 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
     {open ? <MoneyForm row={editing} onClose={() => setOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await upsertMoneyIncomeSourceAction(fd); if (res.success) { setOpen(false); router.refresh(); } })} /> : null}
     {growthOpen ? <GrowthAssetForm row={growthEditing} onClose={() => setGrowthOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await upsertGrowthAssetAction(fd); if (res.success) { setGrowthOpen(false); setGrowthEditing(null); router.refresh(); } })} /> : null}
     {snapshotOpen ? <AssetSnapshotForm assets={growthRows} snapshots={snapshots} onClose={() => setSnapshotOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await saveAssetMonthlySnapshotAction(fd); if (res.success) { setSnapshotOpen(false); router.refresh(); } })} /> : null}
-    {selectedProjectId ? <RentalHouseProjectDetail
-      budgetData={selectedProjectBudget}
-      selectedCategory={selectedCostCategory}
-      onClose={() => setSelectedProjectId(null)}
-      onSelectCategory={setSelectedCostCategory}
-      onOpenExpenseForm={(costType) => setActualExpenseOpen(costType)}
-      onManageCategory={(mode, categoryId) => setCategoryManageState({ mode, categoryId })}
-      onDeleteCategory={(categoryId) => setDeleteCategoryId(categoryId)}
-      onEditExpense={(expenseId) => setEditingExpenseId(expenseId)}
-      onDeleteExpense={(expenseId) => setDeleteExpenseId(expenseId)}
-    /> : null}
     {projectCreateOpen ? <ConstructionProjectForm
       onClose={() => setProjectCreateOpen(false)}
       onSubmit={async (fd) => {
         const result = await createConstructionProjectAction(fd);
         if (result.success) {
           setProjectCreateOpen(false);
-          router.refresh();
-        }
-        return result;
-      }}
-    /> : null}
-    {categoryManageState ? <CategoryManagementForm
-      mode={categoryManageState.mode}
-      project={selectedProjectBudget.project}
-      nextSortOrder={selectedProjectBudget.categories.length ? Math.max(...selectedProjectBudget.categories.map((category) => Number(category.sort_order ?? 0))) + 10 : 10}
-      category={selectedProjectBudget.categories.find((category) => category.id === categoryManageState.categoryId) ?? null}
-      onClose={() => setCategoryManageState(null)}
-      onSubmit={async (fd) => {
-        const result = await upsertConstructionCategoryAction(fd);
-        if (result.success) {
-          setCategoryManageState(null);
-          router.refresh();
-        }
-        return result;
-      }}
-    /> : null}
-    {deleteCategoryId ? <DeleteCategoryConfirm
-      category={selectedProjectBudget.categories.find((category) => category.id === deleteCategoryId) ?? null}
-      expenseCount={selectedProjectBudget.expenses.filter((expense) => expense.category_id === deleteCategoryId).length}
-      onClose={() => setDeleteCategoryId(null)}
-      onConfirm={async () => {
-        const result = await deleteConstructionCategoryAction(deleteCategoryId);
-        if (result.success) {
-          setDeleteCategoryId(null);
-          if (selectedCostCategory === deleteCategoryId) setSelectedCostCategory(null);
-          router.refresh();
-        }
-        return result;
-      }}
-    /> : null}
-    {actualExpenseOpen ? <ActualExpenseForm
-      project={selectedProjectBudget.project}
-      categories={selectedProjectBudget.categories}
-      expense={null}
-      initialCostType={actualExpenseOpen}
-      onClose={() => setActualExpenseOpen(null)}
-      onSubmit={async (fd) => {
-        const result = await createConstructionExpenseAction(fd);
-        if (result.success) {
-          setActualExpenseOpen(null);
-          router.refresh();
-        }
-        return result;
-      }}
-    /> : null}
-    {editingExpenseId ? <ActualExpenseForm
-      project={selectedProjectBudget.project}
-      categories={selectedProjectBudget.categories}
-      expense={selectedProjectBudget.expenses.find((expense) => expense.id === editingExpenseId) ?? null}
-      initialCostType={selectedProjectBudget.expenses.find((expense) => expense.id === editingExpenseId)?.cost_type ?? 'material'}
-      onClose={() => setEditingExpenseId(null)}
-      onSubmit={async (fd) => {
-        const result = await updateConstructionExpenseAction(fd);
-        if (result.success) {
-          setEditingExpenseId(null);
-          router.refresh();
-        }
-        return result;
-      }}
-    /> : null}
-    {deleteExpenseId ? <DeleteExpenseConfirm
-      expense={selectedProjectBudget.expenses.find((expense) => expense.id === deleteExpenseId) ?? null}
-      onClose={() => setDeleteExpenseId(null)}
-      onConfirm={async () => {
-        const result = await deleteConstructionExpenseAction(deleteExpenseId);
-        if (result.success) {
-          setDeleteExpenseId(null);
           router.refresh();
         }
         return result;
@@ -336,10 +259,50 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
   </div>;
 }
 
+export function ProjectDetailClient({ budgetData }: { budgetData: ConstructionProjectBudgetData }) {
+  const router = useRouter();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [actualExpenseOpen, setActualExpenseOpen] = useState<ConstructionCostType | null>(null);
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+  const [deleteExpenseId, setDeleteExpenseId] = useState<string | null>(null);
+  const [categoryManageState, setCategoryManageState] = useState<{ mode: CategoryManageMode; categoryId?: string } | null>(null);
+  const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
+
+  const refresh = () => router.refresh();
+  return <>
+    <ProjectBudgetDetail
+      budgetData={budgetData}
+      selectedCategory={selectedCategory}
+      onSelectCategory={setSelectedCategory}
+      onOpenExpenseForm={setActualExpenseOpen}
+      onManageCategory={(mode, categoryId) => setCategoryManageState({ mode, categoryId })}
+      onDeleteCategory={setDeleteCategoryId}
+      onEditExpense={setEditingExpenseId}
+      onDeleteExpense={setDeleteExpenseId}
+    />
+    {categoryManageState ? <CategoryManagementForm
+      mode={categoryManageState.mode}
+      project={budgetData.project}
+      nextSortOrder={budgetData.categories.length ? Math.max(...budgetData.categories.map((category) => Number(category.sort_order ?? 0))) + 10 : 10}
+      category={budgetData.categories.find((category) => category.id === categoryManageState.categoryId) ?? null}
+      onClose={() => setCategoryManageState(null)}
+      onSubmit={async (fd) => { const result = await upsertConstructionCategoryAction(fd); if (result.success) { setCategoryManageState(null); refresh(); } return result; }}
+    /> : null}
+    {deleteCategoryId ? <DeleteCategoryConfirm
+      category={budgetData.categories.find((category) => category.id === deleteCategoryId) ?? null}
+      expenseCount={budgetData.expenses.filter((expense) => expense.category_id === deleteCategoryId).length}
+      onClose={() => setDeleteCategoryId(null)}
+      onConfirm={async () => { const result = await deleteConstructionCategoryAction(deleteCategoryId); if (result.success) { setDeleteCategoryId(null); if (selectedCategory === deleteCategoryId) setSelectedCategory(null); refresh(); } return result; }}
+    /> : null}
+    {actualExpenseOpen ? <ActualExpenseForm project={budgetData.project} categories={budgetData.categories} expense={null} initialCostType={actualExpenseOpen} onClose={() => setActualExpenseOpen(null)} onSubmit={async (fd) => { const result = await createConstructionExpenseAction(fd); if (result.success) { setActualExpenseOpen(null); refresh(); } return result; }} /> : null}
+    {editingExpenseId ? <ActualExpenseForm project={budgetData.project} categories={budgetData.categories} expense={budgetData.expenses.find((expense) => expense.id === editingExpenseId) ?? null} initialCostType={budgetData.expenses.find((expense) => expense.id === editingExpenseId)?.cost_type ?? 'material'} onClose={() => setEditingExpenseId(null)} onSubmit={async (fd) => { const result = await updateConstructionExpenseAction(fd); if (result.success) { setEditingExpenseId(null); refresh(); } return result; }} /> : null}
+    {deleteExpenseId ? <DeleteExpenseConfirm expense={budgetData.expenses.find((expense) => expense.id === deleteExpenseId) ?? null} onClose={() => setDeleteExpenseId(null)} onConfirm={async () => { const result = await deleteConstructionExpenseAction(deleteExpenseId); if (result.success) { setDeleteExpenseId(null); refresh(); } return result; }} /> : null}
+  </>;
+}
+
 function statusBadgeClass(status: ConstructionCategoryStatus | string) {
-  if (status === 'done') return 'status-badge status-success';
+  if (status === 'completed' || status === 'done') return 'status-badge status-success';
   if (status === 'in_progress') return 'status-badge status-info';
-  if (status === 'warning') return 'status-badge status-warning';
   return 'status-badge status-waiting';
 }
 
@@ -452,11 +415,11 @@ function formatThaiDate(value: string) {
   return new Intl.DateTimeFormat('th-TH', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(new Date(`${value}T00:00:00`));
 }
 
-function InvestmentProjectsSection({ data, onCreate, onOpenProject }: { data: ConstructionInvestmentProjectsData; onCreate: () => void; onOpenProject: (projectId: string) => void }) {
+function InvestmentProjectsSection({ data, onCreate }: { data: ConstructionInvestmentProjectsData; onCreate: () => void }) {
   const summary = getInvestmentProjectsSummary(data);
   const showPortfolioSummary = data.projects.length > 1;
 
-  return <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6">
+  return <section id="investment-projects" className="scroll-mt-24 rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6">
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div>
         <p className="text-[13px] font-semibold text-blue-600">Project Budget Monitor</p>
@@ -481,13 +444,13 @@ function InvestmentProjectsSection({ data, onCreate, onOpenProject }: { data: Co
     </div> : <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
       {data.projects.map((project) => {
         const budgetData = getProjectBudgetData(data, project.id);
-        return <InvestmentProjectCard key={project.id} budgetData={budgetData} onOpen={() => onOpenProject(project.id)} />;
+        return <InvestmentProjectCard key={project.id} budgetData={budgetData} />;
       })}
     </div>}
   </section>;
 }
 
-function InvestmentProjectCard({ budgetData, onOpen }: { budgetData: ConstructionProjectBudgetData; onOpen: () => void }) {
+function InvestmentProjectCard({ budgetData }: { budgetData: ConstructionProjectBudgetData }) {
   const { totalBudget, totalSpent, remaining, financeProgress } = getConstructionBudgetSummary(budgetData);
   const project = budgetData.project;
   if (!project) return null;
@@ -502,7 +465,7 @@ function InvestmentProjectCard({ budgetData, onOpen }: { budgetData: Constructio
         </div>
         <p className="mt-2 text-sm leading-6 text-slate-500">{project.description || 'ไม่มีรายละเอียด'}</p>
       </div>
-      <button type="button" onClick={onOpen} className="theme-button-primary shrink-0 !text-[#FFFFFF]" style={{ color: '#FFFFFF' }}>ดูรายละเอียด</button>
+      <Link href={`/money-management/projects/${project.id}`} className="theme-button-primary shrink-0 text-center !text-[#FFFFFF]" style={{ color: '#FFFFFF' }}>ดูรายละเอียด</Link>
     </div>
 
     <div className="mt-4 grid grid-cols-2 gap-3 text-sm lg:grid-cols-4">
@@ -524,43 +487,58 @@ function InvestmentProjectCard({ budgetData, onOpen }: { budgetData: Constructio
   </article>;
 }
 
-function RentalHouseProjectDetail({ budgetData, selectedCategory, onClose, onSelectCategory, onOpenExpenseForm, onManageCategory, onDeleteCategory, onEditExpense, onDeleteExpense }: { budgetData: ConstructionProjectBudgetData; selectedCategory: string | null; onClose: () => void; onSelectCategory: (categoryId: string) => void; onOpenExpenseForm: (costType: ConstructionCostType) => void; onManageCategory: (mode: CategoryManageMode, categoryId?: string) => void; onDeleteCategory: (categoryId: string) => void; onEditExpense: (expenseId: string) => void; onDeleteExpense: (expenseId: string) => void }) {
+export function ProjectBudgetDetail({ budgetData, selectedCategory, onSelectCategory, onOpenExpenseForm, onManageCategory, onDeleteCategory, onEditExpense, onDeleteExpense }: { budgetData: ConstructionProjectBudgetData; selectedCategory: string | null; onSelectCategory: (categoryId: string) => void; onOpenExpenseForm: (costType: ConstructionCostType) => void; onManageCategory: (mode: CategoryManageMode, categoryId?: string) => void; onDeleteCategory: (categoryId: string) => void; onEditExpense: (expenseId: string) => void; onDeleteExpense: (expenseId: string) => void }) {
   const [openCategoryMenu, setOpenCategoryMenu] = useState<string | null>(null);
-  const [expenseFilter, setExpenseFilter] = useState<ExpenseFilter>('all');
+  const [categoryStatusFilter, setCategoryStatusFilter] = useState<CategoryStatusFilter>('all');
+  const [financialAnalysisOpen, setFinancialAnalysisOpen] = useState(false);
   const project = budgetData.project;
   const summary = getConstructionBudgetSummary(budgetData);
+  const categoryStatusCounts = useMemo(() => budgetData.categories.reduce<Record<ConstructionCategoryStatus, number>>((counts, category) => {
+    counts[category.status] += 1;
+    return counts;
+  }, { not_started: 0, in_progress: 0, completed: 0 }), [budgetData.categories]);
+  const filteredCategories = useMemo(() => categoryStatusFilter === 'all'
+    ? budgetData.categories
+    : budgetData.categories.filter((category) => category.status === categoryStatusFilter), [budgetData.categories, categoryStatusFilter]);
+  const categoryFilterOptions: { value: CategoryStatusFilter; label: string; count: number }[] = [
+    { value: 'all', label: 'ทั้งหมด', count: budgetData.categories.length },
+    ...constructionStatusOptions.map((status) => ({ value: status, label: constructionStatusLabel[status], count: categoryStatusCounts[status] })),
+  ];
+  const emptyCategoryMessage: Record<CategoryStatusFilter, string> = {
+    all: 'ยังไม่มีหมวดงานในโครงการนี้',
+    not_started: 'ไม่มีงานที่ยังไม่เริ่ม',
+    in_progress: 'ไม่มีงานที่กำลังดำเนินการ',
+    completed: 'ยังไม่มีงานที่เสร็จแล้ว',
+  };
   const uncategorizedExpenses = budgetData.expenses.filter((expense) => expense.category_id === null);
-  const categoryIds = new Set(budgetData.categories.map((category) => category.id));
-  const activeCategoryId = selectedCategory && (categoryIds.has(selectedCategory) || selectedCategory === 'uncategorized') ? selectedCategory : budgetData.categories[0]?.id ?? (uncategorizedExpenses.length ? 'uncategorized' : null);
-  const activeCategory = budgetData.categories.find((category) => category.id === activeCategoryId) ?? null;
-  const activeCategoryExpenses = [...budgetData.expenses]
-    .filter((expense) => activeCategoryId === 'uncategorized' ? expense.category_id === null : expense.category_id === activeCategoryId)
-    .sort((a, b) => `${b.expense_date}-${b.created_at}`.localeCompare(`${a.expense_date}-${a.created_at}`));
-  const activeExpenses = activeCategoryExpenses.filter((expense) => expenseFilter === 'all' || getExpenseCostType(expense) === expenseFilter);
+  const expenseDetailCategory = selectedCategory === 'uncategorized'
+    ? null
+    : budgetData.categories.find((category) => category.id === selectedCategory) ?? null;
+  const expenseDetailOpen = selectedCategory === 'uncategorized' || Boolean(expenseDetailCategory);
+  const expenseDetailItems = expenseDetailOpen
+    ? budgetData.expenses.filter((expense) => selectedCategory === 'uncategorized' ? expense.category_id === null : expense.category_id === selectedCategory)
+    : [];
 
   if (!project) {
-    return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-      <section className="w-full max-w-lg rounded-[24px] border border-slate-200 bg-white p-6 shadow-2xl">
+    return <div className="rounded-[24px] border border-slate-200 bg-white p-6">
+      <section>
         <h2 className="text-xl font-semibold text-slate-900">ยังไม่พบข้อมูลโครงการ</h2>
         <p className="mt-2 text-sm text-slate-500">รัน migration เพื่อสร้าง project และ seed ข้อมูลเริ่มต้นก่อนใช้งาน</p>
-        <button type="button" onClick={onClose} className="theme-button-secondary mt-5">ปิด</button>
       </section>
     </div>;
   }
 
-  return <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-950/45 px-4 py-6 backdrop-blur-sm">
-    <div className="flex min-h-full items-center justify-center">
-      <section className="relative z-[101] flex max-h-[calc(100vh-48px)] w-full max-w-7xl flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-2xl">
-        <div className="sticky top-0 z-10 flex flex-col gap-3 border-b border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-6">
-          <div>
+  return <section className="w-full rounded-[24px] border border-slate-200 bg-white shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)]">
+        <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-6">
+          <div className="min-w-0">
             <p className="text-[13px] font-semibold text-blue-600">Project Budget Monitor</p>
             <h2 className="mt-1 text-2xl font-semibold text-slate-900">{project.name}</h2>
             <p className="mt-1 text-sm text-slate-500">ดูภาพรวมก่อน แล้วเลือกหมวดงานเพื่อดูรายการค่าใช้จ่ายย้อนหลัง</p>
           </div>
-          <button type="button" onClick={onClose} className="theme-button-secondary self-start">ปิด</button>
+          <button type="button" onClick={() => setFinancialAnalysisOpen(true)} aria-label="วิเคราะห์สถานะการเงินของโครงการ" className="theme-button-secondary w-full shrink-0 sm:w-auto">วิเคราะห์สถานะการเงิน</button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+        <div className="px-5 py-5 sm:px-6">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
             <ProjectMetric label="งบรวมทั้งหมด" value={thb.format(summary.grandBudgetTotal)} />
             <ProjectMetric label="ใช้จริงรวม" value={thb.format(summary.grandActualTotal)} valueClass="text-blue-600" />
@@ -588,96 +566,55 @@ function RentalHouseProjectDetail({ budgetData, selectedCategory, onClose, onSel
             />
           </div>
 
-          <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-slate-900">แยกตามหมวดงาน</p>
-              <p className="text-sm text-slate-500">เลือกหมวดงานเพื่อดูค่าใช้จ่ายย่อยของหมวดนั้น</p>
+          <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-slate-900">แยกตามหมวดงาน</p>
+                <p className="text-sm text-slate-500">กรองรายการตามสถานะ เพื่อดูและจัดการหมวดงานได้ง่ายขึ้น</p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:justify-end">
+                <button onClick={() => onManageCategory('create')} className="theme-button-secondary w-full sm:w-auto">➕ เพิ่มหมวดงาน</button>
+                <button onClick={() => onOpenExpenseForm('material')} className="theme-button-primary w-full !text-[#FFFFFF] sm:w-auto" style={{ color: '#FFFFFF' }}>เพิ่มค่าใช้จ่ายจริง</button>
+                <button onClick={() => onOpenExpenseForm('labor')} className="theme-button-primary w-full !bg-violet-600 !text-[#FFFFFF] hover:!bg-violet-700 sm:w-auto" style={{ color: '#FFFFFF' }}>เพิ่มค่าแรงจริง</button>
+              </div>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <button onClick={() => onManageCategory('create')} className="theme-button-secondary w-full sm:w-auto">➕ เพิ่มหมวดงาน</button>
-              <button onClick={() => onOpenExpenseForm('material')} className="theme-button-primary w-full !text-[#FFFFFF] sm:w-auto" style={{ color: '#FFFFFF' }}>เพิ่มค่าใช้จ่ายจริง</button>
-              <button onClick={() => onOpenExpenseForm('labor')} className="theme-button-primary w-full !bg-violet-600 !text-[#FFFFFF] hover:!bg-violet-700 sm:w-auto" style={{ color: '#FFFFFF' }}>เพิ่มค่าแรงจริง</button>
+            <div className="mt-4 flex flex-wrap gap-2.5 sm:gap-3" role="group" aria-label="กรองหมวดงานตามสถานะ">
+              {categoryFilterOptions.map((option) => <CategoryStatusFilterButton
+                key={option.value}
+                value={option.value}
+                label={option.label}
+                count={option.count}
+                active={categoryStatusFilter === option.value}
+                onSelect={setCategoryStatusFilter}
+              />)}
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {budgetData.categories.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center lg:col-span-2">
-              <p className="text-base font-semibold text-slate-900">ยังไม่มีหมวดงาน</p>
-              <p className="mt-2 text-sm text-slate-500">เพิ่มหมวดงานแรกเพื่อเริ่มคำนวณงบทั้งหมดจาก Cost Breakdown</p>
-              <button type="button" onClick={() => onManageCategory('create')} className="theme-button-primary mt-4 !text-[#FFFFFF]" style={{ color: '#FFFFFF' }}>เพิ่มหมวดงาน</button>
+          <div className="mt-5 flex flex-col gap-4">
+            {filteredCategories.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-5 text-center">
+              <p className="text-sm font-medium text-slate-600">{emptyCategoryMessage[categoryStatusFilter]}</p>
             </div> : null}
-            {budgetData.categories.map((category) => <CostCategoryCard
+            {filteredCategories.map((category) => <CostCategoryCard
               key={category.id}
               category={category}
               expenses={getCategoryExpenses(budgetData.expenses, category.id)}
-              active={category.id === activeCategoryId}
               menuOpen={openCategoryMenu === category.id}
               onSelect={() => onSelectCategory(category.id)}
               onToggleMenu={() => setOpenCategoryMenu((current) => current === category.id ? null : category.id)}
               onManage={(mode) => { setOpenCategoryMenu(null); onManageCategory(mode, category.id); }}
               onDelete={() => { setOpenCategoryMenu(null); onDeleteCategory(category.id); }}
             />)}
-            {uncategorizedExpenses.length ? <button type="button" onClick={() => onSelectCategory('uncategorized')} className={`rounded-2xl border bg-white p-4 text-left shadow-[0_12px_30px_-26px_rgba(15,23,42,0.45)] ${activeCategoryId === 'uncategorized' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-200'}`}>
-              <h3 className="text-base font-semibold text-slate-900">ไม่ระบุหมวด</h3>
-              <p className="mt-3 text-sm text-slate-500">{uncategorizedExpenses.length} รายการ</p>
-              <p className="font-numeric mt-1 text-lg font-semibold text-blue-600">{thb.format(uncategorizedExpenses.reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0))}</p>
-            </button> : null}
-          </div>
-
-          <div className="mt-5 rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_16px_36px_-28px_rgba(15,23,42,0.45)]">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-900">รายการบันทึกจริง</p>
-                <p className="text-sm text-slate-500">{activeCategory?.name ?? 'ไม่ระบุหมวด'} · {activeExpenses.length} รายการ</p>
+            {categoryStatusFilter === 'all' && uncategorizedExpenses.length ? <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_-26px_rgba(15,23,42,0.45)] sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div><h3 className="text-base font-semibold text-slate-900">ไม่ระบุหมวด</h3><p className="mt-1 text-sm text-slate-500">{uncategorizedExpenses.length} รายการ · <span className="font-numeric font-semibold text-blue-600">{thb.format(uncategorizedExpenses.reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0))}</span></p></div>
+                <button type="button" onClick={() => onSelectCategory('uncategorized')} className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-700 sm:w-auto" aria-label="ดูรายละเอียดค่าใช้จ่าย ไม่ระบุหมวด">ดูรายละเอียดค่าใช้จ่าย <span aria-hidden="true" className="text-xl leading-none">›</span></button>
               </div>
-              <div className="flex flex-col gap-2 sm:items-end">
-                <div className="flex rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold text-slate-600">
-                  {[
-                    { value: 'all', label: 'ทั้งหมด' },
-                    { value: 'material', label: 'ค่าวัสดุ' },
-                    { value: 'labor', label: 'ค่าแรง' },
-                  ].map((option) => <button key={option.value} type="button" onClick={() => setExpenseFilter(option.value as ExpenseFilter)} className={`rounded-full px-3 py-1.5 ${expenseFilter === option.value ? 'bg-white text-blue-700 shadow-sm' : 'hover:text-slate-900'}`}>{option.label}</button>)}
-                </div>
-                <p className="font-numeric text-lg font-semibold text-slate-900">{thb.format(activeExpenses.reduce((sum, item) => sum + Number(item.amount ?? 0), 0))}</p>
-              </div>
-            </div>
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[900px] text-sm">
-                <thead className="text-left text-slate-500">
-                  <tr className="border-b border-slate-200">
-                    <th className="py-3 pr-4">วันที่</th>
-                    <th className="py-3 pr-4">รายการ</th>
-                    <th className="py-3 pr-4">กลุ่ม</th>
-                    <th className="py-3 pr-4">ประเภท</th>
-                    <th className="py-3 pr-4 text-right">จำนวนเงิน</th>
-                    <th className="py-3">หมายเหตุ</th>
-                    <th className="py-3 pl-4 text-right">จัดการ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeExpenses.map((expense) => <tr key={expense.id} className="border-b border-slate-100 last:border-0">
-                    <td className="py-3 pr-4 font-numeric text-slate-700">{formatThaiDate(expense.expense_date)}</td>
-                    <td className="py-3 pr-4 font-semibold text-slate-900">{expense.title}</td>
-                    <td className="py-3 pr-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${getExpenseCostType(expense) === 'labor' ? 'bg-violet-50 text-violet-700' : 'bg-blue-50 text-blue-700'}`}>{getCostTypeLabel(getExpenseCostType(expense))}</span></td>
-                    <td className="py-3 pr-4 text-slate-600">{activeCategory?.name ?? 'ไม่ระบุหมวด'}</td>
-                    <td className="py-3 pr-4 text-right font-numeric font-semibold text-slate-900">{thb.format(expense.amount)}</td>
-                    <td className="py-3 text-slate-500">{expense.note ?? '-'}</td>
-                    <td className="py-3 pl-4">
-                      <div className="flex justify-end gap-2">
-                        <button type="button" onClick={() => onEditExpense(expense.id)} className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100">แก้ไข</button>
-                        <button type="button" onClick={() => onDeleteExpense(expense.id)} className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100">ลบ</button>
-                      </div>
-                    </td>
-                  </tr>)}
-                </tbody>
-              </table>
-            </div>
-            {activeExpenses.length === 0 ? <div className="mt-4 rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">ยังไม่มีรายการบันทึกจริงในเงื่อนไขนี้</div> : null}
+            </article> : null}
           </div>
         </div>
-      </section>
-    </div>
-  </div>;
+        {expenseDetailOpen ? <ProjectExpenseHistoryModal category={expenseDetailCategory} expenses={expenseDetailItems} onClose={() => onSelectCategory('')} onEditExpense={(expenseId) => { onSelectCategory(''); onEditExpense(expenseId); }} onDeleteExpense={(expenseId) => { onSelectCategory(''); onDeleteExpense(expenseId); }} /> : null}
+        {financialAnalysisOpen ? <FinancialAnalysisDialog data={budgetData} onClose={() => setFinancialAnalysisOpen(false)} /> : null}
+  </section>;
 }
 
 function ProjectMetric({ label, value, valueClass = 'text-slate-900' }: { label: string; value: string; valueClass?: string }) {
@@ -706,59 +643,127 @@ function CostTypeSummaryCard({ title, budget, actual, remaining, percent, tone }
   </article>;
 }
 
-function CostCategoryCard({ category, expenses, active, menuOpen, onSelect, onToggleMenu, onManage, onDelete }: { category: ConstructionCategoryRow; expenses: ConstructionExpenseRow[]; active: boolean; menuOpen: boolean; onSelect: () => void; onToggleMenu: () => void; onManage: (mode: CategoryManageMode) => void; onDelete: () => void }) {
+function CostCategoryCard({ category, expenses, menuOpen, onSelect, onToggleMenu, onManage, onDelete }: { category: ConstructionCategoryRow; expenses: ConstructionExpenseRow[]; menuOpen: boolean; onSelect: () => void; onToggleMenu: () => void; onManage: (mode: CategoryManageMode) => void; onDelete: () => void }) {
   const summary = getCategoryBudgetSummary(category, expenses);
-  const percent = summary.percent;
   const checklistProgress = getChecklistProgress(category);
 
-  return <article className={`relative rounded-2xl border bg-white p-4 text-left shadow-[0_12px_30px_-26px_rgba(15,23,42,0.45)] transition hover:border-blue-300 hover:shadow-[0_18px_38px_-30px_rgba(37,99,235,0.5)] ${active ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-200'}`}>
-    <div className="flex items-start justify-between gap-3">
-      <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left">
-        <h3 className="break-words text-base font-semibold text-slate-900">{category.name}</h3>
-        <span className={`${statusBadgeClass(category.status)} mt-2`}>{constructionStatusLabel[category.status] ?? category.status}</span>
-        <div className="mt-3 max-w-xs">
+  return <article className="relative rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-[0_12px_30px_-26px_rgba(15,23,42,0.45)] sm:p-5">
+    <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,6fr)_minmax(0,11fr)_minmax(180px,4fr)] lg:items-stretch lg:gap-6">
+      <div className="min-w-0 pr-12 lg:self-center lg:pr-0">
+        <h3 className="break-words text-base font-semibold text-slate-900 sm:text-lg">{category.name}</h3>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className={statusBadgeClass(category.status)}>{constructionStatusLabel[category.status] ?? category.status}</span>
+          <span className={checklistProgress.total ? 'text-xs font-semibold text-emerald-700' : 'text-xs font-semibold text-slate-400'}>✓ {checklistProgress.done}/{checklistProgress.total} งาน</span>
+        </div>
+        <div className="mt-3 max-w-sm">
           <div className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-500">
-            <span className={checklistProgress.total ? 'text-emerald-700' : 'text-slate-400'}>✓ {checklistProgress.done}/{checklistProgress.total} งาน</span>
-            {checklistProgress.total ? <span className="font-numeric text-slate-500">{Math.round(checklistProgress.percent)}%</span> : null}
+            <span>ความคืบหน้างาน</span>
+            <span className="font-numeric text-slate-600">{Math.round(checklistProgress.percent)}%</span>
           </div>
           <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
             <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.min(checklistProgress.percent, 100)}%` }} />
           </div>
         </div>
-      </button>
-      <button type="button" onClick={onToggleMenu} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl leading-none text-slate-600 hover:border-blue-200 hover:bg-blue-50" aria-label={`จัดการ ${category.name}`}>⋮</button>
-    </div>
-    {menuOpen ? <div className="absolute right-4 top-14 z-20 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
-      <button type="button" onClick={() => onManage('operation')} className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">รายละเอียดการดำเนินงาน</button>
-      <button type="button" onClick={() => onManage('edit')} className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">แก้ไข</button>
-      <button type="button" onClick={onDelete} className="block w-full rounded-xl px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50">ลบ</button>
-    </div> : null}
-    <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-      <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3">
+      </div>
+
+      <div className="grid min-w-0 grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:self-center">
+        <div className="min-w-0 rounded-xl border border-blue-100 bg-blue-50/60 p-3">
         <p className="text-xs font-semibold text-blue-700">ค่าวัสดุ</p>
         <div className="mt-2 space-y-1">
           <BudgetLine label="งบ" value={summary.materialBudget} />
           <BudgetLine label="ใช้จริง" value={summary.materialActual} valueClass="text-blue-600" />
           <BudgetLine label="คงเหลือ" value={summary.materialRemaining} valueClass={summary.materialRemaining >= 0 ? 'text-emerald-600' : 'text-rose-600'} />
         </div>
-      </div>
-      <div className="rounded-xl border border-violet-100 bg-violet-50/60 p-3">
+        </div>
+        <div className="min-w-0 rounded-xl border border-violet-100 bg-violet-50/60 p-3">
         <p className="text-xs font-semibold text-violet-700">ค่าแรง</p>
         <div className="mt-2 space-y-1">
           <BudgetLine label="งบ" value={summary.laborBudget} />
           <BudgetLine label="ใช้จริง" value={summary.laborActual} valueClass="text-violet-600" />
           <BudgetLine label="คงเหลือ" value={summary.laborRemaining} valueClass={summary.laborRemaining >= 0 ? 'text-emerald-600' : 'text-rose-600'} />
         </div>
+        </div>
+      </div>
+
+      <div className="flex min-w-0 items-center justify-end lg:min-h-[112px] lg:flex-col lg:items-end lg:justify-between">
+        <button type="button" onClick={(event) => { event.stopPropagation(); onToggleMenu(); }} className="absolute right-4 top-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl leading-none text-slate-600 hover:border-blue-200 hover:bg-blue-50 lg:static" aria-label={`จัดการ ${category.name}`} aria-expanded={menuOpen}>⋮</button>
+        <button type="button" onClick={(event) => { event.stopPropagation(); onSelect(); }} className="flex w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-transparent bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-blue-100 hover:bg-blue-50 hover:text-blue-700 lg:w-auto lg:whitespace-nowrap" aria-label={`ดูรายละเอียดค่าใช้จ่าย ${category.name}`}>
+          <span className="min-w-0 break-words lg:break-normal">ดูรายละเอียดค่าใช้จ่าย</span>
+          <span aria-hidden="true" className="shrink-0 text-xl leading-none">›</span>
+        </button>
       </div>
     </div>
-    <div className="mt-3 flex items-center justify-between gap-3 text-xs font-semibold text-slate-500">
-      <span>รวมหมวดงาน</span>
-      <span className="font-numeric text-slate-900">{percent}%</span>
-    </div>
-    <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-      <div className={`h-full rounded-full ${percent >= 85 ? 'bg-amber-500' : 'bg-[color:var(--accent-blue)]'}`} style={{ width: `${Math.min(percent, 100)}%` }} />
-    </div>
+
+    {menuOpen ? <div onClick={(event) => event.stopPropagation()} className="absolute right-4 top-14 z-20 w-[min(14rem,calc(100%-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl lg:right-5 lg:top-16">
+      <button type="button" onClick={() => onManage('operation')} className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">รายละเอียดการดำเนินงาน</button>
+      <button type="button" onClick={() => onManage('edit')} className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">จัดการหมวดงาน</button>
+      <button type="button" onClick={onDelete} className="block w-full rounded-xl px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50">ลบ</button>
+    </div> : null}
   </article>;
+}
+
+function ProjectExpenseHistoryModal({ category, expenses, onClose, onEditExpense, onDeleteExpense }: { category: ConstructionCategoryRow | null; expenses: ConstructionExpenseRow[]; onClose: () => void; onEditExpense: (expenseId: string) => void; onDeleteExpense: (expenseId: string) => void }) {
+  const [filter, setFilter] = useState<ExpenseFilter>('all');
+  const dialogRef = useRef<HTMLElement>(null);
+  const categoryName = category?.name ?? 'ไม่ระบุหมวด';
+  const sortedExpenses = [...expenses].sort((a, b) => `${b.expense_date}-${b.created_at}`.localeCompare(`${a.expense_date}-${a.created_at}`));
+  const visibleExpenses = sortedExpenses.filter((expense) => filter === 'all' || getExpenseCostType(expense) === filter);
+  const materialActual = expenses.filter((expense) => getExpenseCostType(expense) === 'material').reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0);
+  const laborActual = expenses.filter((expense) => getExpenseCostType(expense) === 'labor').reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0);
+
+  useEffect(() => {
+    const trigger = Array.from(document.querySelectorAll<HTMLElement>('button[aria-label]')).find((element) => element.getAttribute('aria-label') === `ดูรายละเอียดค่าใช้จ่าย ${categoryName}`) ?? null;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const focusTimer = window.setTimeout(() => dialogRef.current?.focus(), 0);
+    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousBodyOverflow;
+      trigger?.focus();
+    };
+  }, [categoryName, onClose]);
+
+  return createPortal(<div className="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm supports-[height:100dvh]:h-[100dvh] sm:p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="expense-history-title" tabIndex={-1} onMouseDown={(event) => event.stopPropagation()} className="flex max-h-[calc(100vh-24px)] w-[calc(100vw-24px)] max-w-[1100px] min-w-0 flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-2xl outline-none supports-[height:100dvh]:max-h-[calc(100dvh-24px)] sm:max-h-[88vh] sm:w-[min(1100px,calc(100vw-32px))]">
+      <header className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
+        <div className="min-w-0"><p className="text-[13px] font-semibold text-blue-600">รายการบันทึกจริง</p><h2 id="expense-history-title" className="mt-1 text-xl font-semibold text-slate-900 sm:text-2xl">รายละเอียดค่าใช้จ่าย</h2><p className="mt-1 break-words text-sm text-slate-500">{categoryName}</p></div>
+        <button type="button" onClick={onClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-600 hover:border-blue-200 hover:bg-blue-50" aria-label="ปิดรายละเอียดค่าใช้จ่าย">×</button>
+      </header>
+
+      <div className="shrink-0 border-b border-slate-200 bg-slate-50/60 px-4 py-4 sm:px-6">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          <ExpenseSummaryMetric label="งบค่าวัสดุ" value={Number(category?.budget ?? 0)} />
+          <ExpenseSummaryMetric label="ใช้จริงค่าวัสดุ" value={materialActual} tone="material" />
+          <ExpenseSummaryMetric label="งบค่าแรง" value={Number(category?.labor_budget ?? 0)} />
+          <ExpenseSummaryMetric label="ใช้จริงค่าแรง" value={laborActual} tone="labor" />
+          <ExpenseSummaryMetric label="รวมใช้จริงทั้งหมด" value={materialActual + laborActual} tone="total" className="col-span-2 sm:col-span-1" />
+        </div>
+        <div className="mt-4 flex w-full rounded-full border border-slate-200 bg-white p-1 text-xs font-semibold text-slate-600 sm:w-fit">
+          {([{ value: 'all', label: 'ทั้งหมด' }, { value: 'material', label: 'ค่าวัสดุ' }, { value: 'labor', label: 'ค่าแรง' }] as const).map((option) => <button key={option.value} type="button" onClick={() => setFilter(option.value)} className={`flex-1 rounded-full px-3 py-2 transition sm:flex-none ${filter === option.value ? 'bg-blue-50 text-blue-700 shadow-sm' : 'hover:text-slate-900'}`}>{option.label}</button>)}
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 sm:px-6">
+        {visibleExpenses.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-6 text-center text-sm text-slate-500">ยังไม่มีรายการบันทึกจริงในหมวดงานนี้</div> : <>
+          <div className="hidden md:block">
+            <table className="w-full table-fixed text-sm">
+              <thead className="text-left text-slate-500"><tr className="border-b border-slate-200"><th className="w-[12%] py-3 pr-3">วันที่</th><th className="w-[20%] py-3 pr-3">รายการ</th><th className="w-[12%] py-3 pr-3">กลุ่ม</th><th className="w-[14%] py-3 pr-3">ประเภท</th><th className="w-[16%] py-3 pr-3 text-right">จำนวนเงิน</th><th className="w-[16%] py-3 pr-3">หมายเหตุ</th><th className="w-[10%] py-3 text-right">จัดการ</th></tr></thead>
+              <tbody>{visibleExpenses.map((expense) => <tr key={expense.id} className="border-b border-slate-100 align-top last:border-0"><td className="py-3 pr-3 font-numeric text-slate-700">{formatThaiDate(expense.expense_date)}</td><td className="break-words py-3 pr-3 font-semibold text-slate-900">{expense.title}</td><td className="py-3 pr-3"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${getExpenseCostType(expense) === 'labor' ? 'bg-violet-50 text-violet-700' : 'bg-blue-50 text-blue-700'}`}>{getCostTypeLabel(getExpenseCostType(expense))}</span></td><td className="break-words py-3 pr-3 text-slate-600">{categoryName}</td><td className="py-3 pr-3 text-right font-numeric font-semibold text-slate-900">{thb.format(expense.amount)}</td><td className="break-words py-3 pr-3 text-slate-500">{expense.note ?? '-'}</td><td className="py-3"><div className="flex flex-col items-end gap-1.5"><button type="button" onClick={() => onEditExpense(expense.id)} className="text-xs font-semibold text-blue-700 hover:underline">แก้ไข</button><button type="button" onClick={() => onDeleteExpense(expense.id)} className="text-xs font-semibold text-rose-700 hover:underline">ลบ</button></div></td></tr>)}</tbody>
+            </table>
+          </div>
+          <div className="space-y-3 md:hidden">{visibleExpenses.map((expense) => <article key={expense.id} className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="break-words font-semibold text-slate-900">{expense.title}</p><p className="mt-1 text-xs text-slate-500">{formatThaiDate(expense.expense_date)} · {categoryName}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${getExpenseCostType(expense) === 'labor' ? 'bg-violet-50 text-violet-700' : 'bg-blue-50 text-blue-700'}`}>{getCostTypeLabel(getExpenseCostType(expense))}</span></div><p className="font-numeric mt-3 text-lg font-semibold text-slate-900">{thb.format(expense.amount)}</p><p className="mt-2 break-words text-sm text-slate-500">{expense.note ?? '-'}</p><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => onEditExpense(expense.id)} className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">แก้ไข</button><button type="button" onClick={() => onDeleteExpense(expense.id)} className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">ลบ</button></div></article>)}</div>
+        </>}
+      </div>
+    </section>
+  </div>, document.body);
+}
+
+function ExpenseSummaryMetric({ label, value, tone = 'default', className = '' }: { label: string; value: number; tone?: 'default' | 'material' | 'labor' | 'total'; className?: string }) {
+  const valueClass = tone === 'material' ? 'text-blue-600' : tone === 'labor' ? 'text-violet-600' : tone === 'total' ? 'text-emerald-600' : 'text-slate-900';
+  return <article className={`min-w-0 rounded-xl border border-slate-200 bg-white p-3 ${className}`}><p className="text-xs text-slate-500">{label}</p><p className={`font-numeric mt-1 break-words text-sm font-semibold sm:text-base ${valueClass}`}>{thb.format(value)}</p></article>;
 }
 
 function BudgetLine({ label, value, valueClass = 'text-slate-900' }: { label: string; value: number; valueClass?: string }) {
@@ -819,8 +824,31 @@ function CategoryManagementForm({ mode, project, nextSortOrder, category, onClos
   const [operationChecklist, setOperationChecklist] = useState<ConstructionOperationChecklistItem[]>(getOperationChecklist(category));
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const title = mode === 'operation' ? 'รายละเอียดการดำเนินงาน' : mode === 'create' ? 'เพิ่มหมวดงาน' : 'แก้ไขหมวดงาน';
+  const title = mode === 'operation' ? 'รายละเอียดการดำเนินงาน' : mode === 'create' ? 'เพิ่มหมวดงาน' : 'อัปเดตหมวดงาน';
   const operationDone = operationChecklist.filter((item) => item.done).length;
+  const firstFieldRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    const activeElement = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
+    const categoryMenuButton = category
+      ? Array.from(document.querySelectorAll<HTMLElement>('button[aria-label]')).find((element) => element.getAttribute('aria-label') === `จัดการ ${category.name}`) ?? null
+      : null;
+    const previouslyFocused = activeElement ?? categoryMenuButton;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const focusTimer = window.setTimeout(() => (firstFieldRef.current ?? dialogRef.current)?.focus(), 0);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousBodyOverflow;
+      previouslyFocused?.focus();
+    };
+  }, [category, onClose]);
 
   const addChecklistItem = () => setOperationChecklist((items) => [...items, { id: createChecklistId(), title: '', done: false }]);
   const updateChecklistItem = (id: string, patch: Partial<ConstructionOperationChecklistItem>) => {
@@ -828,8 +856,11 @@ function CategoryManagementForm({ mode, project, nextSortOrder, category, onClos
   };
   const deleteChecklistItem = (id: string) => setOperationChecklist((items) => items.filter((item) => item.id !== id));
 
-  return <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-    <form onSubmit={async (event) => {
+  return createPortal(<div
+    className="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center overflow-hidden bg-slate-950/45 p-2 backdrop-blur-sm supports-[height:100dvh]:h-[100dvh] sm:p-4"
+    onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
+  >
+    <form ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="category-management-title" tabIndex={-1} onMouseDown={(event) => event.stopPropagation()} onSubmit={async (event) => {
       event.preventDefault();
       setSaving(true);
       setMessage('');
@@ -849,18 +880,19 @@ function CategoryManagementForm({ mode, project, nextSortOrder, category, onClos
       const result = await onSubmit(fd);
       setSaving(false);
       if (!result.success) setMessage(result.message);
-    }} className={`w-full rounded-[24px] border border-slate-200 bg-white p-5 shadow-2xl sm:p-6 ${mode === 'operation' ? 'max-w-2xl' : 'max-w-lg'}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[13px] font-semibold text-blue-600">{mode === 'operation' ? 'Operation Detail' : 'Category Management'}</p>
-          <h3 className="mt-1 text-xl font-semibold text-slate-900">{title}</h3>
-          <p className="mt-1 text-sm text-slate-500">บันทึกลง Supabase และ refresh dashboard ทันที</p>
+    }} className={`flex max-h-[calc(100vh-16px)] w-[calc(100vw-16px)] min-w-0 flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-2xl outline-none supports-[height:100dvh]:max-h-[calc(100dvh-16px)] sm:max-h-[calc(100vh-32px)] sm:w-[min(760px,calc(100vw-32px))] sm:supports-[height:100dvh]:max-h-[calc(100dvh-32px)] ${mode === 'operation' ? '' : 'sm:max-w-lg'}`}>
+      <header className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold text-blue-600">{mode === 'operation' ? 'Operation Detail' : 'Category Settings'}</p>
+          <h3 id="category-management-title" className="mt-1 break-words text-xl font-semibold text-slate-900">{title}</h3>
+          <p className="mt-1 text-sm text-slate-500">อัปเดตชื่อหมวดงาน สถานะ และงบประมาณของหมวดนี้ ระบบจะบันทึกและอัปเดตข้อมูลทันที</p>
         </div>
-        <button type="button" onClick={onClose} className="theme-button-secondary">ปิด</button>
-      </div>
+        <button type="button" onClick={onClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-600 hover:border-blue-200 hover:bg-blue-50" aria-label="ปิด">×</button>
+      </header>
 
-      <div className="mt-5 space-y-3">
-        <label className="block"><span className="text-sm text-slate-600">ชื่อหมวดงาน</span><input className="theme-input mt-1" value={name} onChange={(event) => setName(event.target.value)} placeholder="เช่น งานไฟฟ้า" required /></label>
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-5 sm:px-6">
+       <div className="min-w-0 space-y-3">
+        <label className="block min-w-0"><span className="text-sm text-slate-600">ชื่อหมวดงาน</span><input ref={firstFieldRef} className="theme-input mt-1 w-full min-w-0" value={name} onChange={(event) => setName(event.target.value)} placeholder="เช่น งานไฟฟ้า" required /></label>
         <label className="block"><span className="text-sm text-slate-600">สถานะ</span><select className="theme-select mt-1" value={status} onChange={(event) => setStatus(event.target.value as ConstructionCategoryStatus)}>{constructionStatusOptions.map((option) => <option key={option} value={option}>{constructionStatusLabel[option]}</option>)}</select></label>
         {mode === 'operation' ? <>
           <label className="block"><span className="text-sm text-slate-600">รายละเอียดการดำเนินงาน</span><textarea className="theme-textarea mt-1 min-h-32" value={operationDetail} onChange={(event) => setOperationDetail(event.target.value)} placeholder="บันทึกขั้นตอนการทำงาน รายละเอียดหน้างาน หรือสิ่งที่ต้องติดตาม" /></label>
@@ -874,10 +906,10 @@ function CategoryManagementForm({ mode, project, nextSortOrder, category, onClos
             </div>
             <div className="mt-3 space-y-2">
               {operationChecklist.length === 0 ? <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-center text-sm text-slate-500">ยังไม่มี checklist เพิ่มรายการแรกเพื่อเริ่มติดตามงาน</div> : null}
-              {operationChecklist.map((item) => <div key={item.id} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2">
-                <input type="checkbox" checked={item.done} onChange={(event) => updateChecklistItem(item.id, { done: event.target.checked })} className="h-4 w-4 rounded border-slate-300 text-blue-600" />
-                <input className="theme-input min-h-10 flex-1 py-2 text-sm" value={item.title} onChange={(event) => updateChecklistItem(item.id, { title: event.target.value })} placeholder="เช่น ตรวจระดับพื้น / ส่งของ / เก็บงาน" />
-                <button type="button" onClick={() => deleteChecklistItem(item.id)} className="rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100">ลบ</button>
+              {operationChecklist.map((item) => <div key={item.id} className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white p-2">
+                <input type="checkbox" checked={item.done} onChange={(event) => updateChecklistItem(item.id, { done: event.target.checked })} className="h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600" />
+                <input className="theme-input min-h-10 min-w-0 flex-1 py-2 text-sm" value={item.title} onChange={(event) => updateChecklistItem(item.id, { title: event.target.value })} placeholder="เช่น ตรวจระดับพื้น / ส่งของ / เก็บงาน" />
+                <button type="button" onClick={() => deleteChecklistItem(item.id)} className="shrink-0 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100">ลบ</button>
               </div>)}
             </div>
           </div>
@@ -887,14 +919,15 @@ function CategoryManagementForm({ mode, project, nextSortOrder, category, onClos
           <label className="block"><span className="text-sm text-slate-600">งบค่าแรง</span><input inputMode="numeric" className="theme-input mt-1 font-numeric" value={laborBudget} onChange={(event) => setLaborBudget(formatMoneyInput(event.target.value))} placeholder="0" /></label>
         </div>}
         {message ? <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{message}</div> : null}
+       </div>
       </div>
 
-      <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <button type="button" onClick={onClose} className="theme-button-secondary">ยกเลิก</button>
-        <button disabled={saving || !project} className="theme-button-primary !text-[#FFFFFF] disabled:bg-slate-300" style={{ color: '#FFFFFF' }}>{saving ? 'กำลังบันทึก...' : 'บันทึก'}</button>
-      </div>
+      <footer className="grid shrink-0 grid-cols-2 gap-2 border-t border-slate-200 bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:flex sm:justify-end sm:px-6">
+        <button type="button" onClick={onClose} className="theme-button-secondary w-full sm:w-auto">ยกเลิก</button>
+        <button disabled={saving || !project} className="theme-button-primary w-full !text-[#FFFFFF] disabled:bg-slate-300 sm:w-auto" style={{ color: '#FFFFFF' }}>{saving ? 'กำลังบันทึก...' : 'บันทึก'}</button>
+      </footer>
     </form>
-  </div>;
+  </div>, document.body);
 }
 
 function DeleteCategoryConfirm({ category, expenseCount, onClose, onConfirm }: { category: ConstructionCategoryRow | null; expenseCount: number; onClose: () => void; onConfirm: () => Promise<{ success: boolean; message: string }> }) {

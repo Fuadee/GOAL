@@ -31,9 +31,15 @@ export type GrowthAssetRow = { id: string; user_id: string | null; asset_name: s
 export type AssetMonthlySnapshotItemRow = { id: string; snapshot_id: string; asset_id: string | null; asset_name: string; asset_type: GrowthAssetType; value: number; created_at: string; };
 export type AssetMonthlySnapshotRow = { id: string; snapshot_month: string; total_value: number; created_at: string; updated_at: string; items: AssetMonthlySnapshotItemRow[]; };
 
-export const CONSTRUCTION_CATEGORY_STATUSES = ['not_started', 'in_progress', 'done', 'warning'] as const;
+export const CONSTRUCTION_CATEGORY_STATUSES = ['not_started', 'in_progress', 'completed'] as const;
 export const CONSTRUCTION_COST_TYPES = ['material', 'labor'] as const;
 export type ConstructionCategoryStatus = (typeof CONSTRUCTION_CATEGORY_STATUSES)[number];
+export function normalizeConstructionCategoryStatus(value: unknown): ConstructionCategoryStatus {
+  const normalized = String(value ?? '').trim().toLowerCase();
+  if (normalized === 'in_progress' || normalized === 'warning' || normalized === 'กำลังทำ' || normalized === 'ใกล้เกินงบ') return 'in_progress';
+  if (normalized === 'completed' || normalized === 'done' || normalized === 'เสร็จแล้ว') return 'completed';
+  return 'not_started';
+}
 export type ConstructionCostType = (typeof CONSTRUCTION_COST_TYPES)[number];
 export type ConstructionOperationChecklistItem = { id: string; title: string; done: boolean };
 export type ConstructionProjectRow = { id: string; name: string; description: string | null; status: string | null; total_budget: number; created_at: string; updated_at: string; };
