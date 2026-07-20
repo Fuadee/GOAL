@@ -1,6 +1,7 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
 import {
   DiscoveryCandidateRow,
+  InnovationAppRow,
   InnovationDashboardRow,
   InnovationLogRow,
   InnovationProcessStepRow,
@@ -41,6 +42,13 @@ export async function getInnovationProcessStepsByInnovationId(innovationId: stri
 export async function getInnovationLogsByInnovationId(innovationId: string): Promise<InnovationLogRow[]> {
   return supabaseRestRequest<InnovationLogRow[]>(
     `innovation_logs?select=id,innovation_id,log_type,title,detail,problem,solution,result,lesson_learned,next_step,created_at&innovation_id=eq.${innovationId}&order=created_at.desc&limit=50`,
+    'GET'
+  );
+}
+
+export async function getInnovationAppsByInnovationId(innovationId: string): Promise<InnovationAppRow[]> {
+  return supabaseRestRequest<InnovationAppRow[]>(
+    `innovation_apps?select=id,innovation_id,title,description,status,created_at,updated_at&innovation_id=eq.${innovationId}&order=updated_at.desc`,
     'GET'
   );
 }

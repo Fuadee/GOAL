@@ -1,7 +1,7 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-import { clearConstructionExpenseCategory, createAssetMonthlySnapshot, createConstructionCategory, createConstructionExpense, createConstructionProject, createGrowthAsset, createMoneyIncomeSource, deleteConstructionCategory, deleteConstructionExpense, deleteGrowthAsset, findAssetMonthlySnapshotByMonth, replaceAssetMonthlySnapshotItems, softDeleteMoneyIncomeSource, updateAssetMonthlySnapshot, updateConstructionCategory, updateConstructionExpense, updateGrowthAsset, updateMoneyIncomeSource } from '@/lib/money/mutations';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { clearConstructionExpenseCategory, createConstructionCategory, createConstructionExpense, createConstructionProject, createGrowthAsset, createMoneyIncomeSource, deleteConstructionCategory, deleteConstructionExpense, deleteGrowthAsset, saveAssetMonthlySnapshotTransaction, softDeleteMoneyIncomeSource, updateConstructionCategory, updateConstructionExpense, updateGrowthAsset, updateMoneyIncomeSource } from '@/lib/money/mutations';
 import { CONSTRUCTION_CATEGORY_STATUSES, CONSTRUCTION_COST_TYPES, ConstructionCategoryStatus, ConstructionCostType, GROWTH_ASSET_TYPES, GrowthAssetType } from '@/lib/money/types';
 
 const toNumber = (value: FormDataEntryValue | null) => {
@@ -112,34 +112,30 @@ export async function saveAssetMonthlySnapshotAction(formData: FormData): Promis
   if (!/^\d{4}-\d{2}-01$/.test(snapshotMonth)) return { success: false, message: 'เดือน/ปีไม่ถูกต้อง' };
 
   const assetIds = formData.getAll('asset_id').map((value) => String(value ?? '').trim());
-  const assetNames = formData.getAll('asset_name').map((value) => String(value ?? '').trim());
-  const assetTypes = formData.getAll('asset_type').map((value) => String(value ?? '').trim() as GrowthAssetType);
   const values = formData.getAll('value').map(toNumber);
+  const overwrite = String(formData.get('overwrite_confirmed') ?? '') === 'true';
 
-  if (assetNames.length === 0) return { success: false, message: 'ยังไม่มีสินทรัพย์สำหรับสร้าง Snapshot' };
+  if (assetIds.length === 0) return { success: false, message: 'ยังไม่มีสินทรัพย์สำหรับสร้าง Snapshot' };
+  if (assetIds.length !== values.length) return { success: false, message: 'ข้อมูลสินทรัพย์ไม่ครบถ้วน' };
+  if (assetIds.some((id) => !id)) return { success: false, message: 'ไม่พบรหัสสินทรัพย์บางรายการ' };
+  if (new Set(assetIds).size !== assetIds.length) return { success: false, message: 'พบสินทรัพย์ซ้ำในรายการ Snapshot' };
   if (values.some(Number.isNaN)) return { success: false, message: 'มูลค่าสินทรัพย์ไม่ถูกต้อง' };
 
-  const items = assetNames.map((assetName, index) => ({
-    asset_id: assetIds[index] || null,
-    asset_name: assetName,
-    asset_type: assetTypes[index],
-    value: values[index] ?? 0,
-  })).filter((item) => item.asset_name && GROWTH_ASSET_TYPES.includes(item.asset_type));
-
-  if (items.length !== assetNames.length) return { success: false, message: 'ข้อมูลสินทรัพย์ไม่ครบถ้วน' };
+  const items = assetIds.map((assetId, index) => ({ asset_id: assetId, value: values[index] }));
 
   try {
-    const totalValue = items.reduce((sum, item) => sum + item.value, 0);
-    const existingSnapshot = await findAssetMonthlySnapshotByMonth(snapshotMonth);
-    const snapshot = existingSnapshot
-      ? await updateAssetMonthlySnapshot(existingSnapshot.id, { total_value: totalValue })
-      : await createAssetMonthlySnapshot({ snapshot_month: snapshotMonth, total_value: totalValue });
-
-    await replaceAssetMonthlySnapshotItems(snapshot.id, items);
+    await saveAssetMonthlySnapshotTransaction({ snapshotMonth, items, overwrite });
+    revalidateTag('supabase');
     revalidatePath('/money-management');
-    return { success: true, message: 'บันทึก Snapshot สำเร็จ' };
+    return { success: true, message: overwrite ? 'อัปเดต Snapshot และมูลค่าสินทรัพย์สำเร็จ' : 'บันทึก Snapshot และมูลค่าสินทรัพย์สำเร็จ' };
   } catch (error) {
     console.error('[asset-monthly-snapshot save failed]', error);
+    if (error instanceof Error && error.message.includes('SNAPSHOT_ALREADY_EXISTS')) {
+      return { success: false, message: 'เดือนนี้มี Snapshot อยู่แล้ว กรุณายืนยันก่อนเขียนทับ' };
+    }
+    if (error instanceof Error && error.message.includes('ASSET_LIST_MISMATCH')) {
+      return { success: false, message: 'รายการสินทรัพย์มีการเปลี่ยนแปลง กรุณาปิดหน้าต่างแล้วเปิดใหม่อีกครั้ง' };
+    }
     return { success: false, message: 'บันทึก Snapshot ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง' };
   }
 }

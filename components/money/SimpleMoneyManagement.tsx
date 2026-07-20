@@ -1,25 +1,24 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Clock3, PiggyBank, ShieldCheck, TrendingUp, type LucideIcon } from 'lucide-react';
+import { CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { createConstructionExpenseAction, createConstructionProjectAction, deleteConstructionCategoryAction, deleteConstructionExpenseAction, deleteGrowthAssetAction, deleteMoneyIncomeSourceAction, saveAssetMonthlySnapshotAction, updateConstructionExpenseAction, upsertConstructionCategoryAction, upsertGrowthAssetAction, upsertMoneyIncomeSourceAction } from '@/app/money-management/actions';
 import { AssetMonthlySnapshotRow, ConstructionCategoryRow, ConstructionCategoryStatus, ConstructionCostType, ConstructionExpenseRow, ConstructionInvestmentProjectsData, ConstructionOperationChecklistItem, ConstructionProjectBudgetData, ConstructionProjectRow, GrowthAssetRow, GrowthAssetType, MoneyManagementPageData, MoneyIncomeSourceRow, MoneySummary } from '@/lib/money/types';
-import { RewardFormModal } from '@/components/rewards/RewardFormModal';
-import { RewardPreviewCard } from '@/components/rewards/RewardPreviewCard';
 import { FinancialAnalysisDialog } from '@/components/money/FinancialAnalysisDialog';
 
 const thb = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 });
 const enMonthLabel = new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' });
 const shortMonthLabel = new Intl.DateTimeFormat('th-TH', { month: 'short' });
-const targetPassiveIncomeMonthly = 10_000;
 const categoryMeta = {
-  investment: { label: 'การลงทุน', badge: 'การลงทุน', color: '#2563EB', cardClass: 'border-blue-200 bg-blue-50 text-blue-700', badgeClass: 'bg-blue-100 text-blue-700', iconText: 'ล' },
-  safe: { label: 'เงินสำรอง', badge: 'เงินสำรอง', color: '#0D9488', cardClass: 'border-teal-200 bg-teal-50 text-teal-700', badgeClass: 'bg-teal-100 text-teal-700', iconText: 'ส' },
-  future: { label: 'เงินอนาคต', badge: 'เงินอนาคต', color: '#7C3AED', cardClass: 'border-violet-200 bg-violet-50 text-violet-700', badgeClass: 'bg-violet-100 text-violet-700', iconText: 'อ' },
-  receivable: { label: 'เงินรอรับ', badge: 'เงินรอรับ', color: '#D97706', cardClass: 'border-amber-200 bg-amber-50 text-amber-700', badgeClass: 'bg-amber-100 text-amber-700', iconText: 'ร' },
+  investment: { label: 'การลงทุน', badge: 'การลงทุน', color: '#2563EB', badgeClass: 'bg-blue-100 text-blue-700', icon: TrendingUp },
+  safe: { label: 'เงินสำรอง', badge: 'เงินสำรอง', color: '#0D9488', badgeClass: 'bg-teal-100 text-teal-700', icon: ShieldCheck },
+  future: { label: 'เงินอนาคต', badge: 'เงินอนาคต', color: '#7C3AED', badgeClass: 'bg-violet-100 text-violet-700', icon: PiggyBank },
+  receivable: { label: 'เงินรอรับ', badge: 'เงินรอรับ', color: '#D97706', badgeClass: 'bg-amber-100 text-amber-700', icon: Clock3 },
 } as const;
 type AssetCategory = keyof typeof categoryMeta;
 const assetCategories = Object.keys(categoryMeta) as AssetCategory[];
@@ -94,7 +93,7 @@ function getLatestAssetSnapshot(snapshots: AssetMonthlySnapshotRow[]) {
   }, null);
 }
 
-export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData }) {
+export function SimpleMoneyManagement({ data, goalImageUrl }: { data: MoneyManagementPageData; goalImageUrl: string | null }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [editing, setEditing] = useState<MoneyIncomeSourceRow | null>(null);
@@ -102,20 +101,13 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
   const [growthOpen, setGrowthOpen] = useState(false);
   const [growthEditing, setGrowthEditing] = useState<GrowthAssetRow | null>(null);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
+  const [snapshotMessage, setSnapshotMessage] = useState<string | null>(null);
   const [projectCreateOpen, setProjectCreateOpen] = useState(false);
-  const [moneyRewardOpen, setMoneyRewardOpen] = useState(false);
-  const [moneyReward, setMoneyReward] = useState({
-    title: 'Las Vegas Trip',
-    description: 'ปลดล็อกเมื่อสร้าง Passive Income เพิ่มครบ +฿10,000/เดือน',
-    imageUrl: ''
-  });
 
   const rows = useMemo(() => data.incomeSources ?? [], [data.incomeSources]);
   const growthRows = useMemo(() => data.growthAssets ?? [], [data.growthAssets]);
   const snapshots = useMemo(() => data.assetSnapshots ?? [], [data.assetSnapshots]);
   const constructionProjects = data.constructionProjects;
-  const currentPassiveIncomeMonthly = 0;
-  const progressPercent = Math.min((currentPassiveIncomeMonthly / targetPassiveIncomeMonthly) * 100, 100);
   const onDelete = (id: string) => startTransition(async () => {
     const result = await deleteMoneyIncomeSourceAction(id);
     if (!result.success) return;
@@ -126,14 +118,16 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
 
   const openCreate = () => { setEditing(null); setOpen(true); };
   const openEdit = (row: MoneyIncomeSourceRow) => { setEditing(row); setOpen(true); };
+  const saveSnapshot = async (formData: FormData) => {
+    const result = await saveAssetMonthlySnapshotAction(formData);
+    if (result.success) {
+      setSnapshotOpen(false);
+      setSnapshotMessage(result.message);
+      router.refresh();
+    }
+    return result;
+  };
   const latestSnapshot = getLatestAssetSnapshot(snapshots);
-  const sortedSnapshots = useMemo(() => sortAssetSnapshotsByMonth(snapshots), [snapshots]);
-  const latestSnapshotIndex = latestSnapshot ? sortedSnapshots.findIndex((snapshot) => snapshot.id === latestSnapshot.id) : -1;
-  const previousSnapshot = latestSnapshotIndex > 0 ? sortedSnapshots[latestSnapshotIndex - 1] : null;
-  const latestAssetValue = Number(latestSnapshot?.total_value ?? 0);
-  const previousAssetValue = Number(previousSnapshot?.total_value ?? 0);
-  const assetGrowth = previousSnapshot ? latestAssetValue - previousAssetValue : data.growthSummary.totalProfitLoss;
-  const assetGrowthPct = previousAssetValue > 0 ? (assetGrowth / previousAssetValue) * 100 : 0;
 
   useEffect(() => {
     if (!latestSnapshot) return;
@@ -150,81 +144,25 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
 
 
   return <div className="mx-auto w-full max-w-[1440px] space-y-8 px-8 pb-8 pt-7">
-    <section className="relative overflow-hidden rounded-[20px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_64px_-42px_rgba(15,23,42,0.36)] md:p-8">
-      <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-blue-100/70 blur-3xl" />
-      <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-3xl">
-          <p className="text-[13px] text-blue-600">ศูนย์ควบคุมการเงิน</p>
-          <h1 className="mt-3 text-[32px] font-bold leading-tight text-slate-950">การเงิน</h1>
-          <p className="mt-3 max-w-2xl text-[15px] leading-7 text-slate-600">ติดตามสินทรัพย์ รายได้ รายได้ทางอ้อม และการเติบโตของมูลค่าสุทธิในที่เดียว</p>
-        </div>
-        <button onClick={() => setSnapshotOpen(true)} className="theme-button-primary w-full !text-[#FFFFFF] sm:w-auto" style={{ color: '#FFFFFF' }}>อัปเดตมูลค่าสุทธิ</button>
-      </div>
-      <div className="relative mt-8 grid grid-cols-1 gap-3 md:grid-cols-3">
-        <WealthMetric label="สินทรัพย์ทั้งหมด" value={thb.format(latestAssetValue)} highlight />
-        <WealthMetric label="รายได้สุทธิ" value={thb.format(data.summary.netIncome)} />
-        <WealthMetric label="การเติบโตมูลค่าสุทธิ" value={`${assetGrowth >= 0 ? '+' : ''}${thb.format(assetGrowth)}${previousSnapshot ? ` (${assetGrowthPct.toFixed(1)}%)` : ''}`} tone={assetGrowth >= 0 ? 'success' : 'danger'} />
-      </div>
-    </section>
+    <FinancialPrimaryGoalCard data={constructionProjects} imageUrl={goalImageUrl} />
+
+    {snapshotMessage ? <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{snapshotMessage}</div> : null}
 
     <InvestmentProjectsSection
       data={constructionProjects}
       onCreate={() => setProjectCreateOpen(true)}
     />
 
-    <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6">
-      <div className="space-y-1">
-        <h2 className="text-xl font-semibold text-slate-900">ภารกิจการเงินประจำปี</h2>
-        <p className="text-sm text-slate-500">เป้าหมายหลักของปีนี้: สร้าง Passive Income เพิ่ม และให้รางวัลตัวเองเมื่อทำสำเร็จ</p>
-      </div>
-      <div className="mt-5 grid grid-cols-1 gap-4">
-        <AnnualGoalCard currentPassiveIncomeMonthly={currentPassiveIncomeMonthly} progressPercent={progressPercent} />
-      </div>
-      <div className="mt-5">
-        <h3 className="text-sm font-semibold text-slate-900">รางวัลภารกิจ</h3>
-        <RewardPreviewCard
-          missionTitle="ภารกิจการเงินประจำปี"
-          emptyTitle="รางวัลภารกิจ"
-          emptyDescription="ตั้งรางวัลให้ภารกิจนี้ เพื่อเพิ่มแรงจูงใจในการทำให้สำเร็จ"
-          lockedCta="ปลดล็อกเมื่อสร้าง Passive Income เพิ่มครบ +฿10,000/เดือน"
-          reward={{
-            title: moneyReward.title,
-            description: moneyReward.description,
-            imageUrl: moneyReward.imageUrl,
-            status: null
-          }}
-          isMissionCompleted={progressPercent >= 100}
-          onAddReward={() => setMoneyRewardOpen(true)}
-          improveLockedContrast
-          preserveImageAspectRatio
-        />
-      </div>
-    </section>
-
-    <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-[40%_60%] md:gap-6 lg:grid-cols-[35%_65%] lg:gap-7">
-      <div className="space-y-5">
-        <IncomeSourcesCard rows={rows} onCreate={openCreate} onEdit={openEdit} onDelete={onDelete} />
-        <MonthlyIncomeOverviewCard rows={rows} summary={data.summary} />
-      </div>
+    <div className="space-y-6 lg:space-y-7">
+      <MonthlyIncomeCard rows={rows} summary={data.summary} onCreate={openCreate} onEdit={openEdit} onDelete={onDelete} />
       <GrowthAssetsCard rows={growthRows} totalValue={data.growthSummary.totalValue} totalProfitLoss={data.growthSummary.totalProfitLoss} onCreate={() => { setGrowthEditing(null); setGrowthOpen(true); }} onEdit={(row) => { setGrowthEditing(row); setGrowthOpen(true); }} onDelete={(id) => startTransition(async () => { const res = await deleteGrowthAssetAction(id); if (res.success) router.refresh(); })} />
     </div>
 
     <AssetGrowthTimeline rows={growthRows} snapshots={snapshots} onOpenSnapshot={() => setSnapshotOpen(true)} />
 
-    <section className="group relative overflow-hidden rounded-[24px] border border-amber-200/80 bg-gradient-to-br from-[#FFF6DF] via-[#F9E8C5] to-[#F3D59A] p-4 shadow-[0_18px_36px_-28px_rgba(120,86,20,0.45)] md:p-5">
-      <div className="pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full bg-amber-200/35 blur-2xl transition-opacity duration-300 group-hover:opacity-90" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.45),transparent_45%,rgba(196,142,55,0.06))]" />
-      <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0 md:flex-1"><p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700/70">โฟกัสระยะยาว</p><h2 className="mt-1 text-xl font-semibold tracking-tight text-amber-950 md:text-2xl">แหล่งรายได้ถัดไป</h2><p className="mt-1 text-xs text-amber-900/70 md:text-sm">สร้างแหล่งรายได้ใหม่เพื่อรองรับภารกิจธุรกิจในอนาคต</p></div>
-        <div className="hidden h-12 w-px bg-gradient-to-b from-transparent via-amber-300/80 to-transparent md:block" />
-        <div className="grid flex-1 gap-2 text-sm text-slate-700 md:max-w-[340px]"><p><span className="font-medium text-amber-900">โหมดปัจจุบัน:</span> สำรวจโอกาส</p><p><span className="font-medium text-amber-900">โฟกัส:</span> แหล่งรายได้ใหม่</p></div>
-        <article className="relative overflow-hidden rounded-xl border border-amber-300/70 bg-gradient-to-br from-[#FFF7E2] to-[#F8E4BF] px-3.5 py-3 shadow-[0_12px_22px_-20px_rgba(120,86,20,0.45)] md:min-w-[210px]"><div className="relative"><div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold !text-[#1F2937]">🎰 รางวัลลาสเวกัส</p><span className="rounded-full border border-amber-400/70 bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide !text-[#374151]">ยังล็อกอยู่</span></div><p className="mt-2 text-[11px] font-medium uppercase tracking-wide !text-[#4B5563]">ปลดล็อกเมื่อถึง</p><p className="text-sm font-semibold !text-[#111827]">฿100,000/เดือน</p></div></article>
-      </div>
-    </section>
-
     {open ? <MoneyForm row={editing} onClose={() => setOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await upsertMoneyIncomeSourceAction(fd); if (res.success) { setOpen(false); router.refresh(); } })} /> : null}
     {growthOpen ? <GrowthAssetForm row={growthEditing} onClose={() => setGrowthOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await upsertGrowthAssetAction(fd); if (res.success) { setGrowthOpen(false); setGrowthEditing(null); router.refresh(); } })} /> : null}
-    {snapshotOpen ? <AssetSnapshotForm assets={growthRows} snapshots={snapshots} onClose={() => setSnapshotOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await saveAssetMonthlySnapshotAction(fd); if (res.success) { setSnapshotOpen(false); router.refresh(); } })} /> : null}
+    {snapshotOpen ? <AssetSnapshotForm assets={growthRows} snapshots={snapshots} onClose={() => setSnapshotOpen(false)} onSubmit={saveSnapshot} /> : null}
     {projectCreateOpen ? <ConstructionProjectForm
       onClose={() => setProjectCreateOpen(false)}
       onSubmit={async (fd) => {
@@ -236,26 +174,6 @@ export function SimpleMoneyManagement({ data }: { data: MoneyManagementPageData 
         return result;
       }}
     /> : null}
-    <RewardFormModal
-      open={moneyRewardOpen}
-      levelId="money-management-annual-reward"
-      defaultValues={{
-        title: moneyReward.title,
-        description: moneyReward.description,
-        emotionalCopy: moneyReward.description,
-        imageUrl: moneyReward.imageUrl
-      }}
-      onClose={() => setMoneyRewardOpen(false)}
-      onSubmit={(fd) => {
-        setMoneyReward((current) => ({
-          ...current,
-          title: String(fd.get('title') ?? current.title),
-          description: String(fd.get('description') ?? current.description),
-          imageUrl: String(fd.get('image_url') ?? current.imageUrl)
-        }));
-        setMoneyRewardOpen(false);
-      }}
-    />
   </div>;
 }
 
@@ -413,6 +331,50 @@ function createChecklistId() {
 
 function formatThaiDate(value: string) {
   return new Intl.DateTimeFormat('th-TH', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(new Date(`${value}T00:00:00`));
+}
+
+function FinancialPrimaryGoalCard({ data, imageUrl }: { data: ConstructionInvestmentProjectsData; imageUrl: string | null }) {
+  const normalizedTargetName = 'บ้านเช่า 6 ห้อง';
+  const targetProject = data.projects.find((project) => project.name.trim() === normalizedTargetName)
+    ?? data.projects.find((project) => project.name.includes('บ้านเช่า') && project.name.includes('6'))
+    ?? data.projects.find((project) => project.name.includes('บ้านเช่า'))
+    ?? null;
+  const budgetData = targetProject ? getProjectBudgetData(data, targetProject.id) : null;
+  const progress = budgetData ? getConstructionBudgetSummary(budgetData).financeProgress : 0;
+  const checklist = budgetData?.categories.flatMap((category) => getOperationChecklist(category)) ?? [];
+  const completedCount = checklist.filter((item) => item.done).length;
+
+  return <article className="grid overflow-hidden rounded-[24px] border border-blue-200 bg-gradient-to-br from-white via-blue-50/40 to-sky-100/60 shadow-[0_22px_52px_-38px_rgba(37,99,235,0.55)] md:grid-cols-[minmax(240px,0.8fr)_minmax(0,1.7fr)]">
+    <div className="relative min-h-[210px] overflow-hidden bg-blue-100 md:min-h-full">
+      {imageUrl ? <Image
+        src={imageUrl}
+        alt="ภาพเป้าหมายด้านการเงินจากบอร์ดวิสัยทัศน์"
+        fill
+        priority
+        sizes="(max-width: 767px) 100vw, 36vw"
+        className="object-cover"
+      /> : <div className="flex h-full min-h-[210px] items-center justify-center bg-gradient-to-br from-blue-100 to-sky-50 text-blue-600" aria-label="ยังไม่มีภาพเป้าหมายด้านการเงินในบอร์ดวิสัยทัศน์">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-14 w-14"><path strokeLinecap="round" strokeLinejoin="round" d="M4 19.5h16M6.5 17V9.5h11V17M9 9.5V6.75h6V9.5M9.25 13h5.5" /></svg>
+      </div>}
+    </div>
+
+    <div className="flex min-w-0 flex-col justify-center p-5 sm:p-7 lg:p-8">
+      <p className="text-sm font-semibold text-blue-700">เป้าหมายหลักด้านการเงิน</p>
+      <h1 className="mt-2 text-2xl font-semibold leading-tight text-slate-900 sm:text-3xl">สร้างบ้านเช่าให้สำเร็จตามเป้าหมาย</h1>
+      <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">บริหารงบประมาณและดำเนินงานก่อสร้างบ้านเช่าให้แล้วเสร็จ เพื่อสร้างรายได้ประจำและความมั่นคงทางการเงินในระยะยาว</p>
+
+      <div className="mt-6 rounded-2xl border border-blue-100 bg-white/80 p-4 shadow-sm sm:p-5">
+        <div className="flex items-center justify-between gap-4">
+          <span className="font-medium text-slate-700">ความคืบหน้าการสร้างบ้านเช่า</span>
+          <span className="font-numeric text-lg font-semibold text-blue-700">{progress.toFixed(1)}%</span>
+        </div>
+        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-blue-100" role="progressbar" aria-label="ความคืบหน้าการสร้างบ้านเช่า" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(progress, 100)}>
+          <div className="h-full rounded-full bg-blue-600 transition-[width] duration-300" style={{ width: `${Math.min(progress, 100)}%` }} />
+        </div>
+        <p className="mt-3 text-sm text-slate-600">{checklist.length > 0 ? `สำเร็จแล้ว ${completedCount} จาก ${checklist.length} งาน` : 'ยังไม่มีรายการงาน'}</p>
+      </div>
+    </div>
+  </article>;
 }
 
 function InvestmentProjectsSection({ data, onCreate }: { data: ConstructionInvestmentProjectsData; onCreate: () => void }) {
@@ -1041,27 +1003,7 @@ function ActualExpenseForm({ project, categories, expense, initialCostType, onCl
   </div>;
 }
 
-function IncomeSourcesCard({ rows, onCreate, onEdit, onDelete }: { rows: MoneyIncomeSourceRow[]; onCreate: () => void; onEdit: (row: MoneyIncomeSourceRow) => void; onDelete: (id: string) => void }) {
-  return <section className="rounded-2xl bg-white p-4 shadow-sm md:p-4.5 lg:p-5">
-    <div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-semibold text-slate-800 lg:text-xl">รายได้ของฉัน</h2><button onClick={onCreate} className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white sm:px-4 sm:py-2 sm:text-sm">+ เพิ่มแหล่งรายได้</button></div>
-    {rows.length === 0 ? <div className="rounded-2xl border border-dashed p-6 text-center text-slate-500">ยังไม่มีแหล่งรายได้ กด “เพิ่มแหล่งรายได้” เพื่อเริ่มต้น</div> : <>
-      <div className="hidden overflow-x-auto md:block"><table className="w-full text-xs lg:text-sm"><thead className="text-left text-slate-500"><tr><th className="py-2.5">แหล่งรายได้</th><th className="py-2.5">รายได้</th><th className="py-2.5">ค่าใช้จ่าย</th><th className="py-2.5">คงเหลือ</th><th className="py-2.5"></th></tr></thead><tbody>{rows.map((r) => <tr key={r.id} className="border-t"><td className="py-2.5"><p className="font-medium text-slate-800">{r.name}</p><p className="text-[11px] text-slate-500 lg:text-xs">{r.description ?? '-'}</p></td><td className="py-2.5 text-emerald-600">{thb.format(r.income_amount)}</td><td className="py-2.5 text-rose-600">{thb.format(r.expense_amount)} <span className="text-[10px] text-slate-500 lg:text-xs">{r.expense_note ? `(${r.expense_note})` : ''}</span></td><td className="py-2.5 font-semibold text-emerald-600">{thb.format(r.income_amount - r.expense_amount)}</td><td className="py-2.5"><div className="flex gap-2"><button onClick={() => onEdit(r)} className="text-slate-600">แก้ไข</button><button onClick={() => onDelete(r.id)} className="text-rose-600">ลบ</button></div></td></tr>)}</tbody></table></div>
-      <div className="space-y-3 md:hidden">{rows.map((r) => <div key={r.id} className="rounded-xl border p-3"><p className="font-semibold">{r.name}</p><p className="text-sm text-slate-500">{r.description}</p><p className="text-sm text-emerald-600">รายได้ {thb.format(r.income_amount)}</p><p className="text-sm text-rose-600">ค่าใช้จ่าย {thb.format(r.expense_amount)}</p><p className="text-sm font-semibold text-emerald-600">คงเหลือ {thb.format(r.income_amount - r.expense_amount)}</p><div className="mt-2 flex gap-3"><button onClick={() => onEdit(r)}>แก้ไข</button><button onClick={() => onDelete(r.id)} className="text-rose-600">ลบ</button></div></div>)}</div>
-    </>}
-    <button onClick={onCreate} className="mt-3 flex w-full items-center gap-2.5 rounded-xl border border-dashed p-3 text-left"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100">+</span><span><p className="text-sm font-medium text-slate-700">เพิ่มแหล่งรายได้ใหม่</p><p className="text-xs text-slate-500">เพิ่มแหล่งรายได้</p></span></button>
-  </section>;
-}
-
-function WealthMetric({ label, value, highlight = false, tone = 'default' }: { label: string; value: string; highlight?: boolean; tone?: 'default' | 'success' | 'danger' }) {
-  const toneClass = tone === 'success' ? 'text-emerald-600' : tone === 'danger' ? 'text-rose-600' : highlight ? 'text-blue-600' : 'text-slate-950';
-  return <article className="rounded-[20px] border border-slate-200/80 bg-slate-50/80 p-4">
-    <p className="text-[13px] text-slate-500">{label}</p>
-    <p className={`font-numeric mt-3 break-words text-2xl leading-tight tabular-nums ${toneClass}`}>{value}</p>
-  </article>;
-}
-
-
-function MonthlyIncomeOverviewCard({ rows, summary }: { rows: MoneyIncomeSourceRow[]; summary: MoneySummary }) {
+function MonthlyIncomeCard({ rows, summary, onCreate, onEdit, onDelete }: { rows: MoneyIncomeSourceRow[]; summary: MoneySummary; onCreate: () => void; onEdit: (row: MoneyIncomeSourceRow) => void; onDelete: (id: string) => void }) {
   const activeRows = rows.filter((row) => row.is_active !== false);
   const largestIncomeSource = activeRows.reduce<MoneyIncomeSourceRow | null>((largest, row) => {
     if (!largest) return row;
@@ -1076,39 +1018,41 @@ function MonthlyIncomeOverviewCard({ rows, summary }: { rows: MoneyIncomeSourceR
       pct: summary.grossIncome > 0 ? (Number(row.income_amount) / summary.grossIncome) * 100 : 0,
     }));
 
-  return <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6">
-    <div className="flex items-start justify-between gap-3">
+  return <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6 lg:p-7">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">ภาพรวมรายเดือน</p>
-        <h2 className="mt-1 text-xl font-semibold text-slate-900">ภาพรวมรายได้ต่อเดือน</h2>
-        <p className="mt-1 text-sm text-slate-500">ภาพรวมรายได้สุทธิและสัดส่วนแหล่งรายได้</p>
+        <h2 className="mt-1 text-xl font-semibold text-slate-900">รายได้ต่อเดือน</h2>
+        <p className="mt-1 text-sm text-slate-500">สรุปยอดและจัดการแหล่งรายได้ในที่เดียว</p>
       </div>
-      <span className="rounded-2xl bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">{activeRows.length} แหล่ง</span>
+      <button type="button" onClick={onCreate} className="theme-button-primary min-h-11 w-full sm:w-auto">+ เพิ่มแหล่งรายได้</button>
     </div>
 
-    <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
       <IncomeOverviewMetric label="รายได้รวมต่อเดือน" value={thb.format(summary.grossIncome)} valueClass="text-slate-900" />
       <IncomeOverviewMetric label="ค่าใช้จ่าย/หักออกจากรายได้" value={thb.format(summary.totalExpense)} valueClass="text-rose-600" />
       <IncomeOverviewMetric label="รายได้สุทธิ" value={thb.format(summary.netIncome)} valueClass="text-emerald-600" />
-      <IncomeOverviewMetric label="จำนวนแหล่งรายได้" value={`${activeRows.length} แหล่ง`} valueClass="text-slate-900" />
     </div>
 
-    <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-slate-900">แหล่งรายได้หลักที่มากที่สุด</p>
-          <p className="mt-1 text-sm text-slate-500">{largestIncomeSource?.name ?? 'ยังไม่มีข้อมูลรายได้'}</p>
-        </div>
-        <p className="text-right text-lg font-semibold text-slate-900">{thb.format(Number(largestIncomeSource?.income_amount ?? 0))}</p>
+    <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
+      <span>แหล่งรายได้หลักที่มากที่สุด:</span>
+      <span className="font-semibold text-slate-800">{largestIncomeSource?.name ?? 'ยังไม่มีข้อมูลรายได้'}</span>
+      {largestIncomeSource ? <span className="font-numeric text-slate-700">({thb.format(Number(largestIncomeSource.income_amount))})</span> : null}
+    </div>
+
+    <div className="mt-6 grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.85fr)] xl:items-start">
+      <div className="min-w-0">
+        {rows.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-slate-500">ยังไม่มีแหล่งรายได้ กด “เพิ่มแหล่งรายได้” เพื่อเริ่มต้น</div> : <>
+          <div className="hidden overflow-x-auto md:block"><table className="w-full min-w-[680px] text-xs lg:text-sm"><thead className="text-left text-slate-500"><tr><th className="py-3 pr-3">แหล่งรายได้</th><th className="py-3 pr-3">รายได้</th><th className="py-3 pr-3">ค่าใช้จ่าย</th><th className="py-3 pr-3">คงเหลือ</th><th className="py-3">จัดการ</th></tr></thead><tbody>{rows.map((r) => <tr key={r.id} className="border-t border-slate-100"><td className="py-3 pr-3"><p className="font-medium text-slate-800">{r.name}</p><p className="text-[11px] text-slate-500 lg:text-xs">{r.description ?? '-'}</p></td><td className="font-numeric py-3 pr-3 text-emerald-600">{thb.format(r.income_amount)}</td><td className="font-numeric py-3 pr-3 text-rose-600">{thb.format(r.expense_amount)} <span className="text-[10px] text-slate-500 lg:text-xs">{r.expense_note ? `(${r.expense_note})` : ''}</span></td><td className="font-numeric py-3 pr-3 font-semibold text-emerald-600">{thb.format(r.income_amount - r.expense_amount)}</td><td className="py-3"><div className="flex gap-3 whitespace-nowrap"><button type="button" onClick={() => onEdit(r)} className="text-slate-600 hover:text-blue-700">แก้ไข</button><button type="button" onClick={() => onDelete(r.id)} className="text-rose-600 hover:text-rose-700">ลบ</button></div></td></tr>)}</tbody></table></div>
+          <div className="space-y-3 md:hidden">{rows.map((r) => <article key={r.id} className="min-w-0 rounded-2xl border border-slate-200 p-4"><p className="break-words font-semibold text-slate-800">{r.name}</p><p className="mt-1 break-words text-sm text-slate-500">{r.description || '-'}</p><dl className="mt-3 grid grid-cols-1 gap-2 text-sm xs:grid-cols-3"><div><dt className="text-slate-500">รายได้</dt><dd className="font-numeric break-words text-emerald-600">{thb.format(r.income_amount)}</dd></div><div><dt className="text-slate-500">ค่าใช้จ่าย</dt><dd className="font-numeric break-words text-rose-600">{thb.format(r.expense_amount)}</dd></div><div><dt className="text-slate-500">คงเหลือ</dt><dd className="font-numeric break-words font-semibold text-emerald-600">{thb.format(r.income_amount - r.expense_amount)}</dd></div></dl><div className="mt-4 flex gap-4"><button type="button" onClick={() => onEdit(r)} className="text-sm font-medium text-blue-700">แก้ไข</button><button type="button" onClick={() => onDelete(r.id)} className="text-sm font-medium text-rose-600">ลบ</button></div></article>)}</div>
+        </>}
+        <button type="button" onClick={onCreate} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 p-3 text-sm font-medium text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"><span aria-hidden="true">+</span> เพิ่มแหล่งรายได้ใหม่</button>
       </div>
-    </div>
 
-    <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-[150px_minmax(0,1fr)] lg:items-center">
-      <div>
+      <aside className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
         <p className="text-sm font-semibold text-slate-900">สัดส่วนรายได้</p>
         <p className="mt-1 text-xs leading-relaxed text-slate-500">สัดส่วนรายได้แต่ละแหล่งในเดือนนี้</p>
-      </div>
-      {chartData.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-200 p-5 text-center text-sm text-slate-500">ยังไม่มีรายได้สำหรับแสดงกราฟ</div> : <div className="flex flex-col gap-5 rounded-2xl bg-white/70 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:p-4">
+      {chartData.length === 0 ? <div className="mt-4 rounded-2xl border border-dashed border-slate-200 p-5 text-center text-sm text-slate-500">ยังไม่มีรายได้สำหรับแสดงกราฟ</div> : <div className="mt-4 flex min-w-0 flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center xl:flex-col">
         <div className="mx-auto h-[150px] w-[150px] shrink-0 sm:mx-0 sm:h-[160px] sm:w-[160px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -1119,13 +1063,14 @@ function MonthlyIncomeOverviewCard({ rows, summary }: { rows: MoneyIncomeSourceR
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="min-w-[min(100%,20rem)] flex-1 space-y-3 sm:max-w-none">
+        <div className="w-full min-w-0 flex-1 space-y-3">
           {chartData.map((item) => <div key={item.name} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 border-0 text-sm no-underline decoration-transparent">
             <div className="flex min-w-0 items-start gap-2.5 border-0 no-underline decoration-transparent"><span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} /><span className="break-words text-sm leading-snug text-slate-700 no-underline decoration-transparent sm:text-base">{item.name}</span></div>
             <div className="shrink-0 text-right"><p className="font-semibold leading-tight text-slate-900">{compactThb(item.value)}</p><p className="mt-0.5 text-sm leading-tight text-slate-500">{item.pct.toFixed(1)}%</p></div>
           </div>)}
         </div>
       </div>}
+      </aside>
     </div>
   </section>;
 }
@@ -1135,6 +1080,28 @@ function IncomeOverviewMetric({ label, value, valueClass }: { label: string; val
     <p className="text-xs font-medium text-slate-500">{label}</p>
     <p className={`mt-1 text-lg font-semibold tracking-tight ${valueClass}`}>{value}</p>
   </div>;
+}
+
+const assetSummaryVariantClass: Record<AssetCategory, { accent: string; border: string; icon: string; iconBackground: string }> = {
+  investment: { accent: 'bg-blue-600', border: 'hover:border-blue-300', icon: 'text-blue-700', iconBackground: 'border-blue-100 bg-blue-50' },
+  safe: { accent: 'bg-teal-600', border: 'hover:border-teal-300', icon: 'text-teal-700', iconBackground: 'border-teal-100 bg-teal-50' },
+  future: { accent: 'bg-violet-600', border: 'hover:border-violet-300', icon: 'text-violet-700', iconBackground: 'border-violet-100 bg-violet-50' },
+  receivable: { accent: 'bg-amber-500', border: 'hover:border-amber-300', icon: 'text-amber-700', iconBackground: 'border-amber-100 bg-amber-50' },
+};
+
+function AssetCategorySummaryCard({ title, value, percentage, icon: Icon, variant }: { title: string; value: number; percentage: number; icon: LucideIcon; variant: AssetCategory }) {
+  const style = assetSummaryVariantClass[variant];
+  return <article className={`relative h-full min-h-[164px] overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 pt-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${style.border}`}>
+    <div className={`absolute inset-x-0 top-0 h-1 ${style.accent}`} />
+    <div className="flex items-center gap-3">
+      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${style.iconBackground}`}>
+        <Icon aria-hidden="true" className={`h-5 w-5 ${style.icon}`} strokeWidth={2} />
+      </span>
+      <h3 className="text-sm font-semibold text-slate-800 sm:text-base">{title}</h3>
+    </div>
+    <p className="font-numeric mt-4 break-words text-2xl font-bold tracking-tight text-slate-950 sm:text-[28px]">{thb.format(value)}</p>
+    <p className="mt-2 text-xs leading-5 text-slate-500 sm:text-sm">สัดส่วน <span className="font-numeric font-semibold text-slate-700">{percentage.toFixed(2)}%</span> ของสินทรัพย์ทั้งหมด</p>
+  </article>;
 }
 
 function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit, onDelete }: { rows: GrowthAssetRow[]; totalValue: number; totalProfitLoss: number; onCreate: () => void; onEdit: (row: GrowthAssetRow) => void; onDelete: (id: string) => void }) {
@@ -1156,7 +1123,14 @@ function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit,
     <div className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-semibold text-slate-900">สินทรัพย์ทั้งหมด</h2><p className="text-sm text-slate-500">จัดกลุ่มตามประเภท</p></div><button className="rounded-xl bg-[#12233f] px-3 py-2 text-xs font-semibold text-white">ดูทั้งหมด</button></div>
     <div className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-stretch xl:gap-8">
       <div className="space-y-5"><div><p className="text-sm text-slate-500">มูลค่ารวม</p><p className="mt-1 text-3xl font-bold text-slate-900">{thb.format(totalAssetValue)}</p><p className="mt-4 text-sm text-slate-500">กำไร/ขาดทุนรวม</p><p className="mt-1 text-xl font-semibold"><span className={financialColorClass(adjustedTotalProfit)}>{thb.format(adjustedTotalProfit || totalProfitLoss)}</span> <span className={financialColorClass(adjustedTotalReturn)}>({adjustedTotalReturn >= 0 ? '+' : ''}{adjustedTotalReturn.toFixed(2)}%)</span></p></div>
-        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">{assetCategories.map((key) => <div key={key} className={`rounded-2xl border px-4 py-3.5 ${categoryMeta[key].cardClass}`}><div className="flex items-center gap-2.5"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/75 text-[11px] font-semibold">{categoryMeta[key].iconText}</span><p className="text-xs font-medium">{categoryMeta[key].label}</p></div><p className="mt-2.5 text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">{thb.format(categorySummary[key])}</p><p className="mt-0.5 text-xs text-slate-500 sm:text-sm">{(adjustedTotalValue > 0 ? (categorySummary[key] / adjustedTotalValue) * 100 : 0).toFixed(2)}%</p></div>)}</div>
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">{assetCategories.map((key) => <AssetCategorySummaryCard
+          key={key}
+          title={categoryMeta[key].label}
+          value={categorySummary[key]}
+          percentage={adjustedTotalValue > 0 ? (categorySummary[key] / adjustedTotalValue) * 100 : 0}
+          icon={categoryMeta[key].icon}
+          variant={key}
+        />)}</div>
       </div>
       <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.55)] sm:p-5"><div><h3 className="text-base font-semibold text-slate-900">สัดส่วนพอร์ต</h3><p className="text-xs text-slate-500">สัดส่วนสินทรัพย์ตามหมวดหมู่</p></div><div className="mx-auto mt-3 h-44 w-full max-w-[230px] sm:h-48"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={chartDataWithPct} dataKey="value" nameKey="name" innerRadius={52} outerRadius={70} paddingAngle={2} stroke="none" onMouseLeave={() => setActiveSlice(null)}>{chartDataWithPct.map((item) => <Cell key={item.key} fill={item.color} fillOpacity={activeSlice ? (activeSlice === item.key ? 1 : 0.38) : 0.85} stroke={activeSlice === item.key ? '#334155' : 'none'} strokeWidth={activeSlice === item.key ? 1.5 : 0} onMouseEnter={() => setActiveSlice(item.key)} />)}</Pie><text x="50%" y="47%" textAnchor="middle" className="fill-slate-900 text-[18px] font-semibold">{compactThb(totalAssetValue)}</text><text x="50%" y="58%" textAnchor="middle" className="fill-slate-500 text-[11px]">สินทรัพย์ทั้งหมด</text><Tooltip contentStyle={{ borderRadius: '10px', border: '1px solid #E2E8F0' }} formatter={(value: number) => thb.format(value)} /></PieChart></ResponsiveContainer></div><div className="mt-2 border-t border-slate-200/90 pt-3"><p className="text-[11px] font-medium tracking-wide text-slate-500">สัดส่วนสูงสุด</p><p className="mt-1 text-sm font-semibold text-slate-800">{largestAllocation ? `${largestAllocation.name} • ${largestAllocation.pct.toFixed(2)}%` : '-'}</p></div></div>
     </div>
@@ -1172,11 +1146,11 @@ function AssetGrowthTimeline({ rows, snapshots, onOpenSnapshot }: { rows: Growth
   const previous = latestIndex > 0 ? sortedSnapshots[latestIndex - 1] : null;
   const delta = latest && previous ? Number(latest.total_value) - Number(previous.total_value) : 0;
   const deltaPct = previous && Number(previous.total_value) > 0 ? (delta / Number(previous.total_value)) * 100 : 0;
-  const chartData = sortedSnapshots.map((snapshot) => {
-    const categoryTotals = assetCategories.reduce((acc, key) => ({ ...acc, [key]: 0 }), {} as Record<AssetCategory, number>);
-    snapshot.items.forEach((item) => { categoryTotals[item.asset_type] += Number(item.value); });
-    return { month: chartMonth(snapshot.snapshot_month), monthFull: displaySnapshotMonth(snapshot.snapshot_month), total: Number(snapshot.total_value), ...categoryTotals };
-  });
+  const chartData = sortedSnapshots.map((snapshot) => ({
+    month: chartMonth(snapshot.snapshot_month),
+    monthFull: displaySnapshotMonth(snapshot.snapshot_month),
+    total: Number(snapshot.total_value)
+  }));
 
   return <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6 lg:p-7">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -1191,33 +1165,61 @@ function AssetGrowthTimeline({ rows, snapshots, onOpenSnapshot }: { rows: Growth
         <SummaryCard label="เปอร์เซ็นต์เปลี่ยนแปลง" value={`${delta >= 0 ? '+' : ''}${deltaPct.toFixed(2)}%`} cls={financialColorClass(deltaPct)} />
         <SummaryCard label="เดือนล่าสุดที่อัปเดต" value={latest ? displaySnapshotMonth(latest.snapshot_month) : '-'} />
       </div>
-      <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
+      <div className="mt-6 w-full">
         <ChartShell title="การเติบโตสินทรัพย์รวม" description="มูลค่าสินทรัพย์รวมรายเดือน"><ResponsiveContainer width="100%" height="100%"><LineChart data={chartData} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" /><XAxis dataKey="month" tickLine={false} axisLine={false} /><YAxis tickLine={false} axisLine={false} width={74} tickFormatter={(value) => compactThb(Number(value))} /><Tooltip formatter={(value: number) => thb.format(value)} labelFormatter={(_, payload) => payload?.[0]?.payload?.monthFull ?? ''} contentStyle={{ borderRadius: 16, border: '1px solid #E2E8F0' }} /><Line type="monotone" dataKey="total" name="สินทรัพย์ทั้งหมด" stroke="#0F766E" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} /></LineChart></ResponsiveContainer></ChartShell>
-        <ChartShell title="สัดส่วนสินทรัพย์ตามหมวด" description="ดูว่าสัดส่วนแต่ละหมวดเพิ่มหรือลดในแต่ละเดือน"><ResponsiveContainer width="100%" height="100%"><BarChart data={chartData} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" /><XAxis dataKey="month" tickLine={false} axisLine={false} /><YAxis tickLine={false} axisLine={false} width={74} tickFormatter={(value) => compactThb(Number(value))} /><Tooltip formatter={(value: number) => thb.format(value)} labelFormatter={(_, payload) => payload?.[0]?.payload?.monthFull ?? ''} contentStyle={{ borderRadius: 16, border: '1px solid #E2E8F0' }} /><Legend iconType="circle" />{assetCategories.map((key) => <Bar key={key} dataKey={key} name={categoryMeta[key].label} stackId="assets" fill={categoryMeta[key].color} radius={[8, 8, 0, 0]} />)}</BarChart></ResponsiveContainer></ChartShell>
       </div>
     </>}
     {rows.length === 0 ? <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-700">เพิ่มสินทรัพย์ในตารางสินทรัพย์ก่อน เพื่อให้ฟอร์ม Snapshot มีรายการให้กรอก</p> : null}
   </section>;
 }
 
-function AssetSnapshotForm({ assets, snapshots, onClose, onSubmit }: { assets: GrowthAssetRow[]; snapshots: AssetMonthlySnapshotRow[]; onClose: () => void; onSubmit: (fd: FormData) => void }) {
+function AssetSnapshotForm({ assets, snapshots, onClose, onSubmit }: { assets: GrowthAssetRow[]; snapshots: AssetMonthlySnapshotRow[]; onClose: () => void; onSubmit: (fd: FormData) => Promise<{ success: boolean; message: string }> }) {
   const [month, setMonth] = useState(monthInputValue());
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   const selectedSnapshot = snapshots.find((snapshot) => snapshot.snapshot_month.startsWith(month));
   const rows = assets.map((asset) => {
-    const snapshotItem = selectedSnapshot?.items.find((item) => item.asset_id === asset.id || item.asset_name === asset.asset_name);
-    return { ...asset, snapshotValue: String(snapshotItem?.value ?? asset.current_value ?? 0) };
+    const snapshotItem = selectedSnapshot?.items.find((item) => item.asset_id === asset.id);
+    const currentValue = asset.asset_type === 'receivable' ? asset.invested_amount : asset.current_value;
+    return { ...asset, snapshotValue: String(snapshotItem?.value ?? currentValue ?? 0) };
   });
+
+  const submitSnapshot = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSubmitting || rows.length === 0) return;
+
+    let overwriteConfirmed = false;
+    if (selectedSnapshot) {
+      overwriteConfirmed = window.confirm(`มี Snapshot ของเดือน ${displaySnapshotMonth(selectedSnapshot.snapshot_month)} อยู่แล้ว ต้องการเขียนทับข้อมูลของเดือนนี้หรือไม่?`);
+      if (!overwriteConfirmed) return;
+    }
+
+    setIsSubmitting(true);
+    setMessage(null);
+    try {
+      const formData = new FormData(event.currentTarget);
+      formData.set('snapshot_month', month);
+      formData.set('overwrite_confirmed', String(overwriteConfirmed));
+      const result = await onSubmit(formData);
+      if (!result.success) setMessage(result.message);
+    } catch {
+      setMessage('บันทึก Snapshot ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/55 px-4 pb-10 pt-[72px] backdrop-blur-sm md:pt-24">
     <div className="flex min-h-full items-start justify-center">
-      <form action={(fd) => { fd.set('snapshot_month', month); onSubmit(fd); }} className="relative z-[101] flex max-h-[calc(100vh-140px)] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-2xl">
+      <form onSubmit={submitSnapshot} className="relative z-[101] flex max-h-[calc(100vh-140px)] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-2xl">
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-slate-100 bg-white px-5 py-5 sm:px-6"><div><h3 className="text-xl font-semibold text-slate-900">{selectedSnapshot ? 'แก้ไข Snapshot รายเดือน' : 'สร้าง Snapshot รายเดือน'}</h3><p className="mt-1 text-sm text-slate-500">หนึ่งเดือนมี Snapshot ได้ 1 ชุด หากเลือกเดือนเดิมระบบจะแก้ไขข้อมูลเดิม</p></div><button type="button" onClick={onClose} className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-500 transition hover:bg-slate-200 hover:text-slate-700">ปิด</button></div>
         <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
           <label className="block text-sm font-medium text-slate-700">เดือน/ปี</label><input className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-slate-400 focus:outline-none" type="month" value={month} onChange={(event) => setMonth(event.target.value)} required />
-          <div className="mt-5 space-y-3">{rows.map((asset) => <div key={`${month}-${asset.id}`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 sm:grid sm:grid-cols-[1fr_170px] sm:items-center sm:gap-3"><div><p className="font-medium text-slate-900">{asset.asset_name}</p><p className="mt-1 text-xs text-slate-500">{categoryMeta[asset.asset_type].label}</p><input type="hidden" name="asset_id" value={asset.id} /><input type="hidden" name="asset_name" value={asset.asset_name} /><input type="hidden" name="asset_type" value={asset.asset_type} /></div><label className="mt-3 block sm:mt-0"><span className="text-xs font-medium text-slate-500">มูลค่าปัจจุบัน</span><input className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-right text-slate-900 focus:border-slate-400 focus:outline-none" type="number" min="0" step="0.01" name="value" defaultValue={asset.snapshotValue} required /></label></div>)}</div>
+          <div className="mt-5 space-y-3">{rows.map((asset) => <div key={`${month}-${asset.id}`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 sm:grid sm:grid-cols-[1fr_170px] sm:items-center sm:gap-3"><div><p className="font-medium text-slate-900">{asset.asset_name}</p><p className="mt-1 text-xs text-slate-500">{categoryMeta[asset.asset_type].label}</p><input type="hidden" name="asset_id" value={asset.id} /></div><label className="mt-3 block sm:mt-0"><span className="text-xs font-medium text-slate-500">มูลค่าปัจจุบัน</span><input className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-right text-slate-900 focus:border-slate-400 focus:outline-none" type="number" min="0" step="0.01" name="value" defaultValue={asset.snapshotValue} required /></label></div>)}</div>
           {rows.length === 0 ? <div className="mt-5 rounded-2xl border border-dashed p-6 text-center text-sm text-slate-500">ยังไม่มีสินทรัพย์ในตารางปัจจุบัน</div> : null}
+          {message ? <p role="alert" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{message}</p> : null}
         </div>
-        <div className="sticky bottom-0 z-10 flex flex-col gap-2 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:px-6"><button disabled={rows.length === 0} className="h-12 w-full rounded-2xl bg-[color:var(--accent-blue)] px-4 text-sm font-semibold text-[#FFFFFF] shadow-[0_14px_28px_-18px_rgba(37,99,235,0.85)] transition-colors hover:bg-blue-700 hover:text-[#FFFFFF] active:text-[#FFFFFF] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-[#FFFFFF] disabled:shadow-none sm:flex-1">บันทึก Snapshot</button><button type="button" onClick={onClose} className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 sm:w-auto">ยกเลิก</button></div>
+        <div className="sticky bottom-0 z-10 flex flex-col gap-2 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:px-6"><button type="submit" disabled={rows.length === 0 || isSubmitting} className="h-12 w-full rounded-2xl bg-[color:var(--accent-blue)] px-4 text-sm font-semibold text-[#FFFFFF] shadow-[0_14px_28px_-18px_rgba(37,99,235,0.85)] transition-colors hover:bg-blue-700 hover:text-[#FFFFFF] active:text-[#FFFFFF] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-[#FFFFFF] disabled:shadow-none sm:flex-1">{isSubmitting ? 'กำลังบันทึก...' : 'บันทึก Snapshot'}</button><button type="button" disabled={isSubmitting} onClick={onClose} className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">ยกเลิก</button></div>
       </form>
     </div>
   </div>;
@@ -1225,7 +1227,6 @@ function AssetSnapshotForm({ assets, snapshots, onClose, onSubmit }: { assets: G
 
 function SummaryCard({ label, value, cls = 'text-slate-900' }: { label: string; value: string; cls?: string }) { return <article className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_16px_36px_-28px_rgba(15,23,42,0.45)]"><p className="text-xs font-normal uppercase tracking-wide text-slate-500">{label}</p><p className={`font-numeric mt-2 text-2xl tracking-tight ${cls}`}>{value}</p></article>; }
 function ChartShell({ title, description, children }: { title: string; description: string; children: React.ReactNode }) { return <article className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 shadow-[0_16px_34px_-30px_rgba(15,23,42,0.45)]"><div><h3 className="text-lg font-semibold text-slate-900">{title}</h3><p className="text-sm text-slate-500">{description}</p></div><div className="mt-4 h-72 w-full sm:h-80">{children}</div></article>; }
-function AnnualGoalCard({ currentPassiveIncomeMonthly, progressPercent }: { currentPassiveIncomeMonthly: number; progressPercent: number }) { return <article className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">เป้าหมายประจำปี</p><h3 className="mt-2 text-lg font-semibold text-slate-900">เป้าหมายประจำปี</h3><p className="mt-2 text-sm font-medium text-slate-800">สร้าง Passive Income เพิ่ม +฿10,000/เดือน</p><p className="mt-2 text-sm leading-relaxed text-slate-600">เพิ่มรายได้แบบไม่ต้องแลกเวลาด้วยงานประจำ เช่น บ้านเช่า การลงทุน หรือธุรกิจที่เริ่มสร้างกระแสเงินสดได้จริง</p><div className="mt-4 rounded-xl border border-slate-200 bg-white p-3"><div className="flex items-center justify-between text-sm"><span className="text-slate-500">เป้าหมาย</span><span className="font-semibold text-slate-800">+฿10,000 / เดือน</span></div><div className="mt-1.5 flex items-center justify-between text-sm"><span className="text-slate-500">ปัจจุบัน</span><span className="font-semibold text-emerald-600">{thb.format(currentPassiveIncomeMonthly)} / เดือน</span></div><div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${progressPercent}%` }} /></div><p className="mt-2 text-right text-xs font-medium text-slate-500">{progressPercent.toFixed(1)}%</p></div><p className="mt-4 rounded-xl bg-emerald-50 px-3 py-2 text-xs text-emerald-700">“ทุก +฿1,000/เดือน คืออิสรภาพที่เพิ่มขึ้นปีละ ฿12,000”</p></article>; }
 
 function MoneyForm({ row, onClose, onSubmit }: { row: MoneyIncomeSourceRow | null; onClose: () => void; onSubmit: (fd: FormData) => void }) {
   const [name, setName] = useState(row?.name ?? ''); const [description, setDescription] = useState(row?.description ?? ''); const [income, setIncome] = useState(row ? String(row.income_amount) : ''); const [expense, setExpense] = useState(row ? String(row.expense_amount) : ''); const [note, setNote] = useState(row?.expense_note ?? '');

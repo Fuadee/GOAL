@@ -63,28 +63,22 @@ export async function deleteGrowthAsset(id: string): Promise<void> {
   await supabaseRestRequest<GrowthAssetRow[]>(`growth_assets?id=eq.${id}`, 'DELETE');
 }
 
-export async function findAssetMonthlySnapshotByMonth(snapshotMonth: string): Promise<{ id: string; snapshot_month: string; total_value: number; created_at: string; updated_at: string } | null> {
-  const rows = await supabaseRestRequest<{ id: string; snapshot_month: string; total_value: number; created_at: string; updated_at: string }[]>(`asset_monthly_snapshots?select=id,snapshot_month,total_value,created_at,updated_at&snapshot_month=eq.${snapshotMonth}&limit=1`, 'GET');
-  return rows[0] ?? null;
-}
-
-export async function createAssetMonthlySnapshot(payload: { snapshot_month: string; total_value: number }): Promise<{ id: string; snapshot_month: string; total_value: number; created_at: string; updated_at: string }> {
-  const rows = await supabaseRestRequest<{ id: string; snapshot_month: string; total_value: number; created_at: string; updated_at: string }[]>('asset_monthly_snapshots', 'POST', payload);
+export async function saveAssetMonthlySnapshotTransaction(payload: {
+  snapshotMonth: string;
+  items: { asset_id: string; value: number }[];
+  overwrite: boolean;
+}): Promise<{ snapshot_id: string; snapshot_month: string; total_value: number; overwritten: boolean }> {
+  const rows = await supabaseRestRequest<{ snapshot_id: string; snapshot_month: string; total_value: number; overwritten: boolean }[]>(
+    'rpc/save_asset_monthly_snapshot',
+    'POST',
+    {
+      p_snapshot_month: payload.snapshotMonth,
+      p_items: payload.items,
+      p_overwrite: payload.overwrite
+    }
+  );
+  if (!rows[0]) throw new Error('Supabase did not return the saved Snapshot.');
   return rows[0];
-}
-
-export async function updateAssetMonthlySnapshot(id: string, payload: { total_value: number }): Promise<{ id: string; snapshot_month: string; total_value: number; created_at: string; updated_at: string }> {
-  const rows = await supabaseRestRequest<{ id: string; snapshot_month: string; total_value: number; created_at: string; updated_at: string }[]>(`asset_monthly_snapshots?id=eq.${id}`, 'PATCH', payload);
-  return rows[0];
-}
-
-export async function replaceAssetMonthlySnapshotItems(
-  snapshotId: string,
-  items: { asset_id: string | null; asset_name: string; asset_type: GrowthAssetType; value: number }[]
-): Promise<void> {
-  await supabaseRestRequest(`asset_monthly_snapshot_items?snapshot_id=eq.${snapshotId}`, 'DELETE');
-  if (items.length === 0) return;
-  await supabaseRestRequest('asset_monthly_snapshot_items', 'POST', items.map((item) => ({ ...item, snapshot_id: snapshotId })));
 }
 
 export async function createConstructionProject(payload: {

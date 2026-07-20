@@ -11,17 +11,12 @@ import {
   convertDiscoveryCandidateToInnovation,
   defineCandidateProblem,
   getDiscoveryCandidateDetailData,
-  getInnovationDashboardData,
   getInnovationDashboardPageData,
   markCandidateValidated,
-  markInnovationNextStepDone,
-  terminateInnovationMission,
   removeDiscoveryCandidate,
   resumeInnovation,
   updateCandidateConcept,
   updateCandidateProblem,
-  upsertInnovationReward,
-  claimInnovationReward,
   updateInnovationBlockedReason
 } from '@/lib/innovation/service';
 
@@ -33,28 +28,38 @@ function revalidateInnovationPages(pathname?: string) {
   }
 }
 
-export async function createInnovationAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+export async function createCompletedInnovationAction(
+  formData: FormData
+): Promise<{ success: boolean; message: string; innovationId?: string }> {
   const title = String(formData.get('title') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim();
-  const goal = String(formData.get('goal') ?? '').trim();
+  const benefit = String(formData.get('benefit') ?? '').trim();
 
   if (!title) {
-    return { success: false, message: 'Title is required.' };
+    return { success: false, message: 'กรุณาระบุชื่อแอป' };
   }
 
-  const innovations = await getInnovationDashboardData();
-  if (innovations.length >= 10) {
-    return { success: false, message: 'Maximum 10 innovations reached.' };
+  try {
+    const innovation = await addInnovation({
+      title,
+      description: description || undefined,
+      goal: benefit || undefined,
+      status: 'completed',
+      result: 'succeeded',
+      ended_at: new Date().toISOString(),
+      is_active: true
+    });
+
+    revalidateInnovationPages();
+    return {
+      success: true,
+      message: 'เพิ่มแอปที่สำเร็จแล้วเรียบร้อย',
+      innovationId: innovation.id
+    };
+  } catch (error) {
+    console.error('Unable to create completed Innovation:', error);
+    return { success: false, message: 'ไม่สามารถเพิ่มแอปที่สำเร็จแล้วได้ กรุณาลองใหม่อีกครั้ง' };
   }
-
-  await addInnovation({
-    title,
-    description: description || undefined,
-    goal: goal || undefined
-  });
-
-  revalidateInnovationPages();
-  return { success: true, message: 'Innovation created.' };
 }
 
 export async function createDiscoveryCandidateAction(
@@ -197,29 +202,6 @@ export async function addInnovationStepAction(
   return { success: true, message: 'Step added.' };
 }
 
-export async function markInnovationNextStepDoneAction(innovationId: string): Promise<{ success: boolean; message: string }> {
-  const nextStep = await markInnovationNextStepDone(innovationId);
-
-  if (!nextStep) {
-    return { success: false, message: 'No pending step found.' };
-  }
-
-  revalidateInnovationPages(`/innovation/${innovationId}`);
-
-  return { success: true, message: 'Step marked done.' };
-}
-
-
-export async function terminateInnovationMissionAction(innovationId: string): Promise<{ success: boolean; message: string }> {
-  try {
-    await terminateInnovationMission(innovationId);
-    revalidateInnovationPages(`/innovation/${innovationId}`);
-    return { success: true, message: 'Mission moved to history.' };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : 'Unable to terminate mission.' };
-  }
-}
-
 export async function blockInnovationAction(innovationId: string, blockedReason: string): Promise<{ success: boolean; message: string }> {
   const reason = blockedReason.trim();
 
@@ -251,35 +233,4 @@ export async function updateInnovationBlockedReasonAction(
   await updateInnovationBlockedReason(innovationId, reason);
   revalidateInnovationPages(`/innovation/${innovationId}`);
   return { success: true, message: 'Blocked reason updated.' };
-}
-
-export async function upsertInnovationRewardAction(formData: FormData): Promise<{ success: boolean; message: string }> {
-  const innovationId = String(formData.get('innovation_id') ?? formData.get('level_id') ?? '').trim();
-  const title = String(formData.get('title') ?? '').trim();
-  if (!innovationId || !title) return { success: false, message: 'Innovation and title are required.' };
-  try {
-    await upsertInnovationReward(innovationId, {
-      title,
-      thaiTitle: String(formData.get('thai_title') ?? '').trim(),
-      description: String(formData.get('description') ?? '').trim(),
-      emotionalCopy: String(formData.get('emotional_copy') ?? '').trim(),
-      imageUrl: String(formData.get('image_url') ?? '').trim()
-    });
-    revalidateInnovationPages(`/innovation/${innovationId}`);
-    return { success: true, message: 'Reward saved.' };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : 'Unable to save reward.' };
-  }
-}
-
-export async function claimInnovationRewardAction(formData: FormData): Promise<{ success: boolean; message: string }> {
-  const innovationId = String(formData.get('innovation_id') ?? '').trim();
-  if (!innovationId) return { success: false, message: 'Innovation id is required.' };
-  try {
-    await claimInnovationReward(innovationId);
-    revalidateInnovationPages(`/innovation/${innovationId}`);
-    return { success: true, message: 'Reward claimed.' };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : 'Unable to claim reward.' };
-  }
 }

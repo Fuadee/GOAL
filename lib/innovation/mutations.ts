@@ -1,14 +1,17 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
 import {
   CreateDiscoveryCandidatePayload,
+  CreateInnovationAppPayload,
   CreateInnovationLogPayload,
   CreateInnovationPayload,
   CreateInnovationProcessStepPayload,
   DiscoveryCandidateRow,
   InnovationLogRow,
+  InnovationAppRow,
   InnovationProcessStepRow,
   InnovationRow,
   UpdateDiscoveryCandidatePayload,
+  UpdateInnovationAppPayload,
   UpdateInnovationPayload,
   UpdateInnovationProcessStepPayload
 } from '@/lib/innovation/types';
@@ -54,5 +57,15 @@ export async function createInnovationLog(payload: CreateInnovationLogPayload): 
 
 export async function touchInnovationUpdatedAt(id: string): Promise<InnovationRow> {
   const rows = await supabaseRestRequest<InnovationRow[]>(`innovations?id=eq.${id}`, 'PATCH', { updated_at: new Date().toISOString() });
+  return rows[0];
+}
+
+export async function createInnovationApp(payload: CreateInnovationAppPayload): Promise<InnovationAppRow> {
+  const rows = await supabaseRestRequest<InnovationAppRow[]>('innovation_apps', 'POST', payload);
+  return rows[0];
+}
+
+export async function updateInnovationApp(id: string, innovationId: string, payload: UpdateInnovationAppPayload): Promise<InnovationAppRow> {
+  const rows = await supabaseRestRequest<InnovationAppRow[]>(`innovation_apps?id=eq.${id}&innovation_id=eq.${innovationId}`, 'PATCH', payload);
   return rows[0];
 }

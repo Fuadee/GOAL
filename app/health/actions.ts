@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { claimHealthMissionReward, createRunLog, deleteHealthMissionReward, markRunnerRestDay, upsertHealthMissionReward } from '@/lib/running/quest.server';
+import { createRunLog, markRunnerRestDay } from '@/lib/running/quest.server';
 import { parseMinuteSecondDuration } from '@/lib/running/quest';
 
 const isEffort = (value: string): value is 'easy' | 'normal' | 'hard' => {
@@ -57,36 +57,5 @@ export async function markRunnerRestDayAction(formData: FormData): Promise<void>
   }
 
   await markRunnerRestDay(restDate);
-  revalidatePath('/health');
-}
-
-export async function upsertHealthRewardAction(formData: FormData): Promise<{ success: boolean; message: string }> {
-  const levelId = String(formData.get('level_id') ?? '');
-  const title = String(formData.get('title') ?? '').trim();
-  const description = String(formData.get('description') ?? '').trim();
-  const emotionalCopy = String(formData.get('emotional_copy') ?? '').trim();
-  const imageUrl = String(formData.get('image_url') ?? '').trim();
-  if (!levelId || !title) return { success: false, message: 'กรอกชื่อ reward ให้ครบ' };
-  await upsertHealthMissionReward(levelId, {
-    title,
-    description: description || 'รางวัลของคุณเมื่อทำภารกิจสำเร็จ',
-    emotionalCopy: emotionalCopy || 'ทำภารกิจนี้ให้สำเร็จ แล้วปลดล็อกช่วงเวลาที่ตั้งใจไว้ให้ตัวเอง',
-    imageUrl
-  });
-  revalidatePath('/health');
-  return { success: true, message: 'บันทึก reward แล้ว' };
-}
-
-export async function deleteHealthRewardAction(formData: FormData): Promise<void> {
-  const levelId = String(formData.get('level_id') ?? '');
-  if (!levelId) throw new Error('level_id required');
-  await deleteHealthMissionReward(levelId);
-  revalidatePath('/health');
-}
-
-export async function claimHealthRewardAction(formData: FormData): Promise<void> {
-  const levelId = String(formData.get('level_id') ?? '');
-  if (!levelId) throw new Error('level_id required');
-  await claimHealthMissionReward(levelId);
   revalidatePath('/health');
 }

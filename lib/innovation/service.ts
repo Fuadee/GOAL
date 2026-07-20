@@ -1,16 +1,19 @@
 import {
   createDiscoveryCandidate,
+  createInnovationApp,
   createInnovation,
   createInnovationLog,
   createInnovationProcessStep,
   deleteDiscoveryCandidate,
   touchInnovationUpdatedAt,
   updateDiscoveryCandidate,
+  updateInnovationApp,
   updateInnovation,
   updateInnovationProcessStep
 } from '@/lib/innovation/mutations';
 import {
   getDiscoveryCandidateById,
+  getInnovationAppsByInnovationId,
   getDiscoveryCandidates,
   getInnovationById,
   getInnovationDashboardRows,
@@ -29,14 +32,17 @@ import {
 } from '@/lib/innovation/helpers';
 import {
   CreateDiscoveryCandidatePayload,
+  CreateInnovationAppPayload,
   CreateInnovationLogPayload,
   CreateInnovationPayload,
   CreateInnovationProcessStepPayload,
   DiscoveryCandidateRow,
   InnovationCardViewModel,
+  InnovationAppRow,
   InnovationDetailViewModel,
   InnovationProcessStepRow,
   UpdateInnovationProcessStepPayload,
+  UpdateInnovationAppPayload,
   InnovationStatus,
   InnovationNextAction
 } from '@/lib/innovation/types';
@@ -133,9 +139,10 @@ export async function getInnovationDetailData(id: string): Promise<InnovationDet
     return null;
   }
 
-  const [steps, logs] = await Promise.all([
+  const [steps, logs, apps] = await Promise.all([
     getInnovationProcessStepsByInnovationId(id),
-    getInnovationLogsByInnovationId(id)
+    getInnovationLogsByInnovationId(id),
+    getInnovationAppsByInnovationId(id)
   ]);
 
   const { completedStepCount, progressPercent } = calculateProgress(steps);
@@ -144,9 +151,23 @@ export async function getInnovationDetailData(id: string): Promise<InnovationDet
     innovation,
     steps,
     logs,
+    apps,
     completedStepCount,
     progressPercent
   };
+}
+
+export async function addInnovationApp(payload: CreateInnovationAppPayload): Promise<InnovationAppRow> {
+  const app = await createInnovationApp(payload);
+  await touchInnovationUpdatedAt(payload.innovation_id);
+  return app;
+}
+
+export async function editInnovationApp(id: string, innovationId: string, payload: UpdateInnovationAppPayload): Promise<InnovationAppRow> {
+  const app = await updateInnovationApp(id, innovationId, payload);
+  if (!app) throw new Error('App not found in this innovation.');
+  await touchInnovationUpdatedAt(innovationId);
+  return app;
 }
 
 export async function addInnovation(payload: CreateInnovationPayload) {
@@ -218,68 +239,10 @@ export async function updateInnovationStepStatus(stepId: string, innovationId: s
   return updated;
 }
 
-export async function upsertInnovationReward(
-  innovationId: string,
-  payload: { title: string; thaiTitle?: string; description?: string; emotionalCopy?: string; imageUrl?: string }
-) {
-  const innovation = await getInnovationById(innovationId);
-  if (!innovation) {
-    throw new Error('Innovation not found.');
-  }
-  const progressDone = innovation.status === 'completed';
-  return updateInnovation(innovationId, {
-    reward_title: payload.title,
-    reward_thai_title: payload.thaiTitle || null,
-    reward_description: payload.description || null,
-    reward_emotional_copy: payload.emotionalCopy || null,
-    reward_image_url: payload.imageUrl || null,
-    reward_status: progressDone ? 'ready_to_claim' : 'locked'
-  });
-}
-
-export async function claimInnovationReward(innovationId: string) {
-  return updateInnovation(innovationId, { reward_status: 'claimed' });
-}
-
 export async function addInnovationLog(payload: CreateInnovationLogPayload) {
   const created = await createInnovationLog(payload);
   await touchInnovationUpdatedAt(payload.innovation_id);
   return created;
-}
-
-export async function markInnovationNextStepDone(innovationId: string) {
-  const steps = await getInnovationProcessStepsByInnovationId(innovationId);
-  const nextStep = steps.find((step) => step.status !== 'completed');
-
-  if (!nextStep) {
-    return null;
-  }
-
-  await updateInnovationProcessStep(nextStep.id, {
-    status: 'completed',
-    completed_at: new Date().toISOString()
-  });
-
-  await syncInnovationStatus(innovationId);
-  return nextStep;
-}
-
-
-export async function terminateInnovationMission(innovationId: string) {
-  const innovation = await getInnovationById(innovationId);
-
-  if (!innovation) {
-    throw new Error('Innovation not found.');
-  }
-
-  return updateInnovation(innovationId, {
-    status: 'terminated',
-    result: 'failed',
-    ended_at: new Date().toISOString(),
-    is_active: false,
-    is_blocked: false,
-    blocked_at: null
-  });
 }
 
 export async function blockInnovation(innovationId: string, blockedReason: string) {

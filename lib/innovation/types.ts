@@ -146,14 +146,45 @@ export type InnovationDetailViewModel = {
   innovation: InnovationRow;
   steps: InnovationProcessStepRow[];
   logs: InnovationLogRow[];
+  apps: InnovationAppRow[];
   completedStepCount: number;
   progressPercent: number;
+};
+
+export const INNOVATION_APP_STATUS = ['building', 'completed'] as const;
+export type InnovationAppStatus = (typeof INNOVATION_APP_STATUS)[number];
+
+export type InnovationAppRow = {
+  id: string;
+  innovation_id: string;
+  title: string;
+  description: string | null;
+  status: InnovationAppStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CreateInnovationAppPayload = {
+  innovation_id: string;
+  title: string;
+  description?: string;
+  status: InnovationAppStatus;
+};
+
+export type UpdateInnovationAppPayload = {
+  title?: string;
+  description?: string | null;
+  status?: InnovationAppStatus;
 };
 
 export type CreateInnovationPayload = {
   title: string;
   description?: string;
   goal?: string;
+  status?: InnovationStatus;
+  result?: 'failed' | 'succeeded' | null;
+  ended_at?: string | null;
+  is_active?: boolean;
 };
 
 export type CreateInnovationProcessStepPayload = {

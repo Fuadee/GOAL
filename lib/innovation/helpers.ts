@@ -112,6 +112,10 @@ export function deriveInnovationState(innovation: InnovationCardViewModel): Inno
     return 'blocked';
   }
 
+  if (innovation.status === 'completed') {
+    return 'completed';
+  }
+
   if (innovation.stepTotal === 0) {
     return 'idea';
   }
@@ -251,7 +255,8 @@ export function getCurrentIncompleteStep(mission: InnovationCardViewModel | null
 }
 
 export function getDiscoveryGap(innovations: InnovationCardViewModel[], goal = 10): number {
-  return Math.max(goal - innovations.length, 0);
+  const completedCount = innovations.filter((innovation) => deriveInnovationState(innovation) === 'completed').length;
+  return Math.max(goal - completedCount, 0);
 }
 
 export function getInnovationNextAction({

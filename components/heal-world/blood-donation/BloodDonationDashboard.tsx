@@ -2,8 +2,6 @@
 
 import { FormEvent, ReactNode, useMemo, useState } from 'react';
 
-import { RewardFormModal } from '@/components/rewards/RewardFormModal';
-import { RewardPreviewCard } from '@/components/rewards/RewardPreviewCard';
 import {
   BloodDonationPlanDisplayStatus,
   getBloodDonationPlanDisplayStatus,
@@ -17,7 +15,7 @@ type Props = {
   initialData: BloodDonationDashboardViewModel;
 };
 
-type ModalState = 'goal' | 'planned' | 'completed' | 'convert' | 'reschedule' | 'reward' | 'deleteReward' | null;
+type ModalState = 'goal' | 'planned' | 'completed' | 'convert' | 'reschedule' | null;
 
 const dateFormatter = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -95,13 +93,9 @@ export function BloodDonationDashboard({ initialData }: Props) {
 
   const now = new Date();
   const currentPlan = useMemo(() => getCurrentBloodDonationPlan(data.upcomingPlans), [data.upcomingPlans]);
-  const isCurrentMissionCompleted = currentPlan?.status === 'completed';
 
   const refreshDashboard = async () => {
     const json = (await apiRequest('/api/blood-donation', { cache: 'no-store' })) as BloodDonationDashboardViewModel;
-    if (isDev) {
-      console.log('[blood-donation] updated mission reward', json.currentMission?.reward);
-    }
     setData(json);
   };
 
@@ -150,27 +144,6 @@ export function BloodDonationDashboard({ initialData }: Props) {
               })
             }
           />
-          <RewardPreviewCard
-            missionTitle={data.currentMission?.title}
-            emptyTitle="ภารกิจนี้ยังไม่มีรางวัล"
-            emptyDescription="ลองเพิ่มภาพ Moment ที่คุณอยากได้เมื่อทำสำเร็จ"
-            lockedCta="ทำภารกิจเพื่อปลดล็อก"
-            reward={data.currentMission?.reward}
-            isMissionCompleted={isCurrentMissionCompleted}
-            onAddReward={() => setModal('reward')}
-            onDeleteReward={() => setModal('deleteReward')}
-            isClaimingReward={loading}
-            improveLockedContrast
-            preserveImageAspectRatio
-            onClaimReward={() =>
-              submit(async () => {
-                if (!currentPlan) return;
-                await apiRequest(`/api/blood-donation/events/${currentPlan.id}/claim-reward`, { method: 'PATCH' });
-                setSuccessMessage('รับรางวัลสำเร็จ! ภารกิจนี้ถูกบันทึกว่า claimed แล้ว');
-              })
-            }
-          />
-
           <section className="pt-0.5">
             <article className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6">
               <div>
@@ -400,100 +373,11 @@ export function BloodDonationDashboard({ initialData }: Props) {
             }
           />
         ) : null}
-
-
-        {modal === 'deleteReward' && currentPlan ? (
-          <DeleteRewardConfirm
-            loading={loading}
-            onCancel={() => setModal(null)}
-            onConfirm={() =>
-              submit(async () => {
-                const payload = {
-                  planned_date: currentPlan.planned_date,
-                  location: currentPlan.location ?? '',
-                  note: currentPlan.note ?? '',
-                  reward_title: null,
-                  reward_thai_title: null,
-                  reward_description: null,
-                  reward_emotional_copy: null,
-                  reward_image_url: null,
-                  reward_status: null
-                };
-                await apiRequest(`/api/blood-donation/events/${currentPlan.id}/reschedule`, {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(payload)
-                });
-                setSuccessMessage('ลบ reward ออกจากภารกิจเรียบร้อยแล้ว');
-              })
-            }
-          />
-        ) : null}
-        {modal === 'reward' && currentPlan ? (
-          <RewardFormModal
-            open
-            levelId={currentPlan.id}
-            defaultValues={{
-              title: currentPlan.reward_title,
-              description: currentPlan.reward_description,
-              emotionalCopy: currentPlan.reward_emotional_copy,
-              imageUrl: currentPlan.reward_image_url
-            }}
-            onClose={() => setModal(null)}
-            onSubmit={(fd) =>
-              submit(async () => {
-                const payload = {
-                  planned_date: currentPlan.planned_date,
-                  location: currentPlan.location ?? '',
-                  note: currentPlan.note ?? '',
-                  reward_title: String(fd.get('title') ?? ''),
-                  reward_description: String(fd.get('description') ?? ''),
-                  reward_emotional_copy: String(fd.get('emotional_copy') ?? ''),
-                  reward_image_url: String(fd.get('image_url') ?? ''),
-                  reward_status: String(currentPlan.reward_status ?? 'locked')
-                };
-                await apiRequest(`/api/blood-donation/events/${currentPlan.id}/reschedule`, {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(payload)
-                });
-              })
-            }
-          />
-        ) : null}
       </ModalShell>
     </section>
   );
 }
 
-
-function DeleteRewardConfirm({ loading, onCancel, onConfirm }: { loading: boolean; onCancel: () => void; onConfirm: () => void }) {
-  return (
-    <div className="space-y-4">
-      <div>
-        <h4 className="text-lg font-semibold text-white">ลบรางวัลนี้ออกจากภารกิจ?</h4>
-        <p className="mt-1 text-sm text-slate-300">คุณสามารถเพิ่ม reward ใหม่ภายหลังได้</p>
-      </div>
-      <div className="flex flex-wrap justify-end gap-2.5">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="min-h-10 rounded-xl border border-white/15 bg-slate-800/85 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-700/85"
-        >
-          ยกเลิก
-        </button>
-        <button
-          type="button"
-          disabled={loading}
-          onClick={onConfirm}
-          className="min-h-10 rounded-xl border border-rose-300/30 bg-rose-500/12 px-4 py-2 text-sm font-medium text-rose-100 transition hover:bg-rose-500/22 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {loading ? 'กำลังลบ...' : 'ลบ reward'}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function BloodDonationNextMissionCard({
   currentPlan,
