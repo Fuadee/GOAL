@@ -34,7 +34,10 @@ export async function supabaseRestRequest<TResponse>(
       'Content-Type': 'application/json',
       Prefer: preferHeader
     },
-    cache: shouldCache ? 'force-cache' : 'no-store',
+    // `next.revalidate` already opts the request into Next's Data Cache.
+    // Combining it with `cache: 'force-cache'` is conflicting in Next 14 and
+    // can leave development serving an old response indefinitely.
+    cache: shouldCache ? undefined : 'no-store',
     next: shouldCache
       ? {
           revalidate: options.revalidate ?? 60,

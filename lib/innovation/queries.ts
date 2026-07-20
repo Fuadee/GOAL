@@ -9,10 +9,46 @@ import {
 } from '@/lib/innovation/types';
 
 export async function getInnovationDashboardRows(): Promise<InnovationDashboardRow[]> {
-  return supabaseRestRequest<InnovationDashboardRow[]>(
-    'innovations?select=id,title,description,goal,status,result,ended_at,is_active,is_blocked,blocked_reason,blocked_at,created_at,updated_at,reward_title,reward_thai_title,reward_description,reward_emotional_copy,reward_image_url,reward_status,innovation_process_steps(id,title,status,step_order,created_at,updated_at,note)&order=updated_at.desc&limit=50',
-    'GET'
-  );
+  const endpoint = 'innovations?select=id,title,description,goal,status,result,ended_at,is_active,is_blocked,blocked_reason,blocked_at,created_at,updated_at,reward_title,reward_thai_title,reward_description,reward_emotional_copy,reward_image_url,reward_status,innovation_process_steps(id,title,status,step_order,created_at,updated_at,note)&order=updated_at.desc&limit=50';
+
+  try {
+    // Dashboard counts and cards must be derived from the same live result.
+    const rows = await supabaseRestRequest<InnovationDashboardRow[]>(endpoint, 'GET', undefined, { revalidate: false });
+
+    if (process.env.NODE_ENV === 'development') {
+      const projectRef = (() => {
+        try {
+          return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').hostname.split('.')[0] || 'unknown';
+        } catch {
+          return 'invalid-url';
+        }
+      })();
+
+      console.info('[innovation:diagnostic]', {
+        source: 'supabase-rest',
+        endpoint: '/rest/v1/innovations',
+        table: 'public.innovations',
+        projectRef,
+        recordCount: rows.length,
+        records: rows.map(({ id, title, status }) => ({ id, title, status })),
+        currentUserId: null,
+        userScope: 'none (server service-role query)',
+        environmentMode: process.env.NODE_ENV
+      });
+    }
+
+    return rows;
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[innovation:diagnostic:error]', {
+        source: 'supabase-rest',
+        endpoint: '/rest/v1/innovations',
+        environmentMode: process.env.NODE_ENV,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    throw error;
+  }
 }
 
 export async function getDiscoveryCandidates(): Promise<DiscoveryCandidateRow[]> {

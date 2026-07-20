@@ -10,9 +10,11 @@ import {
   getNextBloodDonationMissionSummary
 } from '@/lib/blood-donation/plan-display';
 import { BloodDonationDashboardViewModel, BloodDonationEventViewModel } from '@/lib/blood-donation/types';
+import { VisionHeroCard } from '@/components/ui/VisionHeroCard';
 
 type Props = {
   initialData: BloodDonationDashboardViewModel;
+  goalImageUrl?: string | null;
 };
 
 type ModalState = 'goal' | 'planned' | 'completed' | 'convert' | 'reschedule' | null;
@@ -81,7 +83,7 @@ const getPlanCardTone = (status: BloodDonationPlanDisplayStatus, isCurrent: bool
   return 'border-white/10 bg-slate-950/40';
 };
 
-export function BloodDonationDashboard({ initialData }: Props) {
+export function BloodDonationDashboard({ initialData, goalImageUrl = null }: Props) {
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -123,7 +125,18 @@ export function BloodDonationDashboard({ initialData }: Props) {
 
   return (
     <section className="space-y-3.5">
-
+      <VisionHeroCard
+        imageUrl={goalImageUrl}
+        imageAlt="ภาพเป้าหมายการบริจาคเลือดและช่วยเหลือสังคมจากบอร์ดวิสัยทัศน์"
+        emptyImageLabel="ยังไม่มีภาพเป้าหมายด้านเพื่อสังคมในบอร์ดวิสัยทัศน์"
+        eyebrow="เป้าหมายหลักด้านเพื่อสังคม"
+        title="บริจาคเลือดเพื่อช่วยเหลือผู้อื่น"
+        description="เปลี่ยนความตั้งใจในการทำความดีให้เกิดขึ้นจริง ด้วยการบริจาคเลือดอย่างต่อเนื่องและส่งต่อโอกาสให้กับผู้ที่ต้องการ"
+        progressLabel="ความคืบหน้าสู่เป้าหมายการบริจาคเลือด"
+        completed={summary?.completedCount ?? 0}
+        target={summary?.targetCount ?? data.goal?.target_count ?? 0}
+        unitLabel="ครั้ง"
+      />
 
       {summary ? (
         <>
