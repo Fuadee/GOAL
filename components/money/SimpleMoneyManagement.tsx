@@ -26,6 +26,7 @@ const incomeBreakdownColors = ['#2563EB', '#0D9488', '#7C3AED', '#059669', '#E11
 type CategoryManageMode = 'create' | 'edit' | 'operation';
 type ExpenseFilter = 'all' | ConstructionCostType;
 type CategoryStatusFilter = 'all' | ConstructionCategoryStatus;
+type ActualExpenseOpenState = { costType: ConstructionCostType; categoryId?: string };
 const constructionStatusOptions: ConstructionCategoryStatus[] = ['not_started', 'in_progress', 'completed'];
 const constructionStatusLabel: Record<ConstructionCategoryStatus, string> = {
   not_started: 'ยังไม่เริ่ม',
@@ -179,20 +180,23 @@ export function SimpleMoneyManagement({ data, goalImageUrl }: { data: MoneyManag
 
 export function ProjectDetailClient({ budgetData }: { budgetData: ConstructionProjectBudgetData }) {
   const router = useRouter();
+  const [currentBudgetData, setCurrentBudgetData] = useState(budgetData);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [actualExpenseOpen, setActualExpenseOpen] = useState<ConstructionCostType | null>(null);
+  const [actualExpenseOpen, setActualExpenseOpen] = useState<ActualExpenseOpenState | null>(null);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [deleteExpenseId, setDeleteExpenseId] = useState<string | null>(null);
   const [categoryManageState, setCategoryManageState] = useState<{ mode: CategoryManageMode; categoryId?: string } | null>(null);
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
 
+  useEffect(() => setCurrentBudgetData(budgetData), [budgetData]);
+
   const refresh = () => router.refresh();
   return <>
     <ProjectBudgetDetail
-      budgetData={budgetData}
+      budgetData={currentBudgetData}
       selectedCategory={selectedCategory}
       onSelectCategory={setSelectedCategory}
-      onOpenExpenseForm={setActualExpenseOpen}
+      onOpenExpenseForm={(costType, categoryId) => setActualExpenseOpen({ costType, categoryId })}
       onManageCategory={(mode, categoryId) => setCategoryManageState({ mode, categoryId })}
       onDeleteCategory={setDeleteCategoryId}
       onEditExpense={setEditingExpenseId}
@@ -200,21 +204,29 @@ export function ProjectDetailClient({ budgetData }: { budgetData: ConstructionPr
     />
     {categoryManageState ? <CategoryManagementForm
       mode={categoryManageState.mode}
-      project={budgetData.project}
-      nextSortOrder={budgetData.categories.length ? Math.max(...budgetData.categories.map((category) => Number(category.sort_order ?? 0))) + 10 : 10}
-      category={budgetData.categories.find((category) => category.id === categoryManageState.categoryId) ?? null}
+      project={currentBudgetData.project}
+      nextSortOrder={currentBudgetData.categories.length ? Math.max(...currentBudgetData.categories.map((category) => Number(category.sort_order ?? 0))) + 10 : 10}
+      category={currentBudgetData.categories.find((category) => category.id === categoryManageState.categoryId) ?? null}
       onClose={() => setCategoryManageState(null)}
       onSubmit={async (fd) => { const result = await upsertConstructionCategoryAction(fd); if (result.success) { setCategoryManageState(null); refresh(); } return result; }}
     /> : null}
     {deleteCategoryId ? <DeleteCategoryConfirm
-      category={budgetData.categories.find((category) => category.id === deleteCategoryId) ?? null}
-      expenseCount={budgetData.expenses.filter((expense) => expense.category_id === deleteCategoryId).length}
+      category={currentBudgetData.categories.find((category) => category.id === deleteCategoryId) ?? null}
+      expenseCount={currentBudgetData.expenses.filter((expense) => expense.category_id === deleteCategoryId).length}
       onClose={() => setDeleteCategoryId(null)}
       onConfirm={async () => { const result = await deleteConstructionCategoryAction(deleteCategoryId); if (result.success) { setDeleteCategoryId(null); if (selectedCategory === deleteCategoryId) setSelectedCategory(null); refresh(); } return result; }}
     /> : null}
-    {actualExpenseOpen ? <ActualExpenseForm project={budgetData.project} categories={budgetData.categories} expense={null} initialCostType={actualExpenseOpen} onClose={() => setActualExpenseOpen(null)} onSubmit={async (fd) => { const result = await createConstructionExpenseAction(fd); if (result.success) { setActualExpenseOpen(null); refresh(); } return result; }} /> : null}
-    {editingExpenseId ? <ActualExpenseForm project={budgetData.project} categories={budgetData.categories} expense={budgetData.expenses.find((expense) => expense.id === editingExpenseId) ?? null} initialCostType={budgetData.expenses.find((expense) => expense.id === editingExpenseId)?.cost_type ?? 'material'} onClose={() => setEditingExpenseId(null)} onSubmit={async (fd) => { const result = await updateConstructionExpenseAction(fd); if (result.success) { setEditingExpenseId(null); refresh(); } return result; }} /> : null}
-    {deleteExpenseId ? <DeleteExpenseConfirm expense={budgetData.expenses.find((expense) => expense.id === deleteExpenseId) ?? null} onClose={() => setDeleteExpenseId(null)} onConfirm={async () => { const result = await deleteConstructionExpenseAction(deleteExpenseId); if (result.success) { setDeleteExpenseId(null); refresh(); } return result; }} /> : null}
+    {actualExpenseOpen ? <ActualExpenseForm key={`${actualExpenseOpen.costType}-${actualExpenseOpen.categoryId ?? 'general'}`} project={currentBudgetData.project} categories={currentBudgetData.categories} expense={null} initialCostType={actualExpenseOpen.costType} lockedCategoryId={actualExpenseOpen.categoryId} onClose={() => setActualExpenseOpen(null)} onSubmit={async (fd) => {
+      const result = await createConstructionExpenseAction(fd);
+      if (result.success && result.expense) {
+        const createdExpense = result.expense;
+        setCurrentBudgetData((current) => ({ ...current, expenses: [createdExpense, ...current.expenses] }));
+        setActualExpenseOpen(null);
+      }
+      return result;
+    }} /> : null}
+    {editingExpenseId ? <ActualExpenseForm project={currentBudgetData.project} categories={currentBudgetData.categories} expense={currentBudgetData.expenses.find((expense) => expense.id === editingExpenseId) ?? null} initialCostType={currentBudgetData.expenses.find((expense) => expense.id === editingExpenseId)?.cost_type ?? 'material'} onClose={() => setEditingExpenseId(null)} onSubmit={async (fd) => { const result = await updateConstructionExpenseAction(fd); if (result.success) { setEditingExpenseId(null); refresh(); } return result; }} /> : null}
+    {deleteExpenseId ? <DeleteExpenseConfirm expense={currentBudgetData.expenses.find((expense) => expense.id === deleteExpenseId) ?? null} onClose={() => setDeleteExpenseId(null)} onConfirm={async () => { const result = await deleteConstructionExpenseAction(deleteExpenseId); if (result.success) { setDeleteExpenseId(null); refresh(); } return result; }} /> : null}
   </>;
 }
 
@@ -449,7 +461,7 @@ function InvestmentProjectCard({ budgetData }: { budgetData: ConstructionProject
   </article>;
 }
 
-export function ProjectBudgetDetail({ budgetData, selectedCategory, onSelectCategory, onOpenExpenseForm, onManageCategory, onDeleteCategory, onEditExpense, onDeleteExpense }: { budgetData: ConstructionProjectBudgetData; selectedCategory: string | null; onSelectCategory: (categoryId: string) => void; onOpenExpenseForm: (costType: ConstructionCostType) => void; onManageCategory: (mode: CategoryManageMode, categoryId?: string) => void; onDeleteCategory: (categoryId: string) => void; onEditExpense: (expenseId: string) => void; onDeleteExpense: (expenseId: string) => void }) {
+export function ProjectBudgetDetail({ budgetData, selectedCategory, onSelectCategory, onOpenExpenseForm, onManageCategory, onDeleteCategory, onEditExpense, onDeleteExpense }: { budgetData: ConstructionProjectBudgetData; selectedCategory: string | null; onSelectCategory: (categoryId: string) => void; onOpenExpenseForm: (costType: ConstructionCostType, categoryId?: string) => void; onManageCategory: (mode: CategoryManageMode, categoryId?: string) => void; onDeleteCategory: (categoryId: string) => void; onEditExpense: (expenseId: string) => void; onDeleteExpense: (expenseId: string) => void }) {
   const [openCategoryMenu, setOpenCategoryMenu] = useState<string | null>(null);
   const [categoryStatusFilter, setCategoryStatusFilter] = useState<CategoryStatusFilter>('all');
   const [financialAnalysisOpen, setFinancialAnalysisOpen] = useState(false);
@@ -565,6 +577,7 @@ export function ProjectBudgetDetail({ budgetData, selectedCategory, onSelectCate
               onToggleMenu={() => setOpenCategoryMenu((current) => current === category.id ? null : category.id)}
               onManage={(mode) => { setOpenCategoryMenu(null); onManageCategory(mode, category.id); }}
               onDelete={() => { setOpenCategoryMenu(null); onDeleteCategory(category.id); }}
+              onAddExpense={(costType) => onOpenExpenseForm(costType, category.id)}
             />)}
             {categoryStatusFilter === 'all' && uncategorizedExpenses.length ? <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_-26px_rgba(15,23,42,0.45)] sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -605,7 +618,7 @@ function CostTypeSummaryCard({ title, budget, actual, remaining, percent, tone }
   </article>;
 }
 
-function CostCategoryCard({ category, expenses, menuOpen, onSelect, onToggleMenu, onManage, onDelete }: { category: ConstructionCategoryRow; expenses: ConstructionExpenseRow[]; menuOpen: boolean; onSelect: () => void; onToggleMenu: () => void; onManage: (mode: CategoryManageMode) => void; onDelete: () => void }) {
+function CostCategoryCard({ category, expenses, menuOpen, onSelect, onToggleMenu, onManage, onDelete, onAddExpense }: { category: ConstructionCategoryRow; expenses: ConstructionExpenseRow[]; menuOpen: boolean; onSelect: () => void; onToggleMenu: () => void; onManage: (mode: CategoryManageMode) => void; onDelete: () => void; onAddExpense: (costType: ConstructionCostType) => void }) {
   const summary = getCategoryBudgetSummary(category, expenses);
   const checklistProgress = getChecklistProgress(category);
 
@@ -630,7 +643,10 @@ function CostCategoryCard({ category, expenses, menuOpen, onSelect, onToggleMenu
 
       <div className="grid min-w-0 grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:self-center">
         <div className="min-w-0 rounded-xl border border-blue-100 bg-blue-50/60 p-3">
-        <p className="text-xs font-semibold text-blue-700">ค่าวัสดุ</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-semibold text-blue-700">ค่าวัสดุ</p>
+          <button type="button" onClick={() => onAddExpense('material')} className="inline-flex min-h-8 items-center justify-center rounded-lg bg-blue-700 px-2.5 py-1.5 text-xs font-semibold !text-white shadow-sm transition hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2" style={{ color: '#FFFFFF' }} aria-label={`เพิ่มค่าใช้จ่ายในหมวด ${category.name}`}>+ เพิ่มค่าใช้จ่าย</button>
+        </div>
         <div className="mt-2 space-y-1">
           <BudgetLine label="งบ" value={summary.materialBudget} />
           <BudgetLine label="ใช้จริง" value={summary.materialActual} valueClass="text-blue-600" />
@@ -638,7 +654,10 @@ function CostCategoryCard({ category, expenses, menuOpen, onSelect, onToggleMenu
         </div>
         </div>
         <div className="min-w-0 rounded-xl border border-violet-100 bg-violet-50/60 p-3">
-        <p className="text-xs font-semibold text-violet-700">ค่าแรง</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-semibold text-violet-700">ค่าแรง</p>
+          <button type="button" onClick={() => onAddExpense('labor')} className="inline-flex min-h-8 items-center justify-center rounded-lg bg-violet-700 px-2.5 py-1.5 text-xs font-semibold !text-white shadow-sm transition hover:bg-violet-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2" style={{ color: '#FFFFFF' }} aria-label={`เพิ่มค่าแรงในหมวด ${category.name}`}>+ เพิ่มค่าแรง</button>
+        </div>
         <div className="mt-2 space-y-1">
           <BudgetLine label="งบ" value={summary.laborBudget} />
           <BudgetLine label="ใช้จริง" value={summary.laborActual} valueClass="text-violet-600" />
@@ -957,13 +976,14 @@ function DeleteExpenseConfirm({ expense, onClose, onConfirm }: { expense: Constr
   </div>;
 }
 
-function ActualExpenseForm({ project, categories, expense, initialCostType, onClose, onSubmit }: { project: ConstructionProjectRow | null; categories: ConstructionCategoryRow[]; expense: ConstructionExpenseRow | null; initialCostType: ConstructionCostType; onClose: () => void; onSubmit: (fd: FormData) => Promise<{ success: boolean; message: string }> }) {
+function ActualExpenseForm({ project, categories, expense, initialCostType, lockedCategoryId, onClose, onSubmit }: { project: ConstructionProjectRow | null; categories: ConstructionCategoryRow[]; expense: ConstructionExpenseRow | null; initialCostType: ConstructionCostType; lockedCategoryId?: string; onClose: () => void; onSubmit: (fd: FormData) => Promise<{ success: boolean; message: string }> }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [costType, setCostType] = useState<ConstructionCostType>(expense ? getExpenseCostType(expense) : initialCostType);
   const today = new Date().toISOString().slice(0, 10);
   const isEditing = Boolean(expense);
   const isLabor = costType === 'labor';
+  const lockedCategory = lockedCategoryId ? categories.find((category) => category.id === lockedCategoryId) ?? null : null;
 
   return <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
     <form onSubmit={async (event) => {
@@ -988,7 +1008,11 @@ function ActualExpenseForm({ project, categories, expense, initialCostType, onCl
       </div>
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block"><span className="text-sm text-slate-600">วันที่</span><input name="expense_date" type="date" className="theme-input mt-1" defaultValue={expense?.expense_date ?? today} required /></label>
-        <label className="block"><span className="text-sm text-slate-600">หมวดงาน</span><select name="category_id" className="theme-select mt-1" defaultValue={expense?.category_id ?? categories[0]?.id ?? ''}><option value="">ไม่ระบุหมวด</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+        {lockedCategory ? <div className="block">
+          <span className="text-sm text-slate-600">หมวดงาน</span>
+          <input type="hidden" name="category_id" value={lockedCategory.id} />
+          <div className="mt-1 flex min-h-11 items-center rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800" aria-label={`บันทึกใน: ${lockedCategory.name}`}>บันทึกใน: {lockedCategory.name}</div>
+        </div> : <label className="block"><span className="text-sm text-slate-600">หมวดงาน</span><select name="category_id" className="theme-select mt-1" defaultValue={expense?.category_id ?? categories[0]?.id ?? ''}><option value="">ไม่ระบุหมวด</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>}
         <label className="block"><span className="text-sm text-slate-600">กลุ่ม</span><select className="theme-select mt-1" value={costType} onChange={(event) => setCostType(event.target.value as ConstructionCostType)}><option value="material">ค่าวัสดุ / ค่าใช้จ่าย</option><option value="labor">ค่าแรง</option></select></label>
         <label className="block sm:col-span-2"><span className="text-sm text-slate-600">{isLabor ? 'รายการงาน / คนงาน / จำนวนวันหรือชั่วโมง' : 'รายการ'}</span><input name="title" className="theme-input mt-1" defaultValue={expense?.title ?? ''} placeholder={isLabor ? 'เช่น ค่าแรงช่าง 2 คน 3 วัน' : 'เช่น ค่าเหล็ก'} required /></label>
         <label className="block"><span className="text-sm text-slate-600">จำนวนเงิน</span><input name="amount" type="number" min="0" step="0.01" className="theme-input mt-1" defaultValue={expense?.amount ?? ''} placeholder="0" required /></label>

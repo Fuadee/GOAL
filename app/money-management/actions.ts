@@ -2,7 +2,7 @@
 
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { clearConstructionExpenseCategory, createConstructionCategory, createConstructionExpense, createConstructionProject, createGrowthAsset, createMoneyIncomeSource, deleteConstructionCategory, deleteConstructionExpense, deleteGrowthAsset, saveAssetMonthlySnapshotTransaction, softDeleteMoneyIncomeSource, updateConstructionCategory, updateConstructionExpense, updateGrowthAsset, updateMoneyIncomeSource } from '@/lib/money/mutations';
-import { CONSTRUCTION_CATEGORY_STATUSES, CONSTRUCTION_COST_TYPES, ConstructionCategoryStatus, ConstructionCostType, GROWTH_ASSET_TYPES, GrowthAssetType } from '@/lib/money/types';
+import { CONSTRUCTION_CATEGORY_STATUSES, CONSTRUCTION_COST_TYPES, ConstructionCategoryStatus, ConstructionCostType, ConstructionExpenseRow, GROWTH_ASSET_TYPES, GrowthAssetType } from '@/lib/money/types';
 
 const toNumber = (value: FormDataEntryValue | null) => {
   if (value == null || value === '') return 0;
@@ -246,7 +246,7 @@ export async function deleteConstructionCategoryAction(categoryId: string): Prom
   }
 }
 
-export async function createConstructionExpenseAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+export async function createConstructionExpenseAction(formData: FormData): Promise<{ success: boolean; message: string; expense?: ConstructionExpenseRow }> {
   const projectId = String(formData.get('project_id') ?? '').trim();
   const rawCategoryId = String(formData.get('category_id') ?? '').trim();
   const costTypeValue = String(formData.get('cost_type') ?? 'material').trim();
@@ -262,7 +262,7 @@ export async function createConstructionExpenseAction(formData: FormData): Promi
   if (Number.isNaN(amount) || amount <= 0) return { success: false, message: 'จำนวนเงินต้องมากกว่า 0' };
 
   try {
-    await createConstructionExpense({
+    const expense = await createConstructionExpense({
       project_id: projectId,
       category_id: rawCategoryId || null,
       cost_type: costTypeValue,
@@ -272,7 +272,8 @@ export async function createConstructionExpenseAction(formData: FormData): Promi
       note: note || null,
     });
     revalidatePath('/money-management');
-    return { success: true, message: 'เพิ่มค่าใช้จ่ายจริงสำเร็จ' };
+    revalidatePath(`/money-management/projects/${projectId}`);
+    return { success: true, message: 'เพิ่มค่าใช้จ่ายจริงสำเร็จ', expense };
   } catch (error) {
     console.error('[construction-expense create failed]', error);
     return { success: false, message: 'เพิ่มค่าใช้จ่ายไม่สำเร็จ กรุณาลองใหม่อีกครั้ง' };
