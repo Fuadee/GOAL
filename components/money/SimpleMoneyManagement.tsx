@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Clock3, PiggyBank, ShieldCheck, TrendingUp, type LucideIcon } from 'lucide-react';
 import { CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { createConstructionExpenseAction, createConstructionProjectAction, deleteConstructionCategoryAction, deleteConstructionExpenseAction, deleteGrowthAssetAction, deleteMoneyIncomeSourceAction, saveAssetMonthlySnapshotAction, updateConstructionExpenseAction, upsertConstructionCategoryAction, upsertGrowthAssetAction, upsertMoneyIncomeSourceAction } from '@/app/money-management/actions';
+import { formatConstructionExpenseDateTime, getConstructionExpenseDateKey, sortConstructionExpensesNewestFirst } from '@/lib/money/expense-utils';
 import { AssetMonthlySnapshotRow, ConstructionCategoryRow, ConstructionCategoryStatus, ConstructionCostType, ConstructionExpenseRow, ConstructionInvestmentProjectsData, ConstructionOperationChecklistItem, ConstructionProjectBudgetData, ConstructionProjectRow, GrowthAssetRow, GrowthAssetType, MoneyManagementPageData, MoneyIncomeSourceRow, MoneySummary } from '@/lib/money/types';
 import { FinancialAnalysisDialog } from '@/components/money/FinancialAnalysisDialog';
 
@@ -25,8 +26,10 @@ const assetCategories = Object.keys(categoryMeta) as AssetCategory[];
 const incomeBreakdownColors = ['#2563EB', '#0D9488', '#7C3AED', '#059669', '#E11D48', '#475569'];
 type CategoryManageMode = 'create' | 'edit' | 'operation';
 type ExpenseFilter = 'all' | ConstructionCostType;
+type ExpenseDateFilter = 'all' | '30_days' | '90_days' | 'custom';
 type CategoryStatusFilter = 'all' | ConstructionCategoryStatus;
 type ActualExpenseOpenState = { costType: ConstructionCostType; categoryId?: string };
+type ExpenseActionResult = { success: boolean; message: string; expense?: ConstructionExpenseRow };
 const constructionStatusOptions: ConstructionCategoryStatus[] = ['not_started', 'in_progress', 'completed'];
 const constructionStatusLabel: Record<ConstructionCategoryStatus, string> = {
   not_started: 'ยังไม่เริ่ม',
@@ -225,8 +228,23 @@ export function ProjectDetailClient({ budgetData }: { budgetData: ConstructionPr
       }
       return result;
     }} /> : null}
-    {editingExpenseId ? <ActualExpenseForm project={currentBudgetData.project} categories={currentBudgetData.categories} expense={currentBudgetData.expenses.find((expense) => expense.id === editingExpenseId) ?? null} initialCostType={currentBudgetData.expenses.find((expense) => expense.id === editingExpenseId)?.cost_type ?? 'material'} onClose={() => setEditingExpenseId(null)} onSubmit={async (fd) => { const result = await updateConstructionExpenseAction(fd); if (result.success) { setEditingExpenseId(null); refresh(); } return result; }} /> : null}
-    {deleteExpenseId ? <DeleteExpenseConfirm expense={currentBudgetData.expenses.find((expense) => expense.id === deleteExpenseId) ?? null} onClose={() => setDeleteExpenseId(null)} onConfirm={async () => { const result = await deleteConstructionExpenseAction(deleteExpenseId); if (result.success) { setDeleteExpenseId(null); refresh(); } return result; }} /> : null}
+    {editingExpenseId ? <ActualExpenseForm project={currentBudgetData.project} categories={currentBudgetData.categories} expense={currentBudgetData.expenses.find((expense) => expense.id === editingExpenseId) ?? null} initialCostType={currentBudgetData.expenses.find((expense) => expense.id === editingExpenseId)?.cost_type ?? 'material'} onClose={() => setEditingExpenseId(null)} onSubmit={async (fd) => {
+      const result = await updateConstructionExpenseAction(fd);
+      if (result.success && result.expense) {
+        const updatedExpense = result.expense;
+        setCurrentBudgetData((current) => ({ ...current, expenses: current.expenses.map((expense) => expense.id === updatedExpense.id ? updatedExpense : expense) }));
+        setEditingExpenseId(null);
+      }
+      return result;
+    }} /> : null}
+    {deleteExpenseId ? <DeleteExpenseConfirm expense={currentBudgetData.expenses.find((expense) => expense.id === deleteExpenseId) ?? null} onClose={() => setDeleteExpenseId(null)} onConfirm={async () => {
+      const result = await deleteConstructionExpenseAction(deleteExpenseId, currentBudgetData.project?.id);
+      if (result.success) {
+        setCurrentBudgetData((current) => ({ ...current, expenses: current.expenses.filter((expense) => expense.id !== deleteExpenseId) }));
+        setDeleteExpenseId(null);
+      }
+      return result;
+    }} /> : null}
   </>;
 }
 
@@ -237,10 +255,12 @@ function statusBadgeClass(status: ConstructionCategoryStatus | string) {
 }
 
 function getConstructionBudgetSummary(budgetData: ConstructionProjectBudgetData) {
-  const materialBudgetTotal = budgetData.categories.reduce((sum, category) => sum + Number(category.budget ?? 0), 0);
-  const laborBudgetTotal = budgetData.categories.reduce((sum, category) => sum + Number(category.labor_budget ?? 0), 0);
-  const materialActualTotal = getExpensesTotalByType(budgetData.expenses, 'material');
-  const laborActualTotal = getExpensesTotalByType(budgetData.expenses, 'labor');
+  const materialSummary = getCostTypeBudgetSummary(budgetData, 'material');
+  const laborSummary = getCostTypeBudgetSummary(budgetData, 'labor');
+  const materialBudgetTotal = materialSummary.budget;
+  const laborBudgetTotal = laborSummary.budget;
+  const materialActualTotal = materialSummary.actual;
+  const laborActualTotal = laborSummary.actual;
   const grandBudgetTotal = materialBudgetTotal + laborBudgetTotal;
   const grandActualTotal = materialActualTotal + laborActualTotal;
   const grandRemainingTotal = grandBudgetTotal - grandActualTotal;
@@ -296,6 +316,20 @@ function getExpenseCostType(expense: ConstructionExpenseRow): ConstructionCostTy
 
 function getExpensesTotalByType(expenses: ConstructionExpenseRow[], costType: ConstructionCostType) {
   return expenses.filter((expense) => getExpenseCostType(expense) === costType).reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0);
+}
+
+function getCostTypeBudgetSummary(budgetData: Pick<ConstructionProjectBudgetData, 'categories' | 'expenses'>, costType: ConstructionCostType) {
+  const budget = budgetData.categories.reduce((sum, category) => sum + Number(costType === 'labor' ? category.labor_budget : category.budget), 0);
+  const expenses = budgetData.expenses.filter((expense) => getExpenseCostType(expense) === costType);
+  const actual = expenses.reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0);
+  return {
+    budget,
+    actual,
+    remaining: budget - actual,
+    percent: budget > 0 ? (actual / budget) * 100 : 0,
+    count: expenses.length,
+    expenses,
+  };
 }
 
 function getCategoryExpenses(expenses: ConstructionExpenseRow[], categoryId: string | null) {
@@ -465,8 +499,13 @@ export function ProjectBudgetDetail({ budgetData, selectedCategory, onSelectCate
   const [openCategoryMenu, setOpenCategoryMenu] = useState<string | null>(null);
   const [categoryStatusFilter, setCategoryStatusFilter] = useState<CategoryStatusFilter>('all');
   const [financialAnalysisOpen, setFinancialAnalysisOpen] = useState(false);
+  const [allExpensesOpen, setAllExpensesOpen] = useState(false);
+  const [focusedExpenseId, setFocusedExpenseId] = useState<string | null>(null);
+  const [costTypeHistoryOpen, setCostTypeHistoryOpen] = useState<ConstructionCostType | null>(null);
   const project = budgetData.project;
   const summary = getConstructionBudgetSummary(budgetData);
+  const materialSummary = getCostTypeBudgetSummary(budgetData, 'material');
+  const laborSummary = getCostTypeBudgetSummary(budgetData, 'labor');
   const categoryStatusCounts = useMemo(() => budgetData.categories.reduce<Record<ConstructionCategoryStatus, number>>((counts, category) => {
     counts[category.status] += 1;
     return counts;
@@ -485,6 +524,7 @@ export function ProjectBudgetDetail({ budgetData, selectedCategory, onSelectCate
     completed: 'ยังไม่มีงานที่เสร็จแล้ว',
   };
   const uncategorizedExpenses = budgetData.expenses.filter((expense) => expense.category_id === null);
+  const recentExpenses = useMemo(() => sortConstructionExpensesNewestFirst(budgetData.expenses).slice(0, 5), [budgetData.expenses]);
   const expenseDetailCategory = selectedCategory === 'uncategorized'
     ? null
     : budgetData.categories.find((category) => category.id === selectedCategory) ?? null;
@@ -524,19 +564,23 @@ export function ProjectBudgetDetail({ budgetData, selectedCategory, onSelectCate
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
             <CostTypeSummaryCard
               title="ค่าวัสดุ / ค่าใช้จ่าย"
-              budget={summary.materialBudgetTotal}
-              actual={summary.materialActualTotal}
-              remaining={summary.materialBudgetTotal - summary.materialActualTotal}
-              percent={summary.materialBudgetTotal > 0 ? (summary.materialActualTotal / summary.materialBudgetTotal) * 100 : 0}
+              budget={materialSummary.budget}
+              actual={materialSummary.actual}
+              remaining={materialSummary.remaining}
+              percent={materialSummary.percent}
+              count={materialSummary.count}
               tone="material"
+              onOpen={() => setCostTypeHistoryOpen('material')}
             />
             <CostTypeSummaryCard
               title="ค่าแรง"
-              budget={summary.laborBudgetTotal}
-              actual={summary.laborActualTotal}
-              remaining={summary.laborBudgetTotal - summary.laborActualTotal}
-              percent={summary.laborBudgetTotal > 0 ? (summary.laborActualTotal / summary.laborBudgetTotal) * 100 : 0}
+              budget={laborSummary.budget}
+              actual={laborSummary.actual}
+              remaining={laborSummary.remaining}
+              percent={laborSummary.percent}
+              count={laborSummary.count}
               tone="labor"
+              onOpen={() => setCostTypeHistoryOpen('labor')}
             />
           </div>
 
@@ -564,6 +608,14 @@ export function ProjectBudgetDetail({ budgetData, selectedCategory, onSelectCate
             </div>
           </div>
 
+          <RecentProjectExpensesCard
+            expenses={recentExpenses}
+            categories={budgetData.categories}
+            onAddExpense={() => onOpenExpenseForm('material')}
+            onViewAll={() => { setFocusedExpenseId(null); setAllExpensesOpen(true); }}
+            onOpenExpense={(expenseId) => { setFocusedExpenseId(expenseId); setAllExpensesOpen(true); }}
+          />
+
           <div className="mt-5 flex flex-col gap-4">
             {filteredCategories.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-5 text-center">
               <p className="text-sm font-medium text-slate-600">{emptyCategoryMessage[categoryStatusFilter]}</p>
@@ -587,8 +639,91 @@ export function ProjectBudgetDetail({ budgetData, selectedCategory, onSelectCate
             </article> : null}
           </div>
         </div>
-        {expenseDetailOpen ? <ProjectExpenseHistoryModal category={expenseDetailCategory} expenses={expenseDetailItems} onClose={() => onSelectCategory('')} onEditExpense={(expenseId) => { onSelectCategory(''); onEditExpense(expenseId); }} onDeleteExpense={(expenseId) => { onSelectCategory(''); onDeleteExpense(expenseId); }} /> : null}
+        {expenseDetailOpen ? <ProjectExpenseHistoryModal category={expenseDetailCategory} categories={budgetData.categories} expenses={expenseDetailItems} onClose={() => onSelectCategory('')} onEditExpense={(expenseId) => { onSelectCategory(''); onEditExpense(expenseId); }} onDeleteExpense={(expenseId) => { onSelectCategory(''); onDeleteExpense(expenseId); }} /> : null}
+        {costTypeHistoryOpen ? <ProjectExpenseHistoryModal
+          categories={budgetData.categories}
+          expenses={budgetData.expenses}
+          projectName={project.name}
+          costType={costTypeHistoryOpen}
+          costTypeSummary={costTypeHistoryOpen === 'labor' ? laborSummary : materialSummary}
+          onClose={() => setCostTypeHistoryOpen(null)}
+          onEditExpense={onEditExpense}
+          onDeleteExpense={onDeleteExpense}
+        /> : null}
+        {allExpensesOpen ? <ProjectExpenseHistoryModal
+          categories={budgetData.categories}
+          expenses={budgetData.expenses}
+          projectName={project.name}
+          focusedExpenseId={focusedExpenseId}
+          onClose={() => { setAllExpensesOpen(false); setFocusedExpenseId(null); }}
+          onEditExpense={(expenseId) => { setAllExpensesOpen(false); setFocusedExpenseId(null); onEditExpense(expenseId); }}
+          onDeleteExpense={(expenseId) => { setAllExpensesOpen(false); setFocusedExpenseId(null); onDeleteExpense(expenseId); }}
+        /> : null}
         {financialAnalysisOpen ? <FinancialAnalysisDialog data={budgetData} onClose={() => setFinancialAnalysisOpen(false)} /> : null}
+  </section>;
+}
+
+function getExpenseCategoryName(expense: ConstructionExpenseRow, categories: ConstructionCategoryRow[]) {
+  if (!expense.category_id) return 'ไม่ระบุหมวด';
+  return categories.find((category) => category.id === expense.category_id)?.name ?? 'ไม่พบหมวดงาน';
+}
+
+function ExpenseTypeBadge({ expense }: { expense: ConstructionExpenseRow }) {
+  const costType = getExpenseCostType(expense);
+  return <span className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${costType === 'labor' ? 'bg-violet-50 text-violet-700' : 'bg-blue-50 text-blue-700'}`}>
+    {getCostTypeLabel(costType)}
+  </span>;
+}
+
+function RecentProjectExpensesCard({ expenses, categories, onViewAll, onOpenExpense, onAddExpense }: { expenses: ConstructionExpenseRow[]; categories: ConstructionCategoryRow[]; onViewAll: () => void; onOpenExpense: (expenseId: string) => void; onAddExpense: () => void }) {
+  return <section className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_30px_-26px_rgba(15,23,42,0.45)]" aria-labelledby="recent-project-expenses-title">
+    <header className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <div className="min-w-0">
+        <h3 id="recent-project-expenses-title" className="text-base font-semibold text-slate-900">รายการจ่ายล่าสุด</h3>
+        <p className="mt-1 text-sm text-slate-500">รายการค่าใช้จ่ายที่บันทึกล่าสุดของโครงการ</p>
+      </div>
+      <button type="button" onClick={onViewAll} className="theme-button-secondary w-full shrink-0 sm:w-auto" aria-label="ดูรายการค่าใช้จ่ายทั้งหมดของโครงการ">ดูรายการทั้งหมด</button>
+    </header>
+
+    {expenses.length === 0 ? <div className="px-4 py-7 text-center sm:px-5">
+      <p className="text-sm font-medium text-slate-600">ยังไม่มีรายการค่าใช้จ่ายในโครงการนี้</p>
+      <p className="mt-1 text-sm text-slate-500">เริ่มบันทึกรายการแรกเพื่อดูความเคลื่อนไหวล่าสุดของโครงการ</p>
+      <button type="button" onClick={onAddExpense} className="theme-button-primary mt-4 !text-white" style={{ color: '#FFFFFF' }}>เพิ่มค่าใช้จ่าย</button>
+    </div> : <>
+      <div className="hidden md:block">
+        <div className="grid grid-cols-[minmax(150px,1.1fr)_minmax(0,2fr)_minmax(130px,1.2fr)_minmax(90px,0.8fr)_minmax(120px,0.9fr)] gap-3 border-b border-slate-100 bg-slate-50/70 px-5 py-2.5 text-xs font-semibold text-slate-500">
+          <span>วันที่และเวลา</span><span>รายการ</span><span>หมวดงาน</span><span>ประเภท</span><span className="text-right">จำนวนเงิน</span>
+        </div>
+        <div className="divide-y divide-slate-100">
+          {expenses.map((expense, index) => <button key={expense.id} type="button" onClick={() => onOpenExpense(expense.id)} className="grid min-h-16 w-full grid-cols-[minmax(150px,1.1fr)_minmax(0,2fr)_minmax(130px,1.2fr)_minmax(90px,0.8fr)_minmax(120px,0.9fr)] items-center gap-3 px-5 py-3 text-left transition hover:bg-blue-50/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500" aria-label={`เปิดรายละเอียด ${expense.title}`}>
+            <span className="font-numeric text-sm text-slate-600">{formatConstructionExpenseDateTime(expense)}</span>
+            <span className="min-w-0 break-words text-sm font-semibold text-slate-900">{expense.title}{index === 0 ? <span className="ml-2 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 align-middle text-[10px] font-semibold text-emerald-700">ล่าสุด</span> : null}</span>
+            <span className="min-w-0 break-words text-sm text-slate-600">{getExpenseCategoryName(expense, categories)}</span>
+            <ExpenseTypeBadge expense={expense} />
+            <span className="font-numeric text-right text-sm font-semibold text-slate-800">{thb.format(expense.amount)}</span>
+          </button>)}
+        </div>
+      </div>
+
+      <div className="divide-y divide-slate-100 md:hidden">
+        {expenses.map((expense, index) => <button key={expense.id} type="button" onClick={() => onOpenExpense(expense.id)} className="block min-h-[104px] w-full px-4 py-4 text-left transition active:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500" aria-label={`เปิดรายละเอียด ${expense.title}`}>
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <p className="min-w-0 break-words text-sm font-semibold text-slate-900">{expense.title}</p>
+                {index === 0 ? <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">ล่าสุด</span> : null}
+              </div>
+              <p className="mt-1 break-words text-xs text-slate-500">{getExpenseCategoryName(expense, categories)}</p>
+            </div>
+            <span className="font-numeric shrink-0 text-sm font-semibold text-slate-800">{thb.format(expense.amount)}</span>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <span className="font-numeric text-xs text-slate-500">{formatConstructionExpenseDateTime(expense)}</span>
+            <ExpenseTypeBadge expense={expense} />
+          </div>
+        </button>)}
+      </div>
+    </>}
   </section>;
 }
 
@@ -599,10 +734,11 @@ function ProjectMetric({ label, value, valueClass = 'text-slate-900' }: { label:
   </article>;
 }
 
-function CostTypeSummaryCard({ title, budget, actual, remaining, percent, tone }: { title: string; budget: number; actual: number; remaining: number; percent: number; tone: 'material' | 'labor' }) {
+function CostTypeSummaryCard({ title, budget, actual, remaining, percent, count, tone, onOpen }: { title: string; budget: number; actual: number; remaining: number; percent: number; count: number; tone: 'material' | 'labor'; onOpen: () => void }) {
   const toneClass = tone === 'labor' ? 'border-violet-200 bg-violet-50/70 text-violet-700' : 'border-blue-200 bg-blue-50/70 text-blue-700';
   const barClass = tone === 'labor' ? 'bg-violet-500' : 'bg-[color:var(--accent-blue)]';
-  return <article className={`rounded-2xl border p-4 ${toneClass}`}>
+  const interactionClass = tone === 'labor' ? 'hover:border-violet-400 focus-visible:ring-violet-500' : 'hover:border-blue-400 focus-visible:ring-blue-500';
+  return <button type="button" onClick={onOpen} className={`group w-full cursor-pointer rounded-2xl border p-4 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:translate-y-0 ${toneClass} ${interactionClass}`} aria-label={`ดูรายละเอียด${title}`}>
     <div className="flex items-center justify-between gap-3">
       <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
       <span className="font-numeric text-sm font-semibold">{percent.toFixed(1)}%</span>
@@ -615,7 +751,11 @@ function CostTypeSummaryCard({ title, budget, actual, remaining, percent, tone }
     <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/80">
       <div className={`h-full rounded-full ${barClass}`} style={{ width: `${Math.min(percent, 100)}%` }} />
     </div>
-  </article>;
+    <div className="mt-3 flex items-center justify-between gap-3 border-t border-current/10 pt-3 text-xs font-semibold">
+      <span className="font-normal text-slate-500">{count.toLocaleString('th-TH')} รายการจ่าย</span>
+      <span className="transition-transform group-hover:translate-x-0.5">ดูรายละเอียด <span aria-hidden="true">→</span></span>
+    </div>
+  </button>;
 }
 
 function CostCategoryCard({ category, expenses, menuOpen, onSelect, onToggleMenu, onManage, onDelete, onAddExpense }: { category: ConstructionCategoryRow; expenses: ConstructionExpenseRow[]; menuOpen: boolean; onSelect: () => void; onToggleMenu: () => void; onManage: (mode: CategoryManageMode) => void; onDelete: () => void; onAddExpense: (costType: ConstructionCostType) => void }) {
@@ -683,68 +823,149 @@ function CostCategoryCard({ category, expenses, menuOpen, onSelect, onToggleMenu
   </article>;
 }
 
-function ProjectExpenseHistoryModal({ category, expenses, onClose, onEditExpense, onDeleteExpense }: { category: ConstructionCategoryRow | null; expenses: ConstructionExpenseRow[]; onClose: () => void; onEditExpense: (expenseId: string) => void; onDeleteExpense: (expenseId: string) => void }) {
-  const [filter, setFilter] = useState<ExpenseFilter>('all');
+function formatThaiTimestamp(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Bangkok' }).format(date);
+}
+
+function ProjectExpenseHistoryModal({ category, categories, expenses, projectName, focusedExpenseId, costType, costTypeSummary, onClose, onEditExpense, onDeleteExpense }: { category?: ConstructionCategoryRow | null; categories: ConstructionCategoryRow[]; expenses: ConstructionExpenseRow[]; projectName?: string; focusedExpenseId?: string | null; costType?: ConstructionCostType; costTypeSummary?: ReturnType<typeof getCostTypeBudgetSummary>; onClose: () => void; onEditExpense: (expenseId: string) => void; onDeleteExpense: (expenseId: string) => void }) {
+  const [filter, setFilter] = useState<ExpenseFilter>(costType ?? 'all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState<ExpenseDateFilter>('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [search, setSearch] = useState('');
   const dialogRef = useRef<HTMLElement>(null);
-  const categoryName = category?.name ?? 'ไม่ระบุหมวด';
-  const sortedExpenses = [...expenses].sort((a, b) => `${b.expense_date}-${b.created_at}`.localeCompare(`${a.expense_date}-${a.created_at}`));
-  const visibleExpenses = sortedExpenses.filter((expense) => filter === 'all' || getExpenseCostType(expense) === filter);
-  const materialActual = expenses.filter((expense) => getExpenseCostType(expense) === 'material').reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0);
-  const laborActual = expenses.filter((expense) => getExpenseCostType(expense) === 'labor').reduce((sum, expense) => sum + Number(expense.amount ?? 0), 0);
+  const isProjectScope = Boolean(projectName);
+  const scopeName = isProjectScope ? projectName! : category?.name ?? 'ไม่ระบุหมวด';
+  const summaryCategories = isProjectScope ? categories : category ? [category] : [];
+  const materialSummary = getCostTypeBudgetSummary({ categories: summaryCategories, expenses }, 'material');
+  const laborSummary = getCostTypeBudgetSummary({ categories: summaryCategories, expenses }, 'labor');
+  const activeSummary = costTypeSummary ?? (costType === 'labor' ? laborSummary : materialSummary);
+  const fixedCostType = Boolean(costType);
+  const dialogTone = costType === 'labor' ? 'labor' : 'material';
+  const title = costType === 'labor' ? 'รายละเอียดค่าแรง' : costType === 'material' ? 'รายละเอียดค่าวัสดุและค่าใช้จ่าย' : isProjectScope ? 'รายการค่าใช้จ่ายทั้งหมด' : 'รายละเอียดค่าใช้จ่าย';
+  const searchValue = search.trim().toLocaleLowerCase('th-TH');
+  const hasFilters = categoryFilter !== 'all' || dateFilter !== 'all' || Boolean(searchValue) || (!fixedCostType && filter !== 'all');
+  const visibleExpenses = useMemo(() => {
+    const now = new Date();
+    const threshold = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (dateFilter === '30_days') threshold.setDate(threshold.getDate() - 29);
+    if (dateFilter === '90_days') threshold.setDate(threshold.getDate() - 89);
+    const thresholdKey = `${threshold.getFullYear()}-${String(threshold.getMonth() + 1).padStart(2, '0')}-${String(threshold.getDate()).padStart(2, '0')}`;
+    return sortConstructionExpensesNewestFirst(expenses).filter((expense) => {
+      if (costType && getExpenseCostType(expense) !== costType) return false;
+      if (!costType && filter !== 'all' && getExpenseCostType(expense) !== filter) return false;
+      if (categoryFilter === 'unlinked' ? expense.category_id !== null : categoryFilter !== 'all' && expense.category_id !== categoryFilter) return false;
+      const dateKey = getConstructionExpenseDateKey(expense);
+      if ((dateFilter === '30_days' || dateFilter === '90_days') && dateKey < thresholdKey) return false;
+      if (dateFilter === 'custom' && dateFrom && dateKey < dateFrom) return false;
+      if (dateFilter === 'custom' && dateTo && dateKey > dateTo) return false;
+      if (searchValue) {
+        const categoryName = getExpenseCategoryName(expense, categories);
+        const searchable = [expense.title, expense.note, expense.payee, categoryName].filter(Boolean).join(' ').toLocaleLowerCase('th-TH');
+        if (!searchable.includes(searchValue)) return false;
+      }
+      return true;
+    });
+  }, [categories, categoryFilter, costType, dateFilter, dateFrom, dateTo, expenses, filter, searchValue]);
+  const clearFilters = () => { setFilter(costType ?? 'all'); setCategoryFilter('all'); setDateFilter('all'); setDateFrom(''); setDateTo(''); setSearch(''); };
+  const openExpense = (expenseId: string) => onEditExpense(expenseId);
 
   useEffect(() => {
-    const trigger = Array.from(document.querySelectorAll<HTMLElement>('button[aria-label]')).find((element) => element.getAttribute('aria-label') === `ดูรายละเอียดค่าใช้จ่าย ${categoryName}`) ?? null;
+    const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousBodyOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const focusTimer = window.setTimeout(() => dialogRef.current?.focus(), 0);
-    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.clearTimeout(focusTimer);
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = previousBodyOverflow;
-      trigger?.focus();
+    const focusTimer = window.setTimeout(() => {
+      dialogRef.current?.focus();
+      if (focusedExpenseId) document.getElementById(`expense-history-${focusedExpenseId}`)?.scrollIntoView({ block: 'center' });
+    }, 0);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
-  }, [categoryName, onClose]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => { window.clearTimeout(focusTimer); document.removeEventListener('keydown', handleKeyDown); document.body.style.overflow = previousBodyOverflow; trigger?.focus(); };
+  }, [focusedExpenseId, onClose]);
 
-  return createPortal(<div className="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm supports-[height:100dvh]:h-[100dvh] sm:p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-    <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="expense-history-title" tabIndex={-1} onMouseDown={(event) => event.stopPropagation()} className="flex max-h-[calc(100vh-24px)] w-[calc(100vw-24px)] max-w-[1100px] min-w-0 flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-2xl outline-none supports-[height:100dvh]:max-h-[calc(100dvh-24px)] sm:max-h-[88vh] sm:w-[min(1100px,calc(100vw-32px))]">
+  return createPortal(<div className="fixed inset-0 z-[110] flex h-screen w-screen items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm supports-[height:100dvh]:h-[100dvh] sm:items-center sm:p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="expense-history-title" tabIndex={-1} onMouseDown={(event) => event.stopPropagation()} className="flex h-full max-h-full w-full min-w-0 flex-col overflow-hidden rounded-none border border-slate-200 bg-white shadow-2xl outline-none sm:h-auto sm:max-h-[90vh] sm:w-[min(1100px,calc(100vw-32px))] sm:rounded-[24px]">
       <header className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
-        <div className="min-w-0"><p className="text-[13px] font-semibold text-blue-600">รายการบันทึกจริง</p><h2 id="expense-history-title" className="mt-1 text-xl font-semibold text-slate-900 sm:text-2xl">รายละเอียดค่าใช้จ่าย</h2><p className="mt-1 break-words text-sm text-slate-500">{categoryName}</p></div>
-        <button type="button" onClick={onClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-600 hover:border-blue-200 hover:bg-blue-50" aria-label="ปิดรายละเอียดค่าใช้จ่าย">×</button>
+        <div className="min-w-0"><p className={`text-[13px] font-semibold ${dialogTone === 'labor' ? 'text-violet-600' : 'text-blue-600'}`}>ประวัติการจ่าย · ล่าสุดอยู่ด้านบน</p><h2 id="expense-history-title" className="mt-1 text-xl font-semibold text-slate-900 sm:text-2xl">{title}</h2><p className="mt-1 break-words text-sm text-slate-500">{scopeName}</p></div>
+        <button type="button" onClick={onClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" aria-label={`ปิด${title}`}>×</button>
       </header>
 
       <div className="shrink-0 border-b border-slate-200 bg-slate-50/60 px-4 py-4 sm:px-6">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-          <ExpenseSummaryMetric label="งบค่าวัสดุ" value={Number(category?.budget ?? 0)} />
-          <ExpenseSummaryMetric label="ใช้จริงค่าวัสดุ" value={materialActual} tone="material" />
-          <ExpenseSummaryMetric label="งบค่าแรง" value={Number(category?.labor_budget ?? 0)} />
-          <ExpenseSummaryMetric label="ใช้จริงค่าแรง" value={laborActual} tone="labor" />
-          <ExpenseSummaryMetric label="รวมใช้จริงทั้งหมด" value={materialActual + laborActual} tone="total" className="col-span-2 sm:col-span-1" />
+        {fixedCostType ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          <ExpenseSummaryMetric label="งบประมาณ" value={activeSummary.budget} />
+          <ExpenseSummaryMetric label="ใช้จริง / จ่ายแล้ว" value={activeSummary.actual} tone={dialogTone} />
+          <ExpenseSummaryMetric label="คงเหลือ" value={activeSummary.remaining} tone={activeSummary.remaining >= 0 ? 'total' : 'danger'} />
+          <ExpenseSummaryMetric label="ใช้ไป" value={activeSummary.percent} format="percent" tone={dialogTone} />
+          <ExpenseSummaryMetric label="รายการจ่ายทั้งหมด" value={activeSummary.count} format="count" className="col-span-2 sm:col-span-1" />
+        </div> : <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          <ExpenseSummaryMetric label="งบค่าวัสดุ" value={materialSummary.budget} />
+          <ExpenseSummaryMetric label="ใช้จริงค่าวัสดุ" value={materialSummary.actual} tone="material" />
+          <ExpenseSummaryMetric label="งบค่าแรง" value={laborSummary.budget} />
+          <ExpenseSummaryMetric label="ใช้จริงค่าแรง" value={laborSummary.actual} tone="labor" />
+          <ExpenseSummaryMetric label="รวมใช้จริงทั้งหมด" value={materialSummary.actual + laborSummary.actual} tone="total" className="col-span-2 sm:col-span-1" />
+        </div>}
+
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(190px,1.4fr)_minmax(150px,1fr)_minmax(150px,1fr)_auto]">
+          <label className="block"><span className="sr-only">ค้นหารายการจ่าย</span><input className="theme-input h-11" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ค้นหารายละเอียด ผู้รับเงิน หรือผู้ขาย" /></label>
+          <label className="block"><span className="sr-only">กรองหมวดงาน</span><select className="theme-select h-11" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}><option value="all">ทุกหมวดงาน</option>{isProjectScope || !category ? <option value="unlinked">ยังไม่ระบุหมวดงาน</option> : null}{(isProjectScope ? categories : category ? [category] : []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+          <label className="block"><span className="sr-only">กรองช่วงวันที่</span><select className="theme-select h-11" value={dateFilter} onChange={(event) => setDateFilter(event.target.value as ExpenseDateFilter)}><option value="all">ทุกช่วงวันที่</option><option value="30_days">30 วันล่าสุด</option><option value="90_days">90 วันล่าสุด</option><option value="custom">กำหนดช่วงวันที่</option></select></label>
+          <button type="button" onClick={clearFilters} disabled={!hasFilters} className="theme-button-secondary h-11 disabled:cursor-not-allowed disabled:opacity-50">ล้างตัวกรอง</button>
         </div>
-        <div className="mt-4 flex w-full rounded-full border border-slate-200 bg-white p-1 text-xs font-semibold text-slate-600 sm:w-fit">
-          {([{ value: 'all', label: 'ทั้งหมด' }, { value: 'material', label: 'ค่าวัสดุ' }, { value: 'labor', label: 'ค่าแรง' }] as const).map((option) => <button key={option.value} type="button" onClick={() => setFilter(option.value)} className={`flex-1 rounded-full px-3 py-2 transition sm:flex-none ${filter === option.value ? 'bg-blue-50 text-blue-700 shadow-sm' : 'hover:text-slate-900'}`}>{option.label}</button>)}
-        </div>
+        {dateFilter === 'custom' ? <div className="mt-2 grid grid-cols-2 gap-2 sm:max-w-md"><label><span className="mb-1 block text-xs text-slate-500">ตั้งแต่วันที่</span><input type="date" className="theme-input" value={dateFrom} max={dateTo || undefined} onChange={(event) => setDateFrom(event.target.value)} /></label><label><span className="mb-1 block text-xs text-slate-500">ถึงวันที่</span><input type="date" className="theme-input" value={dateTo} min={dateFrom || undefined} onChange={(event) => setDateTo(event.target.value)} /></label></div> : null}
+        {!fixedCostType ? <div className="mt-3 flex w-full rounded-full border border-slate-200 bg-white p-1 text-xs font-semibold text-slate-600 sm:w-fit">{([{ value: 'all', label: 'ทั้งหมด' }, { value: 'material', label: 'ค่าวัสดุ' }, { value: 'labor', label: 'ค่าแรง' }] as const).map((option) => <button key={option.value} type="button" onClick={() => setFilter(option.value)} className={`flex-1 rounded-full px-3 py-2 transition sm:flex-none ${filter === option.value ? 'bg-blue-50 text-blue-700 shadow-sm' : 'hover:text-slate-900'}`}>{option.label}</button>)}</div> : null}
+        <p className="mt-3 text-xs text-slate-500" aria-live="polite">แสดง {visibleExpenses.length.toLocaleString('th-TH')} จาก {(costType ? activeSummary.count : expenses.length).toLocaleString('th-TH')} รายการ · ยอดสรุปด้านบนเป็นยอดทั้งโครงการและไม่เปลี่ยนตามตัวกรอง</p>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 sm:px-6">
-        {visibleExpenses.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-6 text-center text-sm text-slate-500">ยังไม่มีรายการบันทึกจริงในหมวดงานนี้</div> : <>
+        {visibleExpenses.length === 0 ? <div className="flex min-h-44 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-6 text-center"><p className="text-sm font-semibold text-slate-700">{hasFilters ? 'ไม่พบรายการตามตัวกรอง' : costType === 'labor' ? 'ยังไม่มีรายการจ่ายค่าแรง' : costType === 'material' ? 'ยังไม่มีรายการจ่ายค่าวัสดุและค่าใช้จ่าย' : 'ยังไม่มีรายการบันทึกจริง'}</p>{hasFilters ? <button type="button" onClick={clearFilters} className="theme-button-secondary mt-4">ล้างตัวกรอง</button> : null}</div> : <>
           <div className="hidden md:block">
             <table className="w-full table-fixed text-sm">
-              <thead className="text-left text-slate-500"><tr className="border-b border-slate-200"><th className="w-[12%] py-3 pr-3">วันที่</th><th className="w-[20%] py-3 pr-3">รายการ</th><th className="w-[12%] py-3 pr-3">กลุ่ม</th><th className="w-[14%] py-3 pr-3">ประเภท</th><th className="w-[16%] py-3 pr-3 text-right">จำนวนเงิน</th><th className="w-[16%] py-3 pr-3">หมายเหตุ</th><th className="w-[10%] py-3 text-right">จัดการ</th></tr></thead>
-              <tbody>{visibleExpenses.map((expense) => <tr key={expense.id} className="border-b border-slate-100 align-top last:border-0"><td className="py-3 pr-3 font-numeric text-slate-700">{formatThaiDate(expense.expense_date)}</td><td className="break-words py-3 pr-3 font-semibold text-slate-900">{expense.title}</td><td className="py-3 pr-3"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${getExpenseCostType(expense) === 'labor' ? 'bg-violet-50 text-violet-700' : 'bg-blue-50 text-blue-700'}`}>{getCostTypeLabel(getExpenseCostType(expense))}</span></td><td className="break-words py-3 pr-3 text-slate-600">{categoryName}</td><td className="py-3 pr-3 text-right font-numeric font-semibold text-slate-900">{thb.format(expense.amount)}</td><td className="break-words py-3 pr-3 text-slate-500">{expense.note ?? '-'}</td><td className="py-3"><div className="flex flex-col items-end gap-1.5"><button type="button" onClick={() => onEditExpense(expense.id)} className="text-xs font-semibold text-blue-700 hover:underline">แก้ไข</button><button type="button" onClick={() => onDeleteExpense(expense.id)} className="text-xs font-semibold text-rose-700 hover:underline">ลบ</button></div></td></tr>)}</tbody>
+              <thead className="text-left text-slate-500"><tr className="border-b border-slate-200"><th className="w-[12%] py-3 pr-3">วันที่จ่าย</th><th className="w-[18%] py-3 pr-3">รายการ / ผู้รับเงิน</th><th className="w-[17%] py-3 pr-3">หมวดงาน</th><th className="w-[12%] py-3 pr-3 text-right">จำนวนเงิน</th><th className="w-[23%] py-3 pr-3">รายละเอียด</th><th className="w-[12%] py-3 pr-3">อัปเดตล่าสุด</th><th className="w-[6%] py-3 text-right">จัดการ</th></tr></thead>
+              <tbody>{visibleExpenses.map((expense) => {
+                const expenseCategory = categories.find((item) => item.id === expense.category_id) ?? null;
+                return <tr id={`expense-history-${expense.id}`} key={expense.id} role="button" tabIndex={0} onClick={() => openExpense(expense.id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openExpense(expense.id); } }} className={`cursor-pointer border-b border-slate-100 align-top transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset ${dialogTone === 'labor' ? 'focus-visible:ring-violet-500' : 'focus-visible:ring-blue-500'} ${focusedExpenseId === expense.id ? 'bg-blue-50/70 ring-1 ring-inset ring-blue-200' : ''}`}>
+                  <td className="py-3 pr-3 font-numeric font-semibold text-slate-700">{formatThaiDate(expense.expense_date)}</td>
+                  <td className="break-words py-3 pr-3"><p className="font-semibold text-slate-900">{expense.title}</p>{expense.payee ? <p className="mt-1 text-xs text-slate-500">ผู้รับเงิน/ผู้ขาย: {expense.payee}</p> : null}</td>
+                  <td className="break-words py-3 pr-3">{expenseCategory ? <><p className="text-slate-700">{expenseCategory.name}</p><span className={`${statusBadgeClass(expenseCategory.status)} mt-1.5`}>{constructionStatusLabel[expenseCategory.status]}</span></> : <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">ยังไม่ระบุหมวดงาน</span>}</td>
+                  <td className={`py-3 pr-3 text-right font-numeric font-semibold ${getExpenseCostType(expense) === 'labor' ? 'text-violet-700' : 'text-blue-700'}`}>{thb.format(expense.amount)}</td>
+                  <td className="break-words py-3 pr-3 text-slate-500">{expense.note || '-'}</td>
+                  <td className="py-3 pr-3 text-xs text-slate-500">{formatThaiTimestamp(expense.updated_at || expense.created_at)}</td>
+                  <td className="py-3"><div className="flex flex-col items-end gap-2"><button type="button" onClick={(event) => { event.stopPropagation(); onEditExpense(expense.id); }} className="text-xs font-semibold text-blue-700 hover:underline">แก้ไข</button><button type="button" onClick={(event) => { event.stopPropagation(); onDeleteExpense(expense.id); }} className="text-xs font-semibold text-rose-700 hover:underline">ลบ</button></div></td>
+                </tr>;
+              })}</tbody>
             </table>
           </div>
-          <div className="space-y-3 md:hidden">{visibleExpenses.map((expense) => <article key={expense.id} className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="break-words font-semibold text-slate-900">{expense.title}</p><p className="mt-1 text-xs text-slate-500">{formatThaiDate(expense.expense_date)} · {categoryName}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${getExpenseCostType(expense) === 'labor' ? 'bg-violet-50 text-violet-700' : 'bg-blue-50 text-blue-700'}`}>{getCostTypeLabel(getExpenseCostType(expense))}</span></div><p className="font-numeric mt-3 text-lg font-semibold text-slate-900">{thb.format(expense.amount)}</p><p className="mt-2 break-words text-sm text-slate-500">{expense.note ?? '-'}</p><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => onEditExpense(expense.id)} className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">แก้ไข</button><button type="button" onClick={() => onDeleteExpense(expense.id)} className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">ลบ</button></div></article>)}</div>
+          <div className="space-y-3 md:hidden">{visibleExpenses.map((expense) => {
+            const expenseCategory = categories.find((item) => item.id === expense.category_id) ?? null;
+            return <article id={`expense-history-${expense.id}`} key={expense.id} role="button" tabIndex={0} onClick={() => openExpense(expense.id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openExpense(expense.id); } }} className={`min-w-0 cursor-pointer rounded-2xl border bg-white p-4 transition focus-visible:outline-none focus-visible:ring-2 ${dialogTone === 'labor' ? 'focus-visible:ring-violet-500' : 'focus-visible:ring-blue-500'} ${focusedExpenseId === expense.id ? 'border-blue-300 bg-blue-50/40 ring-1 ring-blue-200' : 'border-slate-200'}`}>
+              <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-numeric text-xs font-semibold text-slate-500">จ่ายเมื่อ {formatThaiDate(expense.expense_date)}</p><p className="mt-1 break-words font-semibold text-slate-900">{expense.title}</p></div><p className={`font-numeric shrink-0 text-base font-semibold ${getExpenseCostType(expense) === 'labor' ? 'text-violet-700' : 'text-blue-700'}`}>{thb.format(expense.amount)}</p></div>
+              <div className="mt-3">{expenseCategory ? <div className="flex flex-wrap items-center gap-2"><span className="text-sm font-medium text-slate-700">{expenseCategory.name}</span><span className={statusBadgeClass(expenseCategory.status)}>{constructionStatusLabel[expenseCategory.status]}</span></div> : <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">ยังไม่ระบุหมวดงาน</span>}</div>
+              {expense.payee ? <p className="mt-3 break-words text-sm text-slate-600">ผู้รับเงิน/ผู้ขาย: {expense.payee}</p> : null}<p className="mt-2 break-words text-sm text-slate-500">{expense.note || 'ไม่มีหมายเหตุ'}</p><p className="mt-3 text-xs text-slate-400">อัปเดตล่าสุด {formatThaiTimestamp(expense.updated_at || expense.created_at)}</p>
+              <div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={(event) => { event.stopPropagation(); onEditExpense(expense.id); }} className="min-h-11 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">แก้ไข</button><button type="button" onClick={(event) => { event.stopPropagation(); onDeleteExpense(expense.id); }} className="min-h-11 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">ลบ</button></div>
+            </article>;
+          })}</div>
         </>}
       </div>
     </section>
   </div>, document.body);
 }
 
-function ExpenseSummaryMetric({ label, value, tone = 'default', className = '' }: { label: string; value: number; tone?: 'default' | 'material' | 'labor' | 'total'; className?: string }) {
-  const valueClass = tone === 'material' ? 'text-blue-600' : tone === 'labor' ? 'text-violet-600' : tone === 'total' ? 'text-emerald-600' : 'text-slate-900';
-  return <article className={`min-w-0 rounded-xl border border-slate-200 bg-white p-3 ${className}`}><p className="text-xs text-slate-500">{label}</p><p className={`font-numeric mt-1 break-words text-sm font-semibold sm:text-base ${valueClass}`}>{thb.format(value)}</p></article>;
+function ExpenseSummaryMetric({ label, value, tone = 'default', format = 'money', className = '' }: { label: string; value: number; tone?: 'default' | 'material' | 'labor' | 'total' | 'danger'; format?: 'money' | 'percent' | 'count'; className?: string }) {
+  const valueClass = tone === 'material' ? 'text-blue-600' : tone === 'labor' ? 'text-violet-600' : tone === 'total' ? 'text-emerald-600' : tone === 'danger' ? 'text-rose-600' : 'text-slate-900';
+  const displayValue = format === 'percent' ? `${value.toFixed(1)}%` : format === 'count' ? `${value.toLocaleString('th-TH')} รายการ` : thb.format(value);
+  return <article className={`min-w-0 rounded-xl border border-slate-200 bg-white p-3 ${className}`}><p className="text-xs text-slate-500">{label}</p><p className={`font-numeric mt-1 break-words text-sm font-semibold sm:text-base ${valueClass}`}>{displayValue}</p></article>;
 }
 
 function BudgetLine({ label, value, valueClass = 'text-slate-900' }: { label: string; value: number; valueClass?: string }) {
@@ -976,7 +1197,7 @@ function DeleteExpenseConfirm({ expense, onClose, onConfirm }: { expense: Constr
   </div>;
 }
 
-function ActualExpenseForm({ project, categories, expense, initialCostType, lockedCategoryId, onClose, onSubmit }: { project: ConstructionProjectRow | null; categories: ConstructionCategoryRow[]; expense: ConstructionExpenseRow | null; initialCostType: ConstructionCostType; lockedCategoryId?: string; onClose: () => void; onSubmit: (fd: FormData) => Promise<{ success: boolean; message: string }> }) {
+function ActualExpenseForm({ project, categories, expense, initialCostType, lockedCategoryId, onClose, onSubmit }: { project: ConstructionProjectRow | null; categories: ConstructionCategoryRow[]; expense: ConstructionExpenseRow | null; initialCostType: ConstructionCostType; lockedCategoryId?: string; onClose: () => void; onSubmit: (fd: FormData) => Promise<ExpenseActionResult> }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [costType, setCostType] = useState<ConstructionCostType>(expense ? getExpenseCostType(expense) : initialCostType);
@@ -985,7 +1206,7 @@ function ActualExpenseForm({ project, categories, expense, initialCostType, lock
   const isLabor = costType === 'labor';
   const lockedCategory = lockedCategoryId ? categories.find((category) => category.id === lockedCategoryId) ?? null : null;
 
-  return <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
+  return <div className="fixed inset-0 z-[120] flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-4">
     <form onSubmit={async (event) => {
       event.preventDefault();
       setSaving(true);
@@ -997,7 +1218,7 @@ function ActualExpenseForm({ project, categories, expense, initialCostType, lock
       const result = await onSubmit(fd);
       setSaving(false);
       if (!result.success) setMessage(result.message);
-    }} className="w-full max-w-xl rounded-[24px] border border-slate-200 bg-white p-5 shadow-2xl sm:p-6">
+    }} className="max-h-[100dvh] w-full max-w-xl overflow-y-auto rounded-t-[24px] border border-slate-200 bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl sm:max-h-[calc(100dvh-32px)] sm:rounded-[24px] sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className={`text-[13px] font-semibold ${isLabor ? 'text-violet-600' : 'text-blue-600'}`}>Actual Record</p>
@@ -1012,10 +1233,11 @@ function ActualExpenseForm({ project, categories, expense, initialCostType, lock
           <span className="text-sm text-slate-600">หมวดงาน</span>
           <input type="hidden" name="category_id" value={lockedCategory.id} />
           <div className="mt-1 flex min-h-11 items-center rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800" aria-label={`บันทึกใน: ${lockedCategory.name}`}>บันทึกใน: {lockedCategory.name}</div>
-        </div> : <label className="block"><span className="text-sm text-slate-600">หมวดงาน</span><select name="category_id" className="theme-select mt-1" defaultValue={expense?.category_id ?? categories[0]?.id ?? ''}><option value="">ไม่ระบุหมวด</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>}
+        </div> : <label className="block"><span className="text-sm font-medium text-slate-700">หมวดงานที่เชื่อมโยง</span><select name="category_id" className="theme-select mt-1" defaultValue={expense?.category_id ?? ''}><option value="">ยังไม่ระบุหมวดงาน</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select><span className="mt-1 block text-xs text-slate-500">เลือกหมวดงานจริงของโครงการเพื่อให้ติดตามยอดได้ถูกต้อง</span></label>}
         <label className="block"><span className="text-sm text-slate-600">กลุ่ม</span><select className="theme-select mt-1" value={costType} onChange={(event) => setCostType(event.target.value as ConstructionCostType)}><option value="material">ค่าวัสดุ / ค่าใช้จ่าย</option><option value="labor">ค่าแรง</option></select></label>
         <label className="block sm:col-span-2"><span className="text-sm text-slate-600">{isLabor ? 'รายการงาน / คนงาน / จำนวนวันหรือชั่วโมง' : 'รายการ'}</span><input name="title" className="theme-input mt-1" defaultValue={expense?.title ?? ''} placeholder={isLabor ? 'เช่น ค่าแรงช่าง 2 คน 3 วัน' : 'เช่น ค่าเหล็ก'} required /></label>
         <label className="block"><span className="text-sm text-slate-600">จำนวนเงิน</span><input name="amount" type="number" min="0" step="0.01" className="theme-input mt-1" defaultValue={expense?.amount ?? ''} placeholder="0" required /></label>
+        <label className="block"><span className="text-sm text-slate-600">ผู้รับเงิน / ผู้ขาย</span><input name="payee" className="theme-input mt-1" defaultValue={expense?.payee ?? ''} placeholder={isLabor ? 'เช่น ช่างสมชาย' : 'เช่น ร้านวัสดุก่อสร้าง'} /></label>
         <label className="block sm:col-span-2"><span className="text-sm text-slate-600">หมายเหตุ</span><textarea name="note" className="theme-textarea mt-1 min-h-24" defaultValue={expense?.note ?? ''} placeholder="รายละเอียดเพิ่มเติม" /></label>
         {message ? <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 sm:col-span-2">{message}</div> : null}
       </div>

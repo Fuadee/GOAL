@@ -49,7 +49,7 @@ export async function getConstructionInvestmentProjects(): Promise<ConstructionI
       { revalidate: false }
     ),
     supabaseRestRequest<ConstructionExpenseRow[]>(
-      `construction_expenses?select=id,project_id,category_id,cost_type,expense_date,title,amount,note,receipt_url,created_at,updated_at&project_id=in.(${projectIds.join(',')})&order=expense_date.desc&order=created_at.desc`,
+      `construction_expenses?select=id,project_id,category_id,cost_type,expense_date,title,amount,payee,note,receipt_url,created_at,updated_at&project_id=in.(${projectIds.join(',')})&order=expense_date.desc&order=created_at.desc`,
       'GET',
       undefined,
       { revalidate: false }
@@ -71,9 +71,17 @@ export async function getConstructionProjectBudget(projectId: string): Promise<C
       'GET', undefined, { revalidate: false }
     ),
     supabaseRestRequest<ConstructionExpenseRow[]>(
-      `construction_expenses?select=id,project_id,category_id,cost_type,expense_date,title,amount,note,receipt_url,created_at,updated_at&project_id=eq.${encodedProjectId}&order=expense_date.desc&order=created_at.desc`,
+      `construction_expenses?select=id,project_id,category_id,cost_type,expense_date,title,amount,payee,note,receipt_url,created_at,updated_at&project_id=eq.${encodedProjectId}&order=expense_date.desc&order=created_at.desc`,
       'GET', undefined, { revalidate: false }
     )
   ]);
   return { project: projects[0] ?? null, categories: categories.map((category) => ({ ...category, status: normalizeConstructionCategoryStatus(category.status) })), expenses };
+}
+
+export async function constructionCategoryBelongsToProject(categoryId: string, projectId: string): Promise<boolean> {
+  const rows = await supabaseRestRequest<Pick<ConstructionCategoryRow, 'id'>[]>(
+    `construction_categories?select=id&id=eq.${encodeURIComponent(categoryId)}&project_id=eq.${encodeURIComponent(projectId)}&limit=1`,
+    'GET', undefined, { revalidate: false }
+  );
+  return rows.length === 1;
 }

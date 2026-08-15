@@ -2,6 +2,7 @@
 
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { clearConstructionExpenseCategory, createConstructionCategory, createConstructionExpense, createConstructionProject, createGrowthAsset, createMoneyIncomeSource, deleteConstructionCategory, deleteConstructionExpense, deleteGrowthAsset, saveAssetMonthlySnapshotTransaction, softDeleteMoneyIncomeSource, updateConstructionCategory, updateConstructionExpense, updateGrowthAsset, updateMoneyIncomeSource } from '@/lib/money/mutations';
+import { constructionCategoryBelongsToProject } from '@/lib/money/queries';
 import { CONSTRUCTION_CATEGORY_STATUSES, CONSTRUCTION_COST_TYPES, ConstructionCategoryStatus, ConstructionCostType, ConstructionExpenseRow, GROWTH_ASSET_TYPES, GrowthAssetType } from '@/lib/money/types';
 
 const toNumber = (value: FormDataEntryValue | null) => {
@@ -253,6 +254,7 @@ export async function createConstructionExpenseAction(formData: FormData): Promi
   const expenseDate = String(formData.get('expense_date') ?? '').trim();
   const title = String(formData.get('title') ?? '').trim();
   const amount = toNumber(formData.get('amount'));
+  const payee = String(formData.get('payee') ?? '').trim();
   const note = String(formData.get('note') ?? '').trim();
 
   if (!projectId) return { success: false, message: 'ไม่พบโครงการ' };
@@ -262,6 +264,9 @@ export async function createConstructionExpenseAction(formData: FormData): Promi
   if (Number.isNaN(amount) || amount <= 0) return { success: false, message: 'จำนวนเงินต้องมากกว่า 0' };
 
   try {
+    if (rawCategoryId && !(await constructionCategoryBelongsToProject(rawCategoryId, projectId))) {
+      return { success: false, message: 'หมวดงานที่เลือกไม่อยู่ในโครงการนี้ กรุณาเลือกใหม่' };
+    }
     const expense = await createConstructionExpense({
       project_id: projectId,
       category_id: rawCategoryId || null,
@@ -269,6 +274,7 @@ export async function createConstructionExpenseAction(formData: FormData): Promi
       expense_date: expenseDate,
       title,
       amount,
+      payee: payee || null,
       note: note || null,
     });
     revalidatePath('/money-management');
@@ -280,43 +286,52 @@ export async function createConstructionExpenseAction(formData: FormData): Promi
   }
 }
 
-export async function updateConstructionExpenseAction(formData: FormData): Promise<{ success: boolean; message: string }> {
+export async function updateConstructionExpenseAction(formData: FormData): Promise<{ success: boolean; message: string; expense?: ConstructionExpenseRow }> {
   const id = String(formData.get('id') ?? '').trim();
+  const projectId = String(formData.get('project_id') ?? '').trim();
   const rawCategoryId = String(formData.get('category_id') ?? '').trim();
   const costTypeValue = String(formData.get('cost_type') ?? 'material').trim();
   const expenseDate = String(formData.get('expense_date') ?? '').trim();
   const title = String(formData.get('title') ?? '').trim();
   const amount = toNumber(formData.get('amount'));
+  const payee = String(formData.get('payee') ?? '').trim();
   const note = String(formData.get('note') ?? '').trim();
 
   if (!id) return { success: false, message: 'ไม่พบรายการค่าใช้จ่าย' };
+  if (!projectId) return { success: false, message: 'ไม่พบโครงการ' };
   if (!isConstructionCostType(costTypeValue)) return { success: false, message: 'กลุ่มรายการไม่ถูกต้อง' };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(expenseDate)) return { success: false, message: 'วันที่ไม่ถูกต้อง' };
   if (!title) return { success: false, message: 'กรุณากรอกรายการค่าใช้จ่าย' };
   if (Number.isNaN(amount) || amount <= 0) return { success: false, message: 'จำนวนเงินต้องมากกว่า 0' };
 
   try {
-    await updateConstructionExpense(id, {
+    if (rawCategoryId && !(await constructionCategoryBelongsToProject(rawCategoryId, projectId))) {
+      return { success: false, message: 'หมวดงานที่เลือกไม่อยู่ในโครงการนี้ กรุณาเลือกใหม่' };
+    }
+    const expense = await updateConstructionExpense(id, {
       category_id: rawCategoryId || null,
       cost_type: costTypeValue,
       expense_date: expenseDate,
       title,
       amount,
+      payee: payee || null,
       note: note || null,
     });
     revalidatePath('/money-management');
-    return { success: true, message: 'แก้ไขค่าใช้จ่ายสำเร็จ' };
+    if (projectId) revalidatePath(`/money-management/projects/${projectId}`);
+    return { success: true, message: 'แก้ไขค่าใช้จ่ายสำเร็จ', expense };
   } catch (error) {
     console.error('[construction-expense update failed]', error);
     return { success: false, message: 'แก้ไขค่าใช้จ่ายไม่สำเร็จ กรุณาลองใหม่อีกครั้ง' };
   }
 }
 
-export async function deleteConstructionExpenseAction(expenseId: string): Promise<{ success: boolean; message: string }> {
+export async function deleteConstructionExpenseAction(expenseId: string, projectId?: string): Promise<{ success: boolean; message: string }> {
   if (!expenseId) return { success: false, message: 'ไม่พบรายการค่าใช้จ่าย' };
   try {
     await deleteConstructionExpense(expenseId);
     revalidatePath('/money-management');
+    if (projectId) revalidatePath(`/money-management/projects/${projectId}`);
     return { success: true, message: 'ลบค่าใช้จ่ายสำเร็จ' };
   } catch (error) {
     console.error('[construction-expense delete failed]', error);

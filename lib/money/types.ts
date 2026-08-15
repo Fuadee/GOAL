@@ -44,7 +44,7 @@ export type ConstructionCostType = (typeof CONSTRUCTION_COST_TYPES)[number];
 export type ConstructionOperationChecklistItem = { id: string; title: string; done: boolean };
 export type ConstructionProjectRow = { id: string; name: string; description: string | null; status: string | null; total_budget: number; created_at: string; updated_at: string; };
 export type ConstructionCategoryRow = { id: string; project_id: string | null; name: string; budget: number; labor_budget: number; status: ConstructionCategoryStatus; operation_detail: string | null; operation_note: string | null; operation_checklist: ConstructionOperationChecklistItem[]; sort_order: number; created_at: string; updated_at: string; };
-export type ConstructionExpenseRow = { id: string; project_id: string | null; category_id: string | null; cost_type: ConstructionCostType; expense_date: string; title: string; amount: number; note: string | null; receipt_url: string | null; created_at: string; updated_at: string; };
+export type ConstructionExpenseRow = { id: string; project_id: string | null; category_id: string | null; cost_type: ConstructionCostType; expense_date: string; title: string; amount: number; payee: string | null; note: string | null; receipt_url: string | null; created_at: string; updated_at: string; };
 export type ConstructionProjectBudgetData = { project: ConstructionProjectRow | null; categories: ConstructionCategoryRow[]; expenses: ConstructionExpenseRow[]; };
 export type ConstructionInvestmentProjectsData = { projects: ConstructionProjectRow[]; categories: ConstructionCategoryRow[]; expenses: ConstructionExpenseRow[]; };
 

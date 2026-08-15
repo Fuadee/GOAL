@@ -137,6 +137,7 @@ export async function createConstructionExpense(payload: {
   expense_date: string;
   title: string;
   amount: number;
+  payee?: string | null;
   note?: string | null;
 }): Promise<ConstructionExpenseRow> {
   const rows = await supabaseRestRequest<ConstructionExpenseRow[]>('construction_expenses', 'POST', payload);
@@ -151,6 +152,7 @@ export async function updateConstructionExpense(
     expense_date: string;
     title: string;
     amount: number;
+    payee?: string | null;
     note?: string | null;
   }
 ): Promise<ConstructionExpenseRow> {
