@@ -15,6 +15,7 @@ import {
   markCandidateValidated,
   removeDiscoveryCandidate,
   resumeInnovation,
+  saveInnovationSupabaseEmail,
   updateCandidateConcept,
   updateCandidateProblem,
   updateInnovationBlockedReason
@@ -25,6 +26,30 @@ function revalidateInnovationPages(pathname?: string) {
   revalidatePath('/innovation/discovery/new');
   if (pathname) {
     revalidatePath(pathname);
+  }
+}
+
+export async function updateInnovationSupabaseEmailAction(
+  innovationId: string,
+  formData: FormData
+): Promise<{ success: boolean; message: string }> {
+  const supabaseEmail = String(formData.get('supabaseEmail') ?? '').trim();
+
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(innovationId)) {
+    return { success: false, message: 'ไม่พบ Innovation ที่ต้องการแก้ไข' };
+  }
+
+  if (supabaseEmail.length > 320 || (supabaseEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supabaseEmail))) {
+    return { success: false, message: 'กรุณากรอก Email ให้ถูกต้อง' };
+  }
+
+  try {
+    await saveInnovationSupabaseEmail(innovationId, supabaseEmail || null);
+    revalidateInnovationPages(`/innovation/${innovationId}`);
+    return { success: true, message: 'บันทึก Supabase Email เรียบร้อย' };
+  } catch (error) {
+    console.error('Unable to update Innovation Supabase Email:', error);
+    return { success: false, message: 'ไม่สามารถบันทึก Email ได้ กรุณาลองใหม่อีกครั้ง' };
   }
 }
 

@@ -9,7 +9,7 @@ import {
 } from '@/lib/innovation/types';
 
 export async function getInnovationDashboardRows(): Promise<InnovationDashboardRow[]> {
-  const endpoint = 'innovations?select=id,title,description,goal,status,result,ended_at,is_active,is_blocked,blocked_reason,blocked_at,created_at,updated_at,reward_title,reward_thai_title,reward_description,reward_emotional_copy,reward_image_url,reward_status,innovation_process_steps(id,title,status,step_order,created_at,updated_at,note)&order=updated_at.desc&limit=50';
+  const endpoint = 'innovations?select=id,title,description,goal,status,result,ended_at,is_active,is_blocked,blocked_reason,blocked_at,supabase_email,created_at,updated_at,reward_title,reward_thai_title,reward_description,reward_emotional_copy,reward_image_url,reward_status,innovation_process_steps(id,title,status,step_order,created_at,updated_at,note)&order=updated_at.desc&limit=50';
 
   try {
     // Dashboard counts and cards must be derived from the same live result.
@@ -64,7 +64,7 @@ export async function getDiscoveryCandidateById(id: string): Promise<DiscoveryCa
 }
 
 export async function getInnovationById(id: string): Promise<InnovationRow | null> {
-  const rows = await supabaseRestRequest<InnovationRow[]>(`innovations?select=id,title,description,goal,status,result,ended_at,is_active,is_blocked,blocked_reason,blocked_at,created_at,updated_at,reward_title,reward_thai_title,reward_description,reward_emotional_copy,reward_image_url,reward_status&id=eq.${id}&limit=1`, 'GET');
+  const rows = await supabaseRestRequest<InnovationRow[]>(`innovations?select=id,title,description,goal,status,result,ended_at,is_active,is_blocked,blocked_reason,blocked_at,supabase_email,created_at,updated_at,reward_title,reward_thai_title,reward_description,reward_emotional_copy,reward_image_url,reward_status&id=eq.${id}&limit=1`, 'GET');
   return rows[0] ?? null;
 }
 

@@ -74,6 +74,7 @@ export type InnovationRow = {
   is_blocked: boolean;
   blocked_reason: string | null;
   blocked_at: string | null;
+  supabase_email: string | null;
   created_at: string;
   updated_at: string;
   reward_title: string | null;
@@ -204,6 +205,7 @@ export type UpdateInnovationPayload = {
   blocked_reason?: string | null;
   blocked_at?: string | null;
   status?: InnovationStatus;
+  supabase_email?: string | null;
   reward_title?: string | null;
   reward_thai_title?: string | null;
   reward_description?: string | null;

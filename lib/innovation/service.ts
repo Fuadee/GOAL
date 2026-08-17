@@ -87,6 +87,7 @@ export async function getInnovationDashboardData(): Promise<InnovationCardViewMo
       is_blocked: row.is_blocked,
       blocked_reason: row.blocked_reason,
       blocked_at: row.blocked_at,
+      supabase_email: row.supabase_email,
       created_at: row.created_at,
       updated_at: row.updated_at,
       reward_title: row.reward_title,
@@ -172,6 +173,10 @@ export async function editInnovationApp(id: string, innovationId: string, payloa
 
 export async function addInnovation(payload: CreateInnovationPayload) {
   return createInnovation(payload);
+}
+
+export async function saveInnovationSupabaseEmail(innovationId: string, supabaseEmail: string | null) {
+  return updateInnovation(innovationId, { supabase_email: supabaseEmail });
 }
 
 export async function addDiscoveryCandidate(payload: CreateDiscoveryCandidatePayload) {
