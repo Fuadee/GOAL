@@ -187,10 +187,19 @@ export async function updateCandidateValidationNotesAction(candidateId: string, 
 }
 
 export async function deleteDiscoveryCandidateAction(candidateId: string): Promise<{ success: boolean; message: string }> {
-  await removeDiscoveryCandidate(candidateId);
-  revalidateInnovationPages();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(candidateId)) {
+    return { success: false, message: 'ไม่พบไอเดียที่ต้องการลบ' };
+  }
 
-  return { success: true, message: 'Candidate deleted.' };
+  try {
+    await removeDiscoveryCandidate(candidateId);
+    revalidateInnovationPages(`/innovation/discovery/${candidateId}`);
+
+    return { success: true, message: 'ลบไอเดียเรียบร้อย' };
+  } catch (error) {
+    console.error('Unable to delete discovery candidate:', error);
+    return { success: false, message: 'ไม่สามารถลบไอเดียได้ กรุณาลองใหม่อีกครั้ง' };
+  }
 }
 
 export async function convertDiscoveryCandidateAction(candidateId: string): Promise<{ success: boolean; message: string; innovationId?: string }> {

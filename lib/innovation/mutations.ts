@@ -36,8 +36,14 @@ export async function updateDiscoveryCandidate(id: string, payload: UpdateDiscov
   return rows[0];
 }
 
-export async function deleteDiscoveryCandidate(id: string): Promise<void> {
-  await supabaseRestRequest<DiscoveryCandidateRow[]>(`discovery_candidates?id=eq.${id}`, 'DELETE');
+export async function deleteDiscoveryCandidate(id: string): Promise<DiscoveryCandidateRow> {
+  const rows = await supabaseRestRequest<DiscoveryCandidateRow[]>(`discovery_candidates?id=eq.${id}`, 'DELETE');
+
+  if (!rows[0]) {
+    throw new Error('Discovery candidate not found or was not deleted.');
+  }
+
+  return rows[0];
 }
 
 export async function createInnovationProcessStep(payload: CreateInnovationProcessStepPayload): Promise<InnovationProcessStepRow> {
