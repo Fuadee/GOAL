@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --test lib/money/*.test.cjs"
+    "test": "node --test lib/money/*.test.cjs lib/blood-donation/*.test.cjs lib/dashboard/*.test.cjs lib/running/*.test.cjs",
+    "typecheck": "tsc --noEmit",
+    "test:health": "node --test lib/running/*.test.cjs"
   },
   "dependencies": {
     "framer-motion": "^12.10.0",
@@ -15,12 +17,14 @@
     "next": "14.2.35",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "recharts": "^2.15.4"
+    "recharts": "^2.15.4",
+    "three": "0.187.0"
   },
   "devDependencies": {
     "@types/node": "24.5.2",
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
+    "@types/three": "0.187.0",
     "autoprefixer": "10.4.21",
     "eslint": "8.57.1",
     "eslint-config-next": "14.2.35",

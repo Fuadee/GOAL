@@ -1,0 +1,18 @@
+Materials Variants Shoe
+Copyright (c) 2021 Shopify.
+Artist and original asset: Shopify.
+
+Source: https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/MaterialsVariantsShoe
+Original GLB: https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+License and disclaimer: https://creativecommons.org/licenses/by/4.0/legalcode
+
+GOAL modifications: retained the Midnight variant; removed unused variants/textures;
+resized embedded textures to 1024px; JPEG recompression; custom runtime material
+shading changes blue accents to electric lime and neutral panels to charcoal/titanium;
+added scene lighting, platform and interaction. Original geometry and UVs retained.
+shoe-poster.png is a static render of this adapted, licensed model and original GOAL stage.
+
+No endorsement by Shopify or Khronos is implied. The original asset and this adapted
+model/poster are provided under CC BY 4.0, without warranties. Attribution, a license
+link and a notice of modifications must be retained on redistribution.

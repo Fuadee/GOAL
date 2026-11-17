@@ -72,7 +72,6 @@ export type CreateCompletedBloodDonationEventPayload = {
 
 export type MarkBloodDonationEventCompletedPayload = {
   actual_date: string;
-  note?: string;
 };
 
 export type RescheduleBloodDonationEventPayload = {

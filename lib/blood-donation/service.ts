@@ -4,7 +4,7 @@ import {
   getChanceToReachBloodDonationGoal,
   getUpcomingBloodDonationPlans
 } from '@/lib/blood-donation/logic';
-import { getActiveBloodDonationGoal, getBloodDonationEventsByGoalId } from '@/lib/blood-donation/queries';
+import { getActiveBloodDonationGoal, getBloodDonationEventsByGoalId, getLatestCompletedBloodDonationGoal } from '@/lib/blood-donation/queries';
 import { BloodDonationDashboardViewModel, BloodDonationMission, BloodDonationReward } from '@/lib/blood-donation/types';
 import { getCurrentBloodDonationPlan } from '@/lib/blood-donation/plan-display';
 
@@ -15,7 +15,7 @@ const createCurrentMission = (reward: BloodDonationReward | null): BloodDonation
 });
 
 export async function getBloodDonationDashboardData(today = new Date()): Promise<BloodDonationDashboardViewModel> {
-  const goal = await getActiveBloodDonationGoal();
+  const goal = (await getActiveBloodDonationGoal()) ?? (await getLatestCompletedBloodDonationGoal());
 
   if (!goal) {
     return {

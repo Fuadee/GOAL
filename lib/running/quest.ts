@@ -9,19 +9,21 @@ import {
   RunnerRunResult,
   RunnerTodayStatus
 } from '@/lib/running/quest.types';
+import { activityType, levelRequirement } from './achievements';
 
 export function formatPace(secondsPerKm: number | null): string {
-  if (!secondsPerKm || secondsPerKm <= 0) {
+  if (!secondsPerKm || !Number.isFinite(secondsPerKm) || secondsPerKm <= 0) {
     return '--:--';
   }
 
-  const minutes = Math.floor(secondsPerKm / 60);
-  const seconds = secondsPerKm % 60;
+  const rounded = Math.round(secondsPerKm);
+  const minutes = Math.floor(rounded / 60);
+  const seconds = rounded % 60;
   return `${minutes}:${String(seconds).padStart(2, '0')} /km`;
 }
 
 export function formatDuration(durationSeconds: number | null): string {
-  if (!durationSeconds || durationSeconds <= 0) {
+  if (!durationSeconds || !Number.isFinite(durationSeconds) || durationSeconds <= 0) {
     return '--:--';
   }
 
@@ -51,13 +53,15 @@ export function parseDurationToSeconds(input: string): number | null {
   if (parts.length === 2) {
     const [minutes, seconds] = parts.map(Number);
     if (seconds >= 60) return null;
-    return minutes * 60 + seconds;
+    const total = minutes * 60 + seconds;
+    return Number.isSafeInteger(total) && total > 0 ? total : null;
   }
 
   if (parts.length === 3) {
     const [hours, minutes, seconds] = parts.map(Number);
     if (minutes >= 60 || seconds >= 60) return null;
-    return hours * 3600 + minutes * 60 + seconds;
+    const total = hours * 3600 + minutes * 60 + seconds;
+    return Number.isSafeInteger(total) && total > 0 ? total : null;
   }
 
   return null;
@@ -87,7 +91,7 @@ export function parseMinuteSecondDuration(input: string): {
     };
   }
 
-  const numericValue = value.replace(/\D/g, '');
+  const numericValue = /^\d+$/.test(value) ? value : '';
   if (!numericValue) {
     return { durationSeconds: null, error: 'กรุณากรอกตัวเลขเวลา', displayValue: null };
   }
@@ -118,13 +122,15 @@ export function calculatePaceSecondsPerKm(durationSeconds: number, distanceKm: n
     return null;
   }
 
-  return Math.round(durationSeconds / distanceKm);
+  return durationSeconds / distanceKm;
 }
 
 export function evaluateRunAttempt(level: RunnerLevel, input: RunAttemptInput): RunAttemptEvaluation {
-  const distanceMet = input.distance_km >= level.distance_target_km;
-  const paceMet = input.pace_seconds_per_km <= level.pace_target_seconds_per_km;
-  const noStopMet = input.no_stop;
+  const pace = calculatePaceSecondsPerKm(input.duration_seconds, input.distance_km);
+  const distanceMet = pace !== null && input.distance_km >= level.distance_target_km;
+  const paceMet = pace !== null && (level.pace_target_seconds_per_km === null || (input.duration_source !== 'legacy_pace' && pace <= level.pace_target_seconds_per_km));
+  const activity = activityType(input);
+  const noStopMet = level.level_number === 6 ? ['continuous', 'run_walk'].includes(activity) : activity === 'continuous';
 
   const unmetConditions: Array<'distance' | 'pace' | 'no_stop'> = [];
 
@@ -152,7 +158,7 @@ export function evaluateRunAttempt(level: RunnerLevel, input: RunAttemptInput): 
     result,
     passed,
     distanceRemainingKm: Math.max(level.distance_target_km - input.distance_km, 0),
-    paceDeltaSeconds: Math.max(input.pace_seconds_per_km - level.pace_target_seconds_per_km, 0),
+    paceDeltaSeconds: level.pace_target_seconds_per_km === null ? 0 : Math.max((pace ?? Infinity) - level.pace_target_seconds_per_km, 0),
     unmetConditions
   };
 }
@@ -224,24 +230,11 @@ export function getPrimaryHealthAction(todayStatus: RunnerTodayStatus): string {
   return 'เริ่มภารกิจวันนี้';
 }
 
-export function getNextMissionText(currentLevel: RunnerDashboardLevel | null, latestAttempt: RunnerRunLog | null, todayStatus: RunnerTodayStatus): string {
-  if (todayStatus === 'ran') {
-    return 'ถ้าวิ่งแล้ว ให้บันทึกผลทันทีเพื่ออัปเดตด่าน';
-  }
-
-  if (todayStatus === 'rest') {
-    return 'วันนี้พักเพื่อฟื้นตัว แล้วกลับมาลุยด่านพรุ่งนี้';
-  }
-
+export function getNextMissionText(currentLevel: RunnerDashboardLevel | null): string {
   if (!currentLevel) {
-    return 'รักษาความสม่ำเสมอ วิ่งเบา ๆ เพื่อคงฟอร์ม';
+    return 'ผ่านครบ 10 Levels แล้ว สามารถบันทึกผลวิ่งต่อได้';
   }
-
-  if (latestAttempt && latestAttempt.pace_seconds_per_km > currentLevel.pace_target_seconds_per_km) {
-    return `เป้าหมายของวันนี้คือทำ pace ให้ต่ำกว่า ${formatPace(currentLevel.pace_target_seconds_per_km).replace(' /km', '/km')}`;
-  }
-
-  return `วันนี้วิ่ง ${currentLevel.distance_target_km} km แบบไม่หยุดให้จบก่อน`;
+  return `เกณฑ์ Level ${currentLevel.level_number}: ${levelRequirement(currentLevel)}`;
 }
 
 export function buildDashboardLevels(
@@ -260,19 +253,19 @@ export function buildDashboardLevels(
 
 
 export function getHealthTodayMissionSummary(todayStatus: RunnerTodayStatus, currentLevel: RunnerDashboardLevel | null, latestAttempt: RunnerRunLog | null) {
-  const primaryText = getNextMissionText(currentLevel, latestAttempt, todayStatus);
+  const primaryText = getNextMissionText(currentLevel);
 
   if (!currentLevel) {
     return {
       primaryText,
-      secondaryText: 'คงวินัยให้ต่อเนื่อง แล้วค่อยขยายเป้าหมายใหม่',
+      secondaryText: 'ประเมินจากผลงานที่บันทึกจริงทั้งหมด',
       primaryActionLabel: getPrimaryHealthAction(todayStatus)
     };
   }
 
   return {
     primaryText,
-    secondaryText: `ด่านปัจจุบัน: ${currentLevel.title}`,
+    secondaryText: `ด่านปัจจุบัน: ${currentLevel.title}${latestAttempt ? ` · ผลล่าสุด ${latestAttempt.run_date}` : ''}`,
     primaryActionLabel: getPrimaryHealthAction(todayStatus)
   };
 }

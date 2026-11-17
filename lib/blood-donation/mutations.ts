@@ -46,12 +46,12 @@ export async function markBloodDonationEventCompleted(
   id: string,
   payload: MarkBloodDonationEventCompletedPayload
 ): Promise<BloodDonationEventRow> {
-  const rows = await supabaseRestRequest<BloodDonationEventRow[]>(`blood_donation_events?id=eq.${id}`, 'PATCH', {
+  const rows = await supabaseRestRequest<BloodDonationEventRow[]>(`blood_donation_events?id=eq.${id}&status=eq.planned`, 'PATCH', {
     status: 'completed',
-    actual_date: payload.actual_date,
-    note: payload.note
+    actual_date: payload.actual_date
   });
 
+  if (!rows[0]) throw new Error('ไม่พบแผนที่ยังรอบันทึก หรือรายการนี้บันทึกสำเร็จแล้ว');
   return rows[0];
 }
 
@@ -72,19 +72,9 @@ export async function rescheduleBloodDonationEvent(
     reward_status: payload.reward_status
   };
 
-  console.log('[blood-donation] update table blood_donation_events', {
-    where: `id=eq.${id}`,
-    fields: Object.keys(updatePayload)
-  });
-
-  await supabaseRestRequest<BloodDonationEventRow[]>(`blood_donation_events?id=eq.${id}`, 'PATCH', updatePayload);
-
-  const updatedRows = await supabaseRestRequest<BloodDonationEventRow[]>(`blood_donation_events?id=eq.${id}&limit=1`, 'GET');
-  const updatedRow = updatedRows[0];
-
-  console.log('[blood-donation] updated row from database', updatedRow);
-
-  return updatedRow;
+  const rows = await supabaseRestRequest<BloodDonationEventRow[]>(`blood_donation_events?id=eq.${id}&status=eq.planned`, 'PATCH', updatePayload);
+  if (!rows[0]) throw new Error('ไม่พบแผนที่ต้องการแก้ไข');
+  return rows[0];
 }
 
 export async function cancelBloodDonationEvent(id: string): Promise<BloodDonationEventRow> {

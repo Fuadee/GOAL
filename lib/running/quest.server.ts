@@ -1,223 +1,102 @@
 import { supabaseRestRequest } from '@/lib/supabase/rest';
-import {
-  buildDashboardLevels,
-  calculatePaceSecondsPerKm,
-  evaluateRunAttempt,
-  getBestAttemptByLevel,
-  getCurrentAvailableLevel,
-  getTodayRunStatus
-} from '@/lib/running/quest';
-import {
-  RunAttemptInput,
-  RunnerDashboardData,
-  RunnerLevel,
-  RunnerLevelProgress,
-  RunnerRestDay,
-  RunnerRunLog
-} from '@/lib/running/quest.types';
-
-type RunnerLevelRow = Omit<RunnerLevel, 'distance_target_km'> & { distance_target_km: string | number };
-type RunnerLevelProgressRow =
-  Omit<RunnerLevelProgress, 'best_distance_km' | 'best_no_stop_distance_km'> & {
-    best_distance_km: string | number | null;
-    best_no_stop_distance_km: string | number | null;
-  };
-type RunnerRunLogRow = Omit<RunnerRunLog, 'distance_km' | 'level' | 'note' | 'effort'> & {
-  distance_km: string | number;
-  note: string | null;
-  effort: 'easy' | 'normal' | 'hard' | null;
-  level?: { id: string; level_number: number; title: string };
-};
-type RunnerRestDayRow = RunnerRestDay;
-
-const toNumber = (value: string | number | null): number | null => {
-  if (value === null) return null;
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : null;
-};
-
-const mapLevel = (row: RunnerLevelRow): RunnerLevel => ({
-  ...row,
-  distance_target_km: toNumber(row.distance_target_km) ?? 0
-});
-
-const mapProgress = (row: RunnerLevelProgressRow): RunnerLevelProgress => ({
-  ...row,
-  best_distance_km: toNumber(row.best_distance_km),
-  best_no_stop_distance_km: toNumber(row.best_no_stop_distance_km)
-});
-
-const mapLog = (row: RunnerRunLogRow): RunnerRunLog => ({
-  ...row,
-  distance_km: toNumber(row.distance_km) ?? 0,
-  level: row.level
-});
-
-const todayDate = () => new Date().toISOString().slice(0, 10);
+import { evaluateRunAttempt, getTodayRunStatus } from './quest';
+import { activityType, bangkokToday, computeAchievements, hasValidMeasurement, normalizeRunLog, validateRunInput } from './achievements';
+import type { RunLogInput, RunnerDashboardData, RunnerLevel, RunnerLevelProgress, RunnerRestDay, RunnerRunLog } from './quest.types';
 
 export async function getRunnerLevels(): Promise<RunnerLevel[]> {
-  const rows = await supabaseRestRequest<RunnerLevelRow[]>('runner_levels?select=id,level_number,title,distance_target_km,pace_target_seconds_per_km,sort_order,created_at&order=sort_order.asc', 'GET');
-  return rows.map(mapLevel);
+  const rows = await supabaseRestRequest<RunnerLevel[]>('runner_levels?select=*&order=sort_order.asc', 'GET', undefined, { revalidate: false });
+  return rows.map(row => ({ ...row, distance_target_km: Number(row.distance_target_km) }));
 }
 
 export async function getRunnerProgress(): Promise<RunnerLevelProgress[]> {
-  const rows = await supabaseRestRequest<RunnerLevelProgressRow[]>('runner_level_progress?select=id,level_id,status,best_distance_km,best_pace_seconds_per_km,best_no_stop_distance_km,passed_at,reward_title,reward_description,reward_emotional_copy,reward_image_url,reward_status,reward_claimed_at,updated_at&order=updated_at.asc', 'GET');
-  return rows.map(mapProgress);
+  return supabaseRestRequest('runner_level_progress?select=*&order=updated_at.asc', 'GET', undefined, { revalidate: false });
 }
 
-export async function getRunnerRunLogs(limit = 50): Promise<RunnerRunLog[]> {
-  const rows = await supabaseRestRequest<RunnerRunLogRow[]>(
-    `runner_run_logs?select=id,level_id,run_date,distance_km,duration_seconds,pace_seconds_per_km,no_stop,note,effort,result,created_at,level:runner_levels(id,level_number,title)&order=run_date.desc,created_at.desc&limit=${limit}`,
-    'GET'
-  );
-
-  return rows.map(mapLog);
+export async function getRunnerRunLogs(): Promise<RunnerRunLog[]> {
+  // Read every page, including when the server caps responses below the requested size.
+  const logs: RunnerRunLog[] = [];
+  let offset = 0;
+  for (;;) {
+    const page = await supabaseRestRequest<RunnerRunLog[]>(`runner_run_logs?select=*&order=run_date.desc,created_at.desc,id.desc&limit=500&offset=${offset}`, 'GET', undefined, { revalidate: false });
+    if (!page.length) break;
+    logs.push(...page.filter(row => !row.deleted_at).map(normalizeRunLog));
+    offset += page.length;
+  }
+  return logs;
 }
 
 export async function getRunnerRestDays(limit = 30): Promise<RunnerRestDay[]> {
-  return supabaseRestRequest<RunnerRestDayRow[]>(`runner_rest_days?select=id,rest_date,note,created_at&order=rest_date.desc,created_at.desc&limit=${limit}`, 'GET');
+  return supabaseRestRequest(`runner_rest_days?select=*&order=rest_date.desc&limit=${limit}`, 'GET', undefined, { revalidate: false });
+}
+
+export async function runningStorageReady(): Promise<boolean> {
+  try {
+    await supabaseRestRequest('runner_run_logs?select=activity_type,deleted_at,updated_at&limit=1', 'GET', undefined, { revalidate: false });
+    return true;
+  } catch (error) {
+    if (error instanceof Error && /42703|PGRST204|does not exist|schema cache/i.test(error.message)) return false;
+    throw error;
+  }
 }
 
 export async function getRunnerDashboardData(): Promise<RunnerDashboardData> {
-  const [levels, progress, logs, restDays] = await Promise.all([
-    getRunnerLevels(),
-    getRunnerProgress(),
-    getRunnerRunLogs(100),
-    getRunnerRestDays(30)
+  const [storedLevels, progress, logs, restDays, storageReady] = await Promise.all([
+    getRunnerLevels(), getRunnerProgress(), getRunnerRunLogs(), getRunnerRestDays(), runningStorageReady()
   ]);
+  const levels = computeAchievements(logs, storedLevels, progress);
+  const currentLevel = levels.find(level => level.progress?.status === 'available') ?? null;
+  const passedLevelsCount = levels.filter(level => level.progress?.status === 'passed').length;
+  const measured = logs.filter(log => hasValidMeasurement(log) && activityType(log) !== 'walk');
+  const continuous = measured.filter(log => activityType(log) === 'continuous');
+  return { levels, logs, currentLevel, nextLevel: currentLevel ? levels.find(level => level.level_number === currentLevel.level_number + 1) ?? null : null,
+    todayStatus: getTodayRunStatus(logs, restDays, bangkokToday()), todayLog: logs.find(log => log.run_date === bangkokToday()) ?? null,
+    passedLevelsCount, totalAttempts: logs.length,
+    bestPaceEver: measured.length ? Math.min(...measured.map(log => log.pace_seconds_per_km)) : null,
+    longestNoStopDistance: continuous.length ? Math.max(...continuous.map(log => log.distance_km)) : null,
+    completionPercent: passedLevelsCount * 10,
+    storageReady, writesEnabled: storageReady && process.env.GOAL_HEALTH_WRITES_ENABLED === 'true' };
+}
 
-  const dashboardLevels = buildDashboardLevels(levels, progress, logs);
-  const currentLevel = dashboardLevels.find((level) => level.progress?.status === 'available') ?? null;
-  const passedLevelsCount = dashboardLevels.filter((level) => level.progress?.status === 'passed').length;
-  const nextLevel = currentLevel
-    ? dashboardLevels.find((level) => level.sort_order === currentLevel.sort_order + 1) ?? null
-    : null;
+function assertWritesEnabled() {
+  // This repository uses a service-role connection without per-user auth. Explicit opt-in
+  // protects an existing production .env.local during local development and preview.
+  if (process.env.GOAL_HEALTH_WRITES_ENABLED !== 'true') throw new Error('ขณะนี้เปิดดูได้อย่างเดียว ยังไม่ได้เปิดการบันทึกข้อมูล');
+}
 
-  const bestPaceEver = logs.length > 0 ? Math.min(...logs.map((log) => log.pace_seconds_per_km)) : null;
-  const longestNoStopDistance = logs.length > 0 ? Math.max(...logs.filter((log) => log.no_stop).map((log) => log.distance_km), 0) : null;
+export async function saveRunLog(input: RunLogInput, edit?: { id: string; updated_at: string }) {
+  assertWritesEnabled();
+  const error = validateRunInput(input);
+  if (error) return { success: false, message: error };
+  if (!await runningStorageReady()) return { success: false, message: 'ยังไม่ได้เตรียมฐานข้อมูลสำหรับระบบ 10 Levels' };
+  const data = await getRunnerDashboardData();
+  const target = data.currentLevel ?? data.levels[9];
+  const noStop = input.activity_type === 'continuous';
+  const pace = input.duration_seconds / input.distance_km;
+  const evaluation = evaluateRunAttempt(target, { ...input, no_stop: noStop, pace_seconds_per_km: pace });
+  const body = { ...input, no_stop: noStop, note: input.note || null, effort: input.effort || null,
+    // Legacy column is integer. Evaluation ALWAYS uses elapsed_seconds / distance.
+    pace_seconds_per_km: Math.round(pace), result: evaluation.result };
+  let result: RunnerRunLog[];
+  if (edit) {
+    if (!validLogId(edit.id) || !edit.updated_at) return { success: false, message: 'รายการแก้ไขไม่ถูกต้อง' };
+    result = await supabaseRestRequest(`runner_run_logs?id=eq.${edit.id}&deleted_at=is.null&updated_at=eq.${encodeURIComponent(edit.updated_at)}`, 'PATCH', body);
+  } else {
+    result = await supabaseRestRequest('runner_run_logs', 'POST', { ...body, level_id: target.id });
+  }
+  return result.length ? { success: true, message: 'บันทึกแล้ว · ประเมินทั้ง 10 Levels จากประวัติทั้งหมดใหม่แล้ว' } : { success: false, message: 'ข้อมูลถูกแก้ไขจากหน้าต่างอื่น กรุณาโหลดหน้าใหม่' };
+}
 
-  const todayStatus = getTodayRunStatus(logs, restDays, todayDate());
-  const todayLog = logs.find((log) => log.run_date === todayDate()) ?? null;
-  return {
-    levels: dashboardLevels,
-    logs,
-    currentLevel,
-    nextLevel,
-    todayStatus,
-    todayLog,
-    passedLevelsCount,
-    totalAttempts: logs.length,
-    bestPaceEver,
-    longestNoStopDistance: longestNoStopDistance && longestNoStopDistance > 0 ? longestNoStopDistance : null,
-    completionPercent: Math.round((passedLevelsCount / Math.max(levels.length, 1)) * 100)
-  };
+export const createRunLog = saveRunLog;
+export const validLogId = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+export async function deleteRunLog(id: string, updatedAt: string) {
+  assertWritesEnabled();
+  if (!validLogId(id) || !updatedAt) return { success: false, message: 'รายการไม่ถูกต้อง' };
+  const rows = await supabaseRestRequest<RunnerRunLog[]>(`runner_run_logs?id=eq.${id}&deleted_at=is.null&updated_at=eq.${encodeURIComponent(updatedAt)}`, 'PATCH', { deleted_at: new Date().toISOString() });
+  return rows.length ? { success: true, message: 'นำรายการออกจากประวัติแล้ว และคำนวณระดับใหม่ (ยังเก็บข้อมูลต้นฉบับไว้)' } : { success: false, message: 'ข้อมูลเปลี่ยนแปลงแล้ว กรุณาโหลดหน้าใหม่' };
 }
 
 export async function markRunnerRestDay(restDate: string): Promise<void> {
-  await supabaseRestRequest<RunnerRestDayRow[]>('runner_rest_days', 'POST', {
-    rest_date: restDate,
-    note: null
-  });
-}
-
-export async function upsertLevelProgressAfterAttempt(params: {
-  level: RunnerLevel;
-  progress: RunnerLevelProgress | null;
-  attempt: RunAttemptInput;
-  passed: boolean;
-}): Promise<void> {
-  const { level, progress, attempt, passed } = params;
-
-  const nextBestDistance = Math.max(progress?.best_distance_km ?? 0, attempt.distance_km);
-  const nextBestPace =
-    progress?.best_pace_seconds_per_km === null || progress?.best_pace_seconds_per_km === undefined
-      ? attempt.pace_seconds_per_km
-      : Math.min(progress.best_pace_seconds_per_km, attempt.pace_seconds_per_km);
-  const nextNoStopDistance = attempt.no_stop
-    ? Math.max(progress?.best_no_stop_distance_km ?? 0, attempt.distance_km)
-    : progress?.best_no_stop_distance_km ?? null;
-
-  await supabaseRestRequest<RunnerLevelProgressRow[]>(`runner_level_progress?level_id=eq.${level.id}`, 'PATCH', {
-    best_distance_km: nextBestDistance,
-    best_pace_seconds_per_km: nextBestPace,
-    best_no_stop_distance_km: nextNoStopDistance,
-    status: passed ? 'passed' : progress?.status ?? 'available',
-    passed_at: passed ? new Date().toISOString() : progress?.passed_at ?? null
-  });
-}
-
-export async function createRunLog(input: {
-  run_date: string;
-  distance_km: number;
-  duration_seconds: number;
-  no_stop: boolean;
-  note?: string;
-  effort?: 'easy' | 'normal' | 'hard';
-}): Promise<{ success: boolean; message: string }> {
-  const levels = await getRunnerLevels();
-  const progress = await getRunnerProgress();
-  const currentLevel = getCurrentAvailableLevel(levels, progress);
-
-  if (!currentLevel) {
-    return { success: false, message: 'All levels are already passed.' };
-  }
-
-  const pace = calculatePaceSecondsPerKm(input.duration_seconds, input.distance_km);
-  if (!pace) {
-    return { success: false, message: 'Invalid distance or duration. Pace could not be calculated.' };
-  }
-
-  const attempt: RunAttemptInput = {
-    ...input,
-    pace_seconds_per_km: pace
-  };
-
-  const evaluation = evaluateRunAttempt(currentLevel, attempt);
-
-  await supabaseRestRequest<RunnerRunLogRow[]>('runner_run_logs', 'POST', {
-    level_id: currentLevel.id,
-    run_date: input.run_date,
-    distance_km: input.distance_km,
-    duration_seconds: input.duration_seconds,
-    pace_seconds_per_km: pace,
-    no_stop: input.no_stop,
-    note: input.note || null,
-    effort: input.effort || null,
-    result: evaluation.result
-  });
-
-  const currentProgress = progress.find((item) => item.level_id === currentLevel.id) ?? null;
-  await upsertLevelProgressAfterAttempt({
-    level: currentLevel,
-    progress: currentProgress,
-    attempt,
-    passed: evaluation.passed
-  });
-
-  if (evaluation.passed) {
-    await supabaseRestRequest<RunnerLevelProgressRow[]>(`runner_level_progress?level_id=eq.${currentLevel.id}`, 'PATCH', {
-      reward_status: 'unlocked'
-    });
-    const currentIndex = levels.findIndex((level) => level.id === currentLevel.id);
-    const nextLevel = currentIndex >= 0 ? levels[currentIndex + 1] : null;
-
-    if (nextLevel) {
-      await supabaseRestRequest<RunnerLevelProgressRow[]>(
-        `runner_level_progress?level_id=eq.${nextLevel.id}&status=eq.locked`,
-        'PATCH',
-        {
-          status: 'available'
-        }
-      );
-    }
-
-    return { success: true, message: `Success. ${currentLevel.title} cleared.` };
-  }
-
-  const bestAttempt = getBestAttemptByLevel(await getRunnerRunLogs(100), currentLevel.id);
-  if (bestAttempt?.result === 'passed') {
-    return { success: true, message: `${currentLevel.title} was already passed on a previous attempt.` };
-  }
-
-  return { success: true, message: 'Attempt saved. Keep pushing on this level.' };
+  assertWritesEnabled();
+  await supabaseRestRequest('runner_rest_days', 'POST', { rest_date: restDate, note: null });
 }

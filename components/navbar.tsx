@@ -47,12 +47,12 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-[90] border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
       <div className="mx-auto flex h-[72px] w-full max-w-[1440px] items-center justify-between gap-4 px-8">
-        <Link href="/" className="theme-focus group rounded-xl">
+        <Link href="/dashboard" aria-label="GOAL — กลับหน้าภาพรวมชีวิต" className="theme-focus group cursor-pointer rounded-xl transition-colors hover:bg-blue-50">
           <span className="block text-xl font-bold tracking-normal text-slate-950 md:text-2xl">GOAL</span>
           <span className="block text-[13px] font-normal text-slate-500 transition group-hover:text-slate-700">ระบบชีวิตส่วนตัว</span>
         </Link>
 
-        <nav className="hidden items-center gap-1 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-1.5 md:flex" aria-label="Main menu">
+        <nav className="hidden items-center gap-1 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-1.5 lg:flex" aria-label="Main menu">
           {menuItems.map((item) => {
             const isActive = isPathActive(pathname, item.href);
             return (
@@ -75,7 +75,7 @@ export function Navbar() {
         <button
           type="button"
           onClick={() => setIsMenuOpen((prev) => !prev)}
-          className="theme-focus inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-950 md:hidden"
+          className="theme-focus inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-950 lg:hidden"
           aria-expanded={isMenuOpen}
           aria-controls="mobile-menu"
           aria-label={isMenuOpen ? 'ปิดเมนู' : 'เปิดเมนู'}
@@ -85,7 +85,7 @@ export function Navbar() {
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden" id="mobile-menu">
+        <div className="lg:hidden" id="mobile-menu">
           <button
             type="button"
             className="fixed inset-0 z-[85] bg-slate-950/20"

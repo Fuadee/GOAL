@@ -11,7 +11,7 @@ export type RunnerLevel = {
   level_number: number;
   title: string;
   distance_target_km: number;
-  pace_target_seconds_per_km: number;
+  pace_target_seconds_per_km: number | null;
   sort_order: number;
   created_at: string;
 };
@@ -23,7 +23,11 @@ export type RunnerRunLog = {
   distance_km: number;
   duration_seconds: number;
   pace_seconds_per_km: number;
-  no_stop: boolean;
+  no_stop: boolean | null;
+  activity_type?: RunnerActivityType;
+  deleted_at?: string | null;
+  updated_at?: string;
+  duration_source?: 'recorded' | 'legacy_pace';
   note: string | null;
   effort: RunnerEffort | null;
   result: RunnerRunResult;
@@ -60,7 +64,9 @@ export type RunAttemptInput = {
   distance_km: number;
   duration_seconds: number;
   pace_seconds_per_km: number;
-  no_stop: boolean;
+  no_stop: boolean | null;
+  activity_type?: RunnerActivityType;
+  duration_source?: 'recorded' | 'legacy_pace';
   note?: string;
   effort?: RunnerEffort;
 };
@@ -76,6 +82,8 @@ export type RunAttemptEvaluation = {
 export type RunnerDashboardLevel = RunnerLevel & {
   progress: RunnerLevelProgress | null;
   latestAttempt: RunnerRunLog | null;
+  evidence?: RunnerRunLog | null;
+  conditionMet?: boolean;
 };
 
 export type RunnerDashboardData = {
@@ -90,4 +98,17 @@ export type RunnerDashboardData = {
   bestPaceEver: number | null;
   longestNoStopDistance: number | null;
   completionPercent: number;
+  writesEnabled?: boolean;
+  storageReady?: boolean;
+};
+
+export type RunnerActivityType = 'continuous' | 'run_walk' | 'walk' | 'unknown';
+
+export type RunLogInput = {
+  run_date: string;
+  distance_km: number;
+  duration_seconds: number;
+  activity_type: RunnerActivityType;
+  note?: string;
+  effort?: RunnerEffort;
 };

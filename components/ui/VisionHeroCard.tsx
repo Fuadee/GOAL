@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { goalPercentage } from '@/lib/progress';
 
 type VisionHeroCardProps = {
   imageUrl: string | null;
@@ -25,7 +26,7 @@ export function VisionHeroCard({
   target,
   unitLabel
 }: VisionHeroCardProps) {
-  const progress = target > 0 ? Math.min(Math.max((completed / target) * 100, 0), 100) : 0;
+  const progress = goalPercentage(completed, target);
 
   return (
     <article className="grid overflow-hidden rounded-[24px] border border-blue-200 bg-gradient-to-br from-white via-blue-50/40 to-sky-100/60 shadow-[0_22px_52px_-38px_rgba(37,99,235,0.55)] md:grid-cols-[minmax(240px,0.8fr)_minmax(0,1.7fr)]">

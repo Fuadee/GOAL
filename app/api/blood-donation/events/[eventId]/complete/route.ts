@@ -10,10 +10,7 @@ export async function PATCH(request: Request, { params }: { params: { eventId: s
       return NextResponse.json({ error: 'actual_date is required' }, { status: 400 });
     }
 
-    const updated = await markBloodDonationEventCompleted(params.eventId, {
-      actual_date: body.actual_date,
-      note: body.note
-    });
+    const updated = await markBloodDonationEventCompleted(params.eventId, { actual_date: body.actual_date });
 
     return NextResponse.json(updated);
   } catch (error) {

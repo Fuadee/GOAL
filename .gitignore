@@ -27,3 +27,7 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local Health reference renders and browser verification artifacts
+/tmp/health-reference/
+/tmp/health-verification/

@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { getSmvProjectProgress } from '@/lib/smv/project-progress';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 
@@ -22,15 +23,7 @@ export function SmvProjectsClient({ initialProjects, goalImageUrl }: SmvProjects
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const overallProgress = useMemo(() => {
-    const milestones = projects.flatMap((project) => project.smv_project_milestones ?? []);
-    const completed = milestones.filter((milestone) => milestone.is_completed).length;
-    return {
-      completed,
-      total: milestones.length,
-      percentage: milestones.length > 0 ? Math.round((completed / milestones.length) * 100) : 0
-    };
-  }, [projects]);
+  const overallProgress = useMemo(() => getSmvProjectProgress(projects), [projects]);
 
   useEffect(() => {
     const closeMenu = () => setOpenMenuId(null);
@@ -153,8 +146,7 @@ export function SmvProjectsClient({ initialProjects, goalImageUrl }: SmvProjects
 
                 {(() => {
                   const milestones = project.smv_project_milestones ?? [];
-                  const completedCount = milestones.filter((milestone) => milestone.is_completed).length;
-                  const progress = milestones.length > 0 ? Math.round((completedCount / milestones.length) * 100) : 0;
+                  const { percentage: progress } = getSmvProjectProgress([project]);
                   return (
                     <>
                       <div className="mt-4 flex flex-wrap gap-2">

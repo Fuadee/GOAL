@@ -1,0 +1,15 @@
+GOAL Health 10 Levels — Codex Reference Pack
+
+1) แตกไฟล์ ZIP (Extract All)
+2) นำไฟล์ทั้ง 4 ไฟล์ไปวางไว้ในโปรเจกต์ GOAL ภายใน references/health-redesign/
+3) เปิด Codex ที่โปรเจกต์ GOAL เดิม
+4) ให้ Codex อ่าน references/health-redesign/CODEX_PROMPT.md และเริ่มทำงานตามคำสั่ง
+5) ห้าม Push/Deploy หรือแก้ฐานข้อมูล Production โดยไม่ได้รับอนุญาต
+
+ไฟล์ที่รวม:
+- CODEX_PROMPT.md: คำสั่งพัฒนา 10 Levels ที่ไม่มี Training Plan
+- 01-design-neon-sport.png: ภาพดีไซน์ UI
+- 02-neon-effects-prototype.html: ตัวอย่างเอฟเฟกต์
+- 03-original-health-page.pdf: หน้า Health เดิม
+
+หมายเหตุ: ไฟล์นี้เป็นชุดอ้างอิง ไม่ใช่ซอร์สโค้ดของโปรเจกต์ GOAL จริง

@@ -6,18 +6,14 @@ import { PageShell } from '@/components/ui/mission';
 import { getGoalVisionImages } from '@/lib/goal-vision/queries';
 import { getGoalVisionPublicUrl } from '@/lib/goal-vision/storage';
 import { getInnovationDashboardPageData } from '@/lib/innovation/service';
-import { deriveInnovationState } from '@/lib/innovation/helpers';
-
-const TARGET_INNOVATIONS = 10;
+import { getCompletedInnovations, TARGET_INNOVATIONS } from '@/lib/innovation/progress';
 
 export default async function InnovationPage() {
   const [{ innovations, discoveryCandidates }, goalVisionImages] = await Promise.all([
     getInnovationDashboardPageData(TARGET_INNOVATIONS),
     getGoalVisionImages()
   ]);
-  const completedInnovations = innovations
-    .filter((innovation) => deriveInnovationState(innovation) === 'completed')
-    .sort((left, right) => new Date(right.updated_at).getTime() - new Date(left.updated_at).getTime());
+  const completedInnovations = getCompletedInnovations(innovations);
   const innovationVisionImage = goalVisionImages.find((image) => image.goal_key === 'innovation');
 
   return (
