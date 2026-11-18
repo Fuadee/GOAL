@@ -23,9 +23,6 @@ export async function createRunnerRunLogAction(form: FormData): Promise<{ succes
     if (error instanceof Error && /^Supabase request failed \((401|403)\)/.test(error.message)) {
       return { success: false, message: 'ฐานข้อมูลปฏิเสธการเขียน กรุณาให้ผู้ดูแลตรวจสิทธิ์ของเซิร์ฟเวอร์ แล้วลองอีกครั้ง' };
     }
-    if (process.env.GOAL_HEALTH_WRITES_ENABLED !== 'true') {
-      return { success: false, message: 'เซิร์ฟเวอร์ปิดการเขียนข้อมูล กรุณาให้ผู้ดูแลตรวจการตั้งค่าแล้วโหลดหน้าใหม่' };
-    }
     return { success: false, message: 'บันทึกไม่สำเร็จ กรุณาตรวจการเชื่อมต่อและสิทธิ์การเขียน แล้วลองอีกครั้ง' };
   }
 }

@@ -99,6 +99,7 @@ export type RunnerDashboardData = {
   longestNoStopDistance: number | null;
   completionPercent: number;
   writesEnabled?: boolean;
+  canCreateRun?: boolean;
   storageReady?: boolean;
 };
 

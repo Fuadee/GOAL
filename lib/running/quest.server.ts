@@ -39,6 +39,11 @@ export async function runningStorageReady(): Promise<boolean> {
   }
 }
 
+function canCreateRun() {
+  return process.env.GOAL_HEALTH_WRITES_ENABLED === 'true'
+    || (process.env.VERCEL_ENV === 'production' && process.env.GOAL_HEALTH_PUBLIC_LOGGING !== 'false');
+}
+
 export async function getRunnerDashboardData(): Promise<RunnerDashboardData> {
   const [storedLevels, progress, logs, restDays, storageReady] = await Promise.all([
     getRunnerLevels(), getRunnerProgress(), getRunnerRunLogs(), getRunnerRestDays(), runningStorageReady()
@@ -54,7 +59,9 @@ export async function getRunnerDashboardData(): Promise<RunnerDashboardData> {
     bestPaceEver: measured.length ? Math.min(...measured.map(log => log.pace_seconds_per_km)) : null,
     longestNoStopDistance: continuous.length ? Math.max(...continuous.map(log => log.distance_km)) : null,
     completionPercent: passedLevelsCount * 10,
-    storageReady, writesEnabled: storageReady && process.env.GOAL_HEALTH_WRITES_ENABLED === 'true' };
+    storageReady,
+    canCreateRun: storageReady && canCreateRun(),
+    writesEnabled: storageReady && process.env.GOAL_HEALTH_WRITES_ENABLED === 'true' };
 }
 
 function assertWritesEnabled() {
@@ -64,7 +71,7 @@ function assertWritesEnabled() {
 }
 
 export async function saveRunLog(input: RunLogInput, edit?: { id: string; updated_at: string }) {
-  assertWritesEnabled();
+  if (edit || !canCreateRun()) assertWritesEnabled();
   const error = validateRunInput(input);
   if (error) return { success: false, message: error };
   if (!await runningStorageReady()) return { success: false, message: 'ยังไม่ได้เตรียมฐานข้อมูลสำหรับระบบ 10 Levels' };

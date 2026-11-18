@@ -20,9 +20,9 @@ Reference originals were read without modification; copies are in `references/he
 
 ## Persistence and safety
 
-The repository uses `lib/supabase/rest.ts` with a server-side service-role key; no Health user/session authentication or per-user ownership exists. This remains unchanged. The new functionality does not add an authorization system. Do not expose a write-enabled instance publicly without resolving that existing deployment constraint.
+The repository uses `lib/supabase/rest.ts` with a server-side service-role key and shared run history. Vercel Production allows visitors to add a run once the database schema is ready. Set `GOAL_HEALTH_PUBLIC_LOGGING=false` in Vercel Production and redeploy to pause public submissions.
 
-Writes require both a migrated database and the server-only setting `GOAL_HEALTH_WRITES_ENABLED=true`. For personal use, select your own Supabase database in `.env.local`, set the flag in `.env.development.local`, and restart `npm run dev`. The development command binds to 127.0.0.1. Keep shared previews read-only. This flag enables mutations for the entire instance, including edits and soft deletion.
+For personal use on the loopback development server, select your Supabase database in `.env.local`, set `GOAL_HEALTH_WRITES_ENABLED=true` in `.env.development.local`, and restart `npm run dev`. That flag enables edits, soft deletion and rest-day changes for the entire instance. Keep it off on public deployments.
 
 The migration `supabase/migrations/20261110090000_running_ten_levels.sql`:
 
