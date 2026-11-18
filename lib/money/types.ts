@@ -48,7 +48,7 @@ export type ConstructionExpenseRow = { id: string; project_id: string | null; ca
 export type ConstructionProjectBudgetData = { project: ConstructionProjectRow | null; categories: ConstructionCategoryRow[]; expenses: ConstructionExpenseRow[]; };
 export type ConstructionInvestmentProjectsData = { projects: ConstructionProjectRow[]; categories: ConstructionCategoryRow[]; expenses: ConstructionExpenseRow[]; };
 
-export type MoneyManagementPageData = { incomeSources: MoneyIncomeSourceRow[]; growthAssets: GrowthAssetRow[]; assetSnapshots: AssetMonthlySnapshotRow[]; constructionProjects: ConstructionInvestmentProjectsData; summary: MoneySummary; growthSummary: { totalValue: number; totalProfitLoss: number; totalInvested: number; totalReturnPercent: number; }; };
+export type MoneyManagementPageData = { assetsLoadFailed?: boolean; incomeSources: MoneyIncomeSourceRow[]; growthAssets: GrowthAssetRow[]; assetSnapshots: AssetMonthlySnapshotRow[]; constructionProjects: ConstructionInvestmentProjectsData; summary: MoneySummary; growthSummary: { totalValue: number; totalProfitLoss: number; totalInvested: number; totalReturnPercent: number; }; };
 export type IncomeManagementPageData = { incomeSources: IncomeSourceRow[] };
 export type ExpenseManagementPageData = { expenses: ExpenseRow[] };
 export type MoneyPlanPageData = { targetIncome: number; currentNet: number; plannedIncrease: number; projectedNet: number; remainingGap: number; plans: MoneyGoalPlanRow[] };

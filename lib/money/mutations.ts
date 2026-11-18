@@ -42,6 +42,7 @@ export async function createGrowthAsset(payload: {
   current_value: number;
 }): Promise<GrowthAssetRow> {
   const rows = await supabaseRestRequest<GrowthAssetRow[]>('growth_assets', 'POST', payload);
+  if (!rows.length) throw new Error('Asset creation returned no record');
   return rows[0];
 }
 
@@ -56,11 +57,13 @@ export async function updateGrowthAsset(
   }
 ): Promise<GrowthAssetRow> {
   const rows = await supabaseRestRequest<GrowthAssetRow[]>(`growth_assets?id=eq.${id}`, 'PATCH', payload);
+  if (!rows.length) throw new Error('Asset update returned no record');
   return rows[0];
 }
 
 export async function deleteGrowthAsset(id: string): Promise<void> {
-  await supabaseRestRequest<GrowthAssetRow[]>(`growth_assets?id=eq.${id}`, 'DELETE');
+  const rows = await supabaseRestRequest<GrowthAssetRow[]>(`growth_assets?id=eq.${id}`, 'DELETE');
+  if (!rows.length) throw new Error('Asset deletion returned no record');
 }
 
 export async function saveAssetMonthlySnapshotTransaction(payload: {

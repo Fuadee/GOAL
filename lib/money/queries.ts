@@ -6,7 +6,7 @@ export async function getMoneyIncomeSources(): Promise<MoneyIncomeSourceRow[]> {
 }
 
 export async function getGrowthAssets(): Promise<GrowthAssetRow[]> {
-  return supabaseRestRequest<GrowthAssetRow[]>('growth_assets?select=id,user_id,asset_name,asset_type,platform,current_value,invested_amount,profit_loss,return_percent,created_at,updated_at&order=created_at.asc', 'GET');
+  return supabaseRestRequest<GrowthAssetRow[]>('growth_assets?select=id,user_id,asset_name,asset_type,platform,current_value,invested_amount,profit_loss,return_percent,created_at,updated_at&order=created_at.asc', 'GET', undefined, { revalidate: false });
 }
 
 

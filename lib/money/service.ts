@@ -39,6 +39,7 @@ export async function getMoneyManagementData(): Promise<MoneyManagementPageData>
   } catch (error) {
     console.error('[money-management load failed]', error);
     return {
+      assetsLoadFailed: true,
       incomeSources: [],
       growthAssets: [],
       assetSnapshots: [],

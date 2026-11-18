@@ -5,25 +5,18 @@ import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Clock3, PiggyBank, ShieldCheck, TrendingUp, type LucideIcon } from 'lucide-react';
+import { CrystalAssets } from './CrystalAssets';
+import { assetLabels, assetValue } from '@/lib/money/asset-bubbles';
 import { CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { createConstructionExpenseAction, createConstructionProjectAction, deleteConstructionCategoryAction, deleteConstructionExpenseAction, deleteGrowthAssetAction, deleteMoneyIncomeSourceAction, saveAssetMonthlySnapshotAction, updateConstructionExpenseAction, upsertConstructionCategoryAction, upsertGrowthAssetAction, upsertMoneyIncomeSourceAction } from '@/app/money-management/actions';
+import { createConstructionExpenseAction, createConstructionProjectAction, deleteConstructionCategoryAction, deleteConstructionExpenseAction, deleteMoneyIncomeSourceAction, saveAssetMonthlySnapshotAction, updateConstructionExpenseAction, upsertConstructionCategoryAction, upsertMoneyIncomeSourceAction } from '@/app/money-management/actions';
 import { formatConstructionExpenseDateTime, getConstructionExpenseDateKey, sortConstructionExpensesNewestFirst } from '@/lib/money/expense-utils';
-import { AssetMonthlySnapshotRow, ConstructionCategoryRow, ConstructionCategoryStatus, ConstructionCostType, ConstructionExpenseRow, ConstructionInvestmentProjectsData, ConstructionOperationChecklistItem, ConstructionProjectBudgetData, ConstructionProjectRow, GrowthAssetRow, GrowthAssetType, MoneyManagementPageData, MoneyIncomeSourceRow, MoneySummary } from '@/lib/money/types';
+import { AssetMonthlySnapshotRow, ConstructionCategoryRow, ConstructionCategoryStatus, ConstructionCostType, ConstructionExpenseRow, ConstructionInvestmentProjectsData, ConstructionOperationChecklistItem, ConstructionProjectBudgetData, ConstructionProjectRow, GrowthAssetRow, MoneyManagementPageData, MoneyIncomeSourceRow, MoneySummary } from '@/lib/money/types';
 import { getConstructionBudgetSummary, getProjectBudgetData, getExpenseCostType, getCostTypeBudgetSummary, getOperationChecklist, getFinancialGoalProgress } from '@/lib/money/construction-progress';
 import { FinancialAnalysisDialog } from '@/components/money/FinancialAnalysisDialog';
 
 const thb = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 });
 const enMonthLabel = new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' });
 const shortMonthLabel = new Intl.DateTimeFormat('th-TH', { month: 'short' });
-const categoryMeta = {
-  investment: { label: 'การลงทุน', badge: 'การลงทุน', color: '#2563EB', badgeClass: 'bg-blue-100 text-blue-700', icon: TrendingUp },
-  safe: { label: 'เงินสำรอง', badge: 'เงินสำรอง', color: '#0D9488', badgeClass: 'bg-teal-100 text-teal-700', icon: ShieldCheck },
-  future: { label: 'เงินอนาคต', badge: 'เงินอนาคต', color: '#7C3AED', badgeClass: 'bg-violet-100 text-violet-700', icon: PiggyBank },
-  receivable: { label: 'เงินรอรับ', badge: 'เงินรอรับ', color: '#D97706', badgeClass: 'bg-amber-100 text-amber-700', icon: Clock3 },
-} as const;
-type AssetCategory = keyof typeof categoryMeta;
-const assetCategories = Object.keys(categoryMeta) as AssetCategory[];
 const incomeBreakdownColors = ['#2563EB', '#0D9488', '#7C3AED', '#059669', '#E11D48', '#475569'];
 type CategoryManageMode = 'create' | 'edit' | 'operation';
 type ExpenseFilter = 'all' | ConstructionCostType;
@@ -103,8 +96,6 @@ export function SimpleMoneyManagement({ data, goalImageUrl }: { data: MoneyManag
   const [, startTransition] = useTransition();
   const [editing, setEditing] = useState<MoneyIncomeSourceRow | null>(null);
   const [open, setOpen] = useState(false);
-  const [growthOpen, setGrowthOpen] = useState(false);
-  const [growthEditing, setGrowthEditing] = useState<GrowthAssetRow | null>(null);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
   const [snapshotMessage, setSnapshotMessage] = useState<string | null>(null);
   const [projectCreateOpen, setProjectCreateOpen] = useState(false);
@@ -160,13 +151,12 @@ export function SimpleMoneyManagement({ data, goalImageUrl }: { data: MoneyManag
 
     <div className="space-y-6 lg:space-y-7">
       <MonthlyIncomeCard rows={rows} summary={data.summary} onCreate={openCreate} onEdit={openEdit} onDelete={onDelete} />
-      <GrowthAssetsCard rows={growthRows} totalValue={data.growthSummary.totalValue} totalProfitLoss={data.growthSummary.totalProfitLoss} onCreate={() => { setGrowthEditing(null); setGrowthOpen(true); }} onEdit={(row) => { setGrowthEditing(row); setGrowthOpen(true); }} onDelete={(id) => startTransition(async () => { const res = await deleteGrowthAssetAction(id); if (res.success) router.refresh(); })} />
+      <CrystalAssets rows={growthRows} loadFailed={data.assetsLoadFailed} />
     </div>
 
     <AssetGrowthTimeline rows={growthRows} snapshots={snapshots} onOpenSnapshot={() => setSnapshotOpen(true)} />
 
     {open ? <MoneyForm row={editing} onClose={() => setOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await upsertMoneyIncomeSourceAction(fd); if (res.success) { setOpen(false); router.refresh(); } })} /> : null}
-    {growthOpen ? <GrowthAssetForm row={growthEditing} onClose={() => setGrowthOpen(false)} onSubmit={(fd) => startTransition(async () => { const res = await upsertGrowthAssetAction(fd); if (res.success) { setGrowthOpen(false); setGrowthEditing(null); router.refresh(); } })} /> : null}
     {snapshotOpen ? <AssetSnapshotForm assets={growthRows} snapshots={snapshots} onClose={() => setSnapshotOpen(false)} onSubmit={saveSnapshot} /> : null}
     {projectCreateOpen ? <ConstructionProjectForm
       onClose={() => setProjectCreateOpen(false)}
@@ -1268,63 +1258,6 @@ function IncomeOverviewMetric({ label, value, valueClass }: { label: string; val
   </div>;
 }
 
-const assetSummaryVariantClass: Record<AssetCategory, { accent: string; border: string; icon: string; iconBackground: string }> = {
-  investment: { accent: 'bg-blue-600', border: 'hover:border-blue-300', icon: 'text-blue-700', iconBackground: 'border-blue-100 bg-blue-50' },
-  safe: { accent: 'bg-teal-600', border: 'hover:border-teal-300', icon: 'text-teal-700', iconBackground: 'border-teal-100 bg-teal-50' },
-  future: { accent: 'bg-violet-600', border: 'hover:border-violet-300', icon: 'text-violet-700', iconBackground: 'border-violet-100 bg-violet-50' },
-  receivable: { accent: 'bg-amber-500', border: 'hover:border-amber-300', icon: 'text-amber-700', iconBackground: 'border-amber-100 bg-amber-50' },
-};
-
-function AssetCategorySummaryCard({ title, value, percentage, icon: Icon, variant }: { title: string; value: number; percentage: number; icon: LucideIcon; variant: AssetCategory }) {
-  const style = assetSummaryVariantClass[variant];
-  return <article className={`relative h-full min-h-[164px] overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 pt-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${style.border}`}>
-    <div className={`absolute inset-x-0 top-0 h-1 ${style.accent}`} />
-    <div className="flex items-center gap-3">
-      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${style.iconBackground}`}>
-        <Icon aria-hidden="true" className={`h-5 w-5 ${style.icon}`} strokeWidth={2} />
-      </span>
-      <h3 className="text-sm font-semibold text-slate-800 sm:text-base">{title}</h3>
-    </div>
-    <p className="font-numeric mt-4 break-words text-2xl font-bold tracking-tight text-slate-950 sm:text-[28px]">{thb.format(value)}</p>
-    <p className="mt-2 text-xs leading-5 text-slate-500 sm:text-sm">สัดส่วน <span className="font-numeric font-semibold text-slate-700">{percentage.toFixed(2)}%</span> ของสินทรัพย์ทั้งหมด</p>
-  </article>;
-}
-
-function GrowthAssetsCard({ rows, totalValue, totalProfitLoss, onCreate, onEdit, onDelete }: { rows: GrowthAssetRow[]; totalValue: number; totalProfitLoss: number; onCreate: () => void; onEdit: (row: GrowthAssetRow) => void; onDelete: (id: string) => void }) {
-  const [activeSlice, setActiveSlice] = useState<string | null>(null);
-  const viewRows = rows.map((row) => {
-    const category = row.asset_type as AssetCategory;
-    return { ...row, category, effectiveCurrentValue: category === 'receivable' ? Number(row.invested_amount) : Number(row.current_value), profit_loss: Number(row.profit_loss), return_percent: Number(row.return_percent) };
-  });
-  const categorySummary = assetCategories.reduce((acc, key) => ({ ...acc, [key]: 0 }), {} as Record<AssetCategory, number>);
-  viewRows.forEach((row) => { categorySummary[row.category] += row.effectiveCurrentValue; });
-  const adjustedTotalValue = viewRows.reduce((sum, row) => sum + row.effectiveCurrentValue, 0);
-  const totalAssetValue = adjustedTotalValue || totalValue;
-  const adjustedTotalProfit = viewRows.reduce((sum, row) => sum + (row.category === 'receivable' ? 0 : row.profit_loss), 0);
-  const adjustedTotalReturn = adjustedTotalValue > 0 ? (adjustedTotalProfit / adjustedTotalValue) * 100 : 0;
-  const chartDataWithPct = assetCategories.map((key) => ({ key, name: categoryMeta[key].label, value: categorySummary[key], color: categoryMeta[key].color, pct: totalAssetValue > 0 ? (categorySummary[key] / totalAssetValue) * 100 : 0 })).filter((item) => item.value > 0);
-  const largestAllocation = chartDataWithPct.reduce((top, item) => (item.value > top.value ? item : top), chartDataWithPct[0] ?? null);
-
-  return <section className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.24)] md:p-6 lg:p-7">
-    <div className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-semibold text-slate-900">สินทรัพย์ทั้งหมด</h2><p className="text-sm text-slate-500">จัดกลุ่มตามประเภท</p></div><button className="rounded-xl bg-[#12233f] px-3 py-2 text-xs font-semibold text-white">ดูทั้งหมด</button></div>
-    <div className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-stretch xl:gap-8">
-      <div className="space-y-5"><div><p className="text-sm text-slate-500">มูลค่ารวม</p><p className="mt-1 text-3xl font-bold text-slate-900">{thb.format(totalAssetValue)}</p><p className="mt-4 text-sm text-slate-500">กำไร/ขาดทุนรวม</p><p className="mt-1 text-xl font-semibold"><span className={financialColorClass(adjustedTotalProfit)}>{thb.format(adjustedTotalProfit || totalProfitLoss)}</span> <span className={financialColorClass(adjustedTotalReturn)}>({adjustedTotalReturn >= 0 ? '+' : ''}{adjustedTotalReturn.toFixed(2)}%)</span></p></div>
-        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">{assetCategories.map((key) => <AssetCategorySummaryCard
-          key={key}
-          title={categoryMeta[key].label}
-          value={categorySummary[key]}
-          percentage={adjustedTotalValue > 0 ? (categorySummary[key] / adjustedTotalValue) * 100 : 0}
-          icon={categoryMeta[key].icon}
-          variant={key}
-        />)}</div>
-      </div>
-      <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.55)] sm:p-5"><div><h3 className="text-base font-semibold text-slate-900">สัดส่วนพอร์ต</h3><p className="text-xs text-slate-500">สัดส่วนสินทรัพย์ตามหมวดหมู่</p></div><div className="mx-auto mt-3 h-44 w-full max-w-[230px] sm:h-48"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={chartDataWithPct} dataKey="value" nameKey="name" innerRadius={52} outerRadius={70} paddingAngle={2} stroke="none" onMouseLeave={() => setActiveSlice(null)}>{chartDataWithPct.map((item) => <Cell key={item.key} fill={item.color} fillOpacity={activeSlice ? (activeSlice === item.key ? 1 : 0.38) : 0.85} stroke={activeSlice === item.key ? '#334155' : 'none'} strokeWidth={activeSlice === item.key ? 1.5 : 0} onMouseEnter={() => setActiveSlice(item.key)} />)}</Pie><text x="50%" y="47%" textAnchor="middle" className="fill-slate-900 text-[18px] font-semibold">{compactThb(totalAssetValue)}</text><text x="50%" y="58%" textAnchor="middle" className="fill-slate-500 text-[11px]">สินทรัพย์ทั้งหมด</text><Tooltip contentStyle={{ borderRadius: '10px', border: '1px solid #E2E8F0' }} formatter={(value: number) => thb.format(value)} /></PieChart></ResponsiveContainer></div><div className="mt-2 border-t border-slate-200/90 pt-3"><p className="text-[11px] font-medium tracking-wide text-slate-500">สัดส่วนสูงสุด</p><p className="mt-1 text-sm font-semibold text-slate-800">{largestAllocation ? `${largestAllocation.name} • ${largestAllocation.pct.toFixed(2)}%` : '-'}</p></div></div>
-    </div>
-    <div className="mt-7 rounded-2xl bg-slate-50/70 max-lg:overflow-x-auto"><table className="w-full text-xs sm:text-sm max-lg:min-w-[620px]"><thead className="text-left text-slate-500"><tr><th className="px-3 py-3.5 sm:px-5">สินทรัพย์</th><th className="px-3 py-3.5 sm:px-5">ประเภท</th><th className="px-3 py-3.5 sm:px-5">มูลค่าปัจจุบัน</th><th className="px-3 py-3.5 sm:px-5">กำไร/ขาดทุน</th><th className="px-3 py-3.5 sm:px-5">ผลตอบแทน</th><th className="px-3 py-3.5 sm:px-5">จัดการ</th></tr></thead><tbody>{viewRows.map((r) => <tr key={r.id} className="border-t border-slate-100/80 transition hover:bg-white"><td className="px-3 py-4.5 font-medium text-slate-800 sm:px-5">{r.asset_name}</td><td className="px-3 py-4.5 sm:px-5"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide ${categoryMeta[r.category].badgeClass}`}>{categoryMeta[r.category].badge}</span></td><td className="px-3 py-4.5 text-slate-700 sm:px-5">{thb.format(r.effectiveCurrentValue)}</td><td className={`px-3 py-4.5 font-medium sm:px-5 ${financialColorClass(r.category === 'receivable' ? 0 : r.profit_loss)}`}>{r.category === 'receivable' ? <span className="text-amber-600">รอรับคืน</span> : thb.format(r.profit_loss)}</td><td className={`px-3 py-4.5 font-semibold sm:px-5 ${r.category === 'receivable' ? 'text-amber-600' : financialColorClass(r.return_percent)}`}>{r.category === 'receivable' ? <span>รอชำระคืน</span> : `${r.return_percent >= 0 ? '+' : ''}${r.return_percent.toFixed(2)}%`}</td><td className="px-3 py-4.5 sm:px-5"><div className="flex items-center gap-3 whitespace-nowrap text-sm"><button onClick={() => onEdit(r)} className="rounded-md px-1.5 py-0.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">แก้ไข</button><button onClick={() => onDelete(r.id)} className="rounded-md px-1.5 py-0.5 text-rose-500 hover:bg-rose-50 hover:text-rose-600">ลบ</button></div></td></tr>)}</tbody></table></div>
-    <button onClick={onCreate} className="mt-5 flex w-full items-center justify-center rounded-xl border border-dashed border-slate-300 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50">+ เพิ่มสินทรัพย์ใหม่</button>
-  </section>;
-}
-
 function AssetGrowthTimeline({ rows, snapshots, onOpenSnapshot }: { rows: GrowthAssetRow[]; snapshots: AssetMonthlySnapshotRow[]; onOpenSnapshot: () => void }) {
   const sortedSnapshots = useMemo(() => sortAssetSnapshotsByMonth(snapshots), [snapshots]);
   const latest = getLatestAssetSnapshot(snapshots);
@@ -1366,8 +1299,7 @@ function AssetSnapshotForm({ assets, snapshots, onClose, onSubmit }: { assets: G
   const selectedSnapshot = snapshots.find((snapshot) => snapshot.snapshot_month.startsWith(month));
   const rows = assets.map((asset) => {
     const snapshotItem = selectedSnapshot?.items.find((item) => item.asset_id === asset.id);
-    const currentValue = asset.asset_type === 'receivable' ? asset.invested_amount : asset.current_value;
-    return { ...asset, snapshotValue: String(snapshotItem?.value ?? currentValue ?? 0) };
+    return { ...asset, snapshotValue: String(snapshotItem?.value ?? assetValue(asset)) };
   });
 
   const submitSnapshot = async (event: FormEvent<HTMLFormElement>) => {
@@ -1401,7 +1333,7 @@ function AssetSnapshotForm({ assets, snapshots, onClose, onSubmit }: { assets: G
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-slate-100 bg-white px-5 py-5 sm:px-6"><div><h3 className="text-xl font-semibold text-slate-900">{selectedSnapshot ? 'แก้ไข Snapshot รายเดือน' : 'สร้าง Snapshot รายเดือน'}</h3><p className="mt-1 text-sm text-slate-500">หนึ่งเดือนมี Snapshot ได้ 1 ชุด หากเลือกเดือนเดิมระบบจะแก้ไขข้อมูลเดิม</p></div><button type="button" onClick={onClose} className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-500 transition hover:bg-slate-200 hover:text-slate-700">ปิด</button></div>
         <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
           <label className="block text-sm font-medium text-slate-700">เดือน/ปี</label><input className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-slate-400 focus:outline-none" type="month" value={month} onChange={(event) => setMonth(event.target.value)} required />
-          <div className="mt-5 space-y-3">{rows.map((asset) => <div key={`${month}-${asset.id}`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 sm:grid sm:grid-cols-[1fr_170px] sm:items-center sm:gap-3"><div><p className="font-medium text-slate-900">{asset.asset_name}</p><p className="mt-1 text-xs text-slate-500">{categoryMeta[asset.asset_type].label}</p><input type="hidden" name="asset_id" value={asset.id} /></div><label className="mt-3 block sm:mt-0"><span className="text-xs font-medium text-slate-500">มูลค่าปัจจุบัน</span><input className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-right text-slate-900 focus:border-slate-400 focus:outline-none" type="number" min="0" step="0.01" name="value" defaultValue={asset.snapshotValue} required /></label></div>)}</div>
+          <div className="mt-5 space-y-3">{rows.map((asset) => <div key={`${month}-${asset.id}`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 sm:grid sm:grid-cols-[1fr_170px] sm:items-center sm:gap-3"><div><p className="font-medium text-slate-900">{asset.asset_name}</p><p className="mt-1 text-xs text-slate-500">{assetLabels[asset.asset_type]}</p><input type="hidden" name="asset_id" value={asset.id} /></div><label className="mt-3 block sm:mt-0"><span className="text-xs font-medium text-slate-500">มูลค่าปัจจุบัน</span><input className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-right text-slate-900 focus:border-slate-400 focus:outline-none" type="number" min="0" step="0.01" name="value" defaultValue={asset.snapshotValue} required /></label></div>)}</div>
           {rows.length === 0 ? <div className="mt-5 rounded-2xl border border-dashed p-6 text-center text-sm text-slate-500">ยังไม่มีสินทรัพย์ในตารางปัจจุบัน</div> : null}
           {message ? <p role="alert" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{message}</p> : null}
         </div>
@@ -1418,21 +1350,3 @@ function MoneyForm({ row, onClose, onSubmit }: { row: MoneyIncomeSourceRow | nul
   const [name, setName] = useState(row?.name ?? ''); const [description, setDescription] = useState(row?.description ?? ''); const [income, setIncome] = useState(row ? String(row.income_amount) : ''); const [expense, setExpense] = useState(row ? String(row.expense_amount) : ''); const [note, setNote] = useState(row?.expense_note ?? '');
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><form action={(fd) => { if (row) fd.set('id', row.id); fd.set('name', name); fd.set('description', description); fd.set('income_amount', income); fd.set('expense_amount', expense); fd.set('expense_note', note); onSubmit(fd); }} className="w-full max-w-lg space-y-3 rounded-2xl bg-white p-5"><h3 className="text-lg font-semibold">{row ? 'แก้ไขแหล่งรายได้' : 'เพิ่มแหล่งรายได้'}</h3><input className="theme-input" placeholder="ชื่อแหล่งรายได้" value={name} onChange={(e) => setName(e.target.value)} required /><textarea className="theme-input" placeholder="คำอธิบาย" value={description} onChange={(e) => setDescription(e.target.value)} /><input className="theme-input" type="number" min="0" placeholder="รายได้" value={income} onChange={(e) => setIncome(e.target.value)} /><input className="theme-input" type="number" min="0" placeholder="ค่าใช้จ่าย" value={expense} onChange={(e) => setExpense(e.target.value)} /><input className="theme-input" placeholder="รายละเอียดค่าใช้จ่าย" value={note} onChange={(e) => setNote(e.target.value)} /><div className="flex gap-2"><button className="theme-button-primary">บันทึก</button><button type="button" onClick={onClose} className="theme-button-secondary">ยกเลิก</button></div></form></div>;
 }
-
-function GrowthAssetForm({ row, onClose, onSubmit }: { row: GrowthAssetRow | null; onClose: () => void; onSubmit: (fd: FormData) => void }) {
-  const [assetName, setAssetName] = useState(row?.asset_name ?? '');
-  const [assetType, setAssetType] = useState<GrowthAssetType>(row?.asset_type ?? 'investment');
-  const [investedAmount, setInvestedAmount] = useState(row ? String(row.invested_amount) : '');
-  const [currentValue, setCurrentValue] = useState(row ? String(row.current_value) : '');
-
-  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[1px]"><form action={(fd) => { if (row) fd.set('id', row.id); fd.set('asset_name', assetName); fd.set('asset_type', assetType); fd.set('invested_amount', investedAmount); fd.set('current_value', currentValue); onSubmit(fd); }} className="w-full max-w-lg space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
-    <h3 className="text-lg font-semibold text-slate-900">{row ? 'แก้ไขสินทรัพย์' : 'เพิ่มสินทรัพย์ใหม่'}</h3>
-    <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none" placeholder="ชื่อสินทรัพย์" value={assetName} onChange={(e) => setAssetName(e.target.value)} required />
-    <select className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-slate-400 focus:outline-none" value={assetType} onChange={(e) => setAssetType(e.target.value as GrowthAssetType)}><option value="investment">การลงทุน</option><option value="safe">เงินสำรอง</option><option value="future">เงินอนาคต</option><option value="receivable">เงินรอรับ</option></select>
-    <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none" type="number" min="0" step="0.01" placeholder="เงินต้น" value={investedAmount} onChange={(e) => setInvestedAmount(e.target.value)} required />
-    <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none" type="number" min="0" step="0.01" placeholder="มูลค่าปัจจุบัน" value={currentValue} onChange={(e) => setCurrentValue(e.target.value)} required />
-    <div className="flex gap-2"><button className="theme-button-primary">บันทึก</button><button type="button" onClick={onClose} className="theme-button-secondary">ยกเลิก</button></div>
-  </form></div>;
-}
-
-
