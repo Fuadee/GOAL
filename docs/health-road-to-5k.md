@@ -22,7 +22,7 @@ Reference originals were read without modification; copies are in `references/he
 
 The repository uses `lib/supabase/rest.ts` with a server-side service-role key; no Health user/session authentication or per-user ownership exists. This remains unchanged. The new functionality does not add an authorization system. Do not expose a write-enabled instance publicly without resolving that existing deployment constraint.
 
-Writes are off by default. Enable `GOAL_HEALTH_WRITES_ENABLED=true` only after choosing the intended test database and applying the migration there. The UI remains read-only when the schema is old, while all 10 levels can still be computed from original history. The variable is server-only. No keys are sent to the browser or stored in source.
+Writes require both a migrated database and the server-only setting `GOAL_HEALTH_WRITES_ENABLED=true`. For personal use, select your own Supabase database in `.env.local`, set the flag in `.env.development.local`, and restart `npm run dev`. The development command binds to 127.0.0.1. Keep shared previews read-only. This flag enables mutations for the entire instance, including edits and soft deletion.
 
 The migration `supabase/migrations/20261110090000_running_ten_levels.sql`:
 
@@ -37,7 +37,9 @@ After full access became available, this migration was executed verbatim against
 
 Read-only live inspection on 2026-11-10 confirmed: 5 existing levels, 7 history records, all 7 with `no_stop=true` and valid elapsed seconds, new columns not yet present. No production writes were made. A fresh backup and migration rehearsal remain prerequisites for a future rollout.
 
-## Open locally with existing data (read-only)
+A read-only check on 2026-11-18 found all ten stored level definitions, the run history columns used by the readiness check, and the revision journal on the configured Supabase project.
+
+## Open locally for a read-only review
 
 In the repository PowerShell terminal:
 

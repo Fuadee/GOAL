@@ -22,12 +22,18 @@ export function bangkokToday() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 }
 
+export function validateRunDuration(seconds: number, distanceKm: number): string | null {
+  if (!Number.isSafeInteger(seconds) || seconds <= 0 || seconds > 604800) return 'เวลารวมต้องเป็นจำนวนวินาที มากกว่า 0 และไม่เกิน 7 วัน';
+  if (distanceKm > 0 && seconds / distanceKm < 60) return 'Pace เร็วกว่า 1:00 /กม. โปรดตรวจระยะทางและเวลารวม';
+  return null;
+}
+
 export function validateRunInput(input: RunLogInput, today = bangkokToday()): string | null {
   const date = /^\d{4}-\d{2}-\d{2}$/.test(input.run_date) ? new Date(`${input.run_date}T00:00:00Z`) : null;
   if (!date || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== input.run_date || input.run_date < '1900-01-01' || input.run_date > today) return 'กรุณาระบุวันที่จริง ไม่เกินวันนี้';
   if (!Number.isFinite(input.distance_km) || input.distance_km < 0.01 || input.distance_km > 1000) return 'ระยะทางต้องอยู่ระหว่าง 0.01–1,000 กม.';
-  if (!Number.isSafeInteger(input.duration_seconds) || input.duration_seconds <= 0 || input.duration_seconds > 604800) return 'เวลารวมต้องเป็นจำนวนวินาที มากกว่า 0 และไม่เกิน 7 วัน';
-  if (input.duration_seconds / input.distance_km < 60) return 'Pace เร็วกว่า 1:00 /กม. โปรดตรวจระยะทางและเวลารวม';
+  const durationError = validateRunDuration(input.duration_seconds, input.distance_km);
+  if (durationError) return durationError;
   if (!Object.hasOwn(ACTIVITY_LABELS, input.activity_type)) return 'กรุณาเลือกรูปแบบกิจกรรม';
   if (input.note && input.note.length > 2000) return 'หมายเหตุต้องไม่เกิน 2,000 ตัวอักษร';
   if (input.effort && !['easy', 'normal', 'hard'].includes(input.effort)) return 'ความหนักไม่ถูกต้อง';

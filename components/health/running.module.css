@@ -98,6 +98,53 @@
 .form :is(input:not([type=hidden]),select,textarea) { transition: border-color var(--motion-quick), box-shadow var(--motion-quick), background var(--motion-quick); }
 .form :is(input:not([type=hidden]),select,textarea):focus { outline: 0; border-color: #c3f44e; box-shadow: 0 0 0 3px #c4f52f17, 0 3px 18px #b8ee2910; background: #1b2514; }
 .form :is(input,select,textarea)[aria-invalid=true] { border-color: #ecb198; box-shadow: 0 0 0 2px #ecb19815; }
+
+/* Keep the native picker readable where customizable selects are unavailable. */
+.form select { color-scheme: dark; }
+.form select option { background: #131a10; color: #edf4e7; }
+.form select option:disabled { color: #a5afa0; }
+
+@supports selector(::picker(select)) {
+  .form select,
+  .form select::picker(select) { appearance: base-select; }
+
+  .form select::picker(select) {
+    background: #131a10;
+    color: #edf4e7;
+    border: 1px solid #4a573d;
+    border-radius: 9px;
+    padding: 4px;
+    box-shadow: 0 12px 28px #0008;
+  }
+
+  .form select::picker-icon { color: var(--lime); }
+
+  .form select option {
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 5px;
+  }
+
+  .form select option:checked:not(:disabled) {
+    background: #263518;
+    color: var(--lime);
+  }
+
+  .form select option:not(:disabled):focus-visible {
+    background: #364a1e;
+    outline: 1px solid var(--lime);
+    outline-offset: -1px;
+  }
+
+  @media (hover: hover) {
+    .form select option:not(:disabled):hover {
+      background: #364a1e;
+      outline: 1px solid var(--lime);
+      outline-offset: -1px;
+    }
+  }
+}
+
 .primaryButton { overflow: hidden; isolation: isolate; min-height: 52px; background: linear-gradient(110deg, #a5dd14, #d7ff6a 48%, #b6ee20); }
 .primaryButton::before { content: ''; position: absolute; inset: -60% auto -60% -55%; width: 40%; background: linear-gradient(90deg, transparent, #fffbd5a0, transparent); transform: skew(-25deg); z-index: -1; transition: left 650ms var(--motion-ease); }
 .primaryButton:hover:not(:disabled)::before { left: 125%; }

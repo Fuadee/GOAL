@@ -90,7 +90,7 @@ function DashboardContent({ data, goalImageUrl }: { data: RunnerDashboardData; g
       </div>
       <aside className={styles.rightColumn}>
         <div ref={formSection}>
-          <RunnerQuestLogForm key={editing?.id ?? 'new'} currentLevel={current} editing={editing} writesEnabled={data.writesEnabled}
+          <RunnerQuestLogForm key={editing?.id ?? 'new'} currentLevel={current} editing={editing} writesEnabled={data.writesEnabled} storageReady={data.storageReady}
             onCancel={() => setEditing(null)}
             onSaveStart={() => { clearFeedback(); beforeSave.current = snapshot(data); }}
             onSaved={receipt => {
